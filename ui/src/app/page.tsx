@@ -360,7 +360,7 @@ const ALL_TOOLS = CATEGORIES.flatMap(c =>
   c.tools.map(t => ({ ...t, category: c.id, categoryLabel: c.label, hue: c.hue }))
 );
 
-function fuzzyMatch(query, target) {
+function fuzzyMatch(query: string, target: string) {
   if (!query) return { score: 1, matched: false };
   const q = query.toLowerCase();
   const t = target.toLowerCase();
@@ -1130,7 +1130,7 @@ function FormatterTool({ tool }) {
       let finalContent = isTextMode ? editorRef.current?.value : editorRef.current?.innerHTML;
       if (!finalContent) finalContent = text; // fallback
 
-      const response = await fetch('http://localhost:8000/api/format', {
+      const response = await fetch('https://my-saas-mezp.onrender.com/api/format', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
