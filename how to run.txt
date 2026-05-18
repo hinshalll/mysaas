@@ -1,0 +1,9 @@
+cd C:\Users\hinsh\Desktop\saas-prototype
+uvicorn api.main:app --reload
+
+
+cd C:\Users\hinsh\Desktop\saas-prototype\ui
+npm run dev
+
+
+http://localhost:3000

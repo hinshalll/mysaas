@@ -1,0 +1,7 @@
+streamlit
+Markdown
+WeasyPrint
+Pygments
+python-docx
+htmldocx
+python-markdown-math
