@@ -396,14 +396,14 @@ function searchTools(query: string) {
    Tiny utilities
    ========================================================================= */
 
-function useKeydown(handler) {
+function useKeydown(handler: (e: KeyboardEvent) => void) {
   useEffect(() => {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [handler]);
 }
 
-function useBodyLock(locked) {
+function useBodyLock(locked: boolean) {
   useEffect(() => {
     if (!locked) return;
     const prev = document.body.style.overflow;
@@ -413,16 +413,24 @@ function useBodyLock(locked) {
 }
 
 /* Subtle category-tinted background swatch for icon containers */
-const tint = (hue, l = 0.30, c = 0.06, alpha = 0.55) =>
+const tint = (hue: number, l = 0.30, c = 0.06, alpha = 0.55) =>
   `oklch(${l} ${c} ${hue} / ${alpha})`;
-const tintFg = (hue) => `oklch(0.82 0.13 ${hue})`;
-const tintBorder = (hue) => `oklch(0.45 0.10 ${hue} / 0.45)`;
+const tintFg = (hue: number) => `oklch(0.82 0.13 ${hue})`;
+const tintBorder = (hue: number) => `oklch(0.45 0.10 ${hue} / 0.45)`;
 
 /* =========================================================================
    Top bar — sticky, blurred, optional contrast
    ========================================================================= */
 
-function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled }) {
+interface TopBarProps {
+  onOpenPalette: () => void;
+  onOpenLauncher: () => void;
+  onHome: () => void;
+  activeTool: any;
+  scrolled: boolean;
+}
+
+function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled }: TopBarProps) {
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -520,11 +528,17 @@ const topLink = {
    Command palette (⌘K)
    ========================================================================= */
 
-function CommandPalette({ open, onClose, onPick }) {
+interface CommandPaletteProps {
+  open: boolean;
+  onClose: () => void;
+  onPick: (id: string) => void;
+}
+
+function CommandPalette({ open, onClose, onPick }: CommandPaletteProps) {
   const [q, setQ] = useState('');
   const [cursor, setCursor] = useState(0);
-  const inputRef = useRef(null);
-  const listRef = useRef(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(() => searchTools(q).slice(0, 12), [q]);
 
@@ -546,7 +560,7 @@ function CommandPalette({ open, onClose, onPick }) {
 
   useBodyLock(open);
 
-  function onKey(e) {
+  function onKey(e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Escape') { e.preventDefault(); onClose(); }
     else if (e.key === 'ArrowDown') {
       e.preventDefault();
@@ -620,7 +634,7 @@ function CommandPalette({ open, onClose, onPick }) {
             }}>
               No tools match <span className="mono" style={{ color: 'var(--fg-muted)' }}>"{q}"</span>
             </div>
-          ) : results.map((t, i) => {
+          ) : results.map((t: any, i: number) => {
             const Ico = Icon[t.icon];
             const active = i === cursor;
             return (
@@ -695,9 +709,15 @@ function CommandPalette({ open, onClose, onPick }) {
    Launcher overlay — full-screen categorized grid
    ========================================================================= */
 
-function Launcher({ open, onClose, onPick }) {
+interface LauncherProps {
+  open: boolean;
+  onClose: () => void;
+  onPick: (id: string) => void;
+}
+
+function Launcher({ open, onClose, onPick }: LauncherProps) {
   useBodyLock(open);
-  useKeydown(useCallback(e => {
+  useKeydown(useCallback((e: KeyboardEvent) => {
     if (open && e.key === 'Escape') onClose();
   }, [open, onClose]));
 
@@ -784,7 +804,14 @@ function Launcher({ open, onClose, onPick }) {
    Tool card — gallery + launcher
    ========================================================================= */
 
-function ToolCard({ tool, onClick, compact, large }) {
+interface ToolCardProps {
+  tool: any;
+  onClick: () => void;
+  compact?: boolean;
+  large?: boolean;
+}
+
+function ToolCard({ tool, onClick, compact, large }: ToolCardProps) {
   const Ico = Icon[tool.icon];
   const [hover, setHover] = useState(false);
   return (
@@ -863,13 +890,21 @@ function ToolCard({ tool, onClick, compact, large }) {
    Inline Select (matches the one in app-tool.jsx but lives here)
    ========================================================================= */
 
-function Select({ value, options, onChange, label, compact }) {
+interface SelectProps {
+  value: any;
+  options: any[];
+  onChange: (opt: any) => void;
+  label?: string;
+  compact?: boolean;
+}
+
+function Select({ value, options, onChange, label, compact }: SelectProps) {
   const [open, setOpen] = useState(false);
-  const ref = useRef(null);
+  const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handler(e) {
-      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    function handler(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
@@ -998,12 +1033,19 @@ const SAMPLE = '# The Cost of Context Switching in Software Teams\n\n' +
    Toolbar primitives
    ========================================================================= */
 
-function TBButton({ children, onClick, active, title }) {
+interface TBButtonProps {
+  children: React.ReactNode;
+  onClick: () => void;
+  active?: boolean;
+  title?: string;
+}
+
+function TBButton({ children, onClick, active, title }: TBButtonProps) {
   return (
     <button
       type="button"
       title={title}
-      onMouseDown={(e) => e.preventDefault()}
+      onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
       onClick={onClick}
       className="reset"
       style={{
@@ -1026,7 +1068,13 @@ function TBButton({ children, onClick, active, title }) {
 function TBDivider() {
   return <span style={{ width: 1, height: 18, background: 'var(--border)', margin: '0 4px', flexShrink: 0 }}/>;
 }
-function BlockSelect({ value, onChange }) {
+
+interface BlockSelectProps {
+  value: string;
+  onChange: (val: string) => void;
+}
+
+function BlockSelect({ value, onChange }: BlockSelectProps) {
   const opts = [
     { v: 'p',  l: 'Paragraph' },
     { v: 'h1', l: 'Heading 1' },
@@ -1066,7 +1114,12 @@ function BlockSelect({ value, onChange }) {
    Helpers
    ========================================================================= */
 
-function Stat({ label, value }) {
+interface StatProps {
+  label: string;
+  value: string | number;
+}
+
+function Stat({ label, value }: StatProps) {
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
       <span style={{ color: 'var(--fg-muted)', fontWeight: 500 }}>{value}</span>
@@ -1090,16 +1143,20 @@ const miniBtn = {
    FormatterTool
    ========================================================================= */
 
-function FormatterTool({ tool }) {
+interface FormatterToolProps {
+  tool: any;
+}
+
+function FormatterTool({ tool }: FormatterToolProps) {
   const [text, setText] = useState(SAMPLE);
   const [theme, setTheme] = useState(THEMES[0]);
   const [format, setFormat] = useState(FORMATS[0]);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
-  const [activeMarks, setActiveMarks] = useState({});
-  const [pendingHtml, setPendingHtml] = useState(null);
-  const taRef = useRef(null);
-  const editorRef = useRef(null);
+  const [activeMarks, setActiveMarks] = useState<any>({});
+  const [pendingHtml, setPendingHtml] = useState<any>(null);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<any>(null);
 
   const chars = text.length;
   const words = useMemo(() => text.trim() ? text.trim().split(/\s+/).length : 0, [text]);
@@ -1157,7 +1214,7 @@ function FormatterTool({ tool }) {
       window.URL.revokeObjectURL(url);
       a.remove();
 
-    } catch (error) {
+    } catch (error: any) {
       alert("Error connecting to Python backend:\n" + error.message);
     } finally {
       setDownloading(false);
@@ -1166,7 +1223,7 @@ function FormatterTool({ tool }) {
 
   // Apply generated HTML to the editor AFTER React has mounted it.
   // Quick helper to strip markdown into pure plain text
-  function stripMarkdown(md) {
+  function stripMarkdown(md: string) {
     return md
       .replace(/[#_*~`>]/g, '') // removes formatting marks
       .replace(/\[(.*?)\]\(.*?\)/g, '$1') // turns links into normal text
@@ -1195,7 +1252,7 @@ function FormatterTool({ tool }) {
   }, [pendingHtml, generated, format.value, text]);
 
   useEffect(() => {
-    function key(e) {
+    function key(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
         e.preventDefault(); handleGenerate();
       }
@@ -1218,12 +1275,12 @@ function FormatterTool({ tool }) {
     } catch (e) {}
   }
 
-  function exec(cmd, value) {
+  function exec(cmd: string, value?: string) {
     editorRef.current?.focus();
     try { document.execCommand(cmd, false, value); } catch (e) {}
     updateActiveMarks();
   }
-  function setBlock(tag) { exec('formatBlock', '<' + tag + '>'); }
+  function setBlock(tag: string) { exec('formatBlock', '<' + tag + '>'); }
   function setLink() {
     const url = window.prompt('Link URL', 'https://');
     if (url) exec('createLink', url);
@@ -1577,7 +1634,12 @@ function FormatterTool({ tool }) {
    Welcome strip — confident, app-feeling header
    ========================================================================= */
 
-function WelcomeStrip({ onOpenLauncher, onOpenPalette }) {
+interface WelcomeStripProps {
+  onOpenLauncher: () => void;
+  onOpenPalette: () => void;
+}
+
+function WelcomeStrip({ onOpenLauncher, onOpenPalette }: WelcomeStripProps) {
   const [now] = useState(() => new Date());
   const hour = now.getHours();
   const greeting = hour < 5 ? 'Up late' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -1685,7 +1747,11 @@ const quickBtn = {
    Featured tool — large card, gives the dashboard a focal point
    ========================================================================= */
 
-function FeaturedTool({ onPick }) {
+interface FeaturedToolProps {
+  onPick: (id: string) => void;
+}
+
+function FeaturedTool({ onPick }: FeaturedToolProps) {
   const featured = ALL_TOOLS.find(t => t.id === 'uaf');
   if (!featured) return null;
   const Ico = Icon[featured.icon];
@@ -1783,7 +1849,12 @@ function FeaturedTool({ onPick }) {
    Tool shelf — categorized gallery
    ========================================================================= */
 
-function Shelf({ category, onPick }) {
+interface ShelfProps {
+  category: any;
+  onPick: (id: string) => void;
+}
+
+function Shelf({ category, onPick }: ShelfProps) {
   const isPro = category.pro;
   return (
     <section style={{ marginBottom: 48 }}>
@@ -1826,7 +1897,7 @@ function Shelf({ category, onPick }) {
           borderRadius: 14,
         } : {}),
       }}>
-        {category.tools.map(t => (
+        {category.tools.map((t: any) => (
           <ToolCard key={t.id} tool={{ ...t, hue: category.hue }} onClick={() => onPick(t.id)} />
         ))}
       </div>
@@ -1838,7 +1909,13 @@ function Shelf({ category, onPick }) {
    Dashboard composer
    ========================================================================= */
 
-function Home({ onOpenTool, onOpenLauncher, onOpenPalette }) {
+interface HomeProps {
+  onOpenTool: (id: string) => void;
+  onOpenLauncher: () => void;
+  onOpenPalette: () => void;
+}
+
+function Home({ onOpenTool, onOpenLauncher, onOpenPalette }: HomeProps) {
   return (
     <div className="fade-in">
       <WelcomeStrip onOpenLauncher={onOpenLauncher} onOpenPalette={onOpenPalette} />
@@ -1860,7 +1937,12 @@ function Home({ onOpenTool, onOpenLauncher, onOpenPalette }) {
    Landing nav — lighter than the app top bar; brand + marketing links + CTA
    ========================================================================= */
 
-function LandingNav({ onLaunch, scrolled }) {
+interface LandingNavProps {
+  onLaunch: () => void;
+  scrolled: boolean;
+}
+
+function LandingNav({ onLaunch, scrolled }: LandingNavProps) {
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -1931,7 +2013,7 @@ function HeroDemo() {
     { id: 'academic',   label: 'Academic',   font: '"Source Serif Pro", Georgia, serif', serifTitle: true },
     { id: 'minimalist', label: 'Minimalist', font: '"JetBrains Mono", monospace', serifTitle: false },
   ];
-  const t = themes.find(x => x.id === tab);
+  const t = themes.find(x => x.id === tab)!;
 
   return (
     <div style={{
@@ -2082,7 +2164,7 @@ function HeroDemo() {
   );
 }
 
-const dot = (color) => ({
+const dot = (color: string) => ({
   width: 11, height: 11, borderRadius: '50%',
   background: color, opacity: 0.6,
 });
@@ -2091,7 +2173,11 @@ const dot = (color) => ({
    Editorial hero
    ========================================================================= */
 
-function LandingHero({ onLaunch }) {
+interface LandingHeroProps {
+  onLaunch: () => void;
+}
+
+function LandingHero({ onLaunch }: LandingHeroProps) {
   return (
     <section style={{
       position: 'relative',
@@ -2228,7 +2314,11 @@ function LandingHero({ onLaunch }) {
    "Browse the suite" — compact tool grid preview
    ========================================================================= */
 
-function SuitePreview({ onLaunch }) {
+interface SuitePreviewProps {
+  onLaunch: () => void;
+}
+
+function SuitePreview({ onLaunch }: SuitePreviewProps) {
   return (
     <section id="tools" style={{
       maxWidth: 1200, margin: '0 auto',
@@ -2321,7 +2411,11 @@ function SuitePreview({ onLaunch }) {
    Pricing
    ========================================================================= */
 
-function Pricing({ onLaunch }) {
+interface PricingProps {
+  onLaunch: () => void;
+}
+
+function Pricing({ onLaunch }: PricingProps) {
   return (
     <section id="pricing" style={{
       maxWidth: 1080, margin: '0 auto',
@@ -2376,7 +2470,7 @@ function Pricing({ onLaunch }) {
               ['Pro Vault tools', false],
               ['Branded exports', false],
               ['Batch processing', false],
-            ].map(([f, on]) => <Feature key={f} on={on}>{f}</Feature>)}
+            ].map(([f, on]) => <Feature key={f as string} on={on as boolean}>{f as string}</Feature>)}
           </ul>
 
           <button onClick={onLaunch} className="reset" style={{
@@ -2434,7 +2528,7 @@ function Pricing({ onLaunch }) {
               ['Branded exports (logo, colors, footer)', true],
               ['Batch process up to 500 files at once', true],
               ['Priority support · early features', true],
-            ].map(([f, on, em]) => <Feature key={f} on={on} em={em}>{f}</Feature>)}
+            ].map(([f, on, em]) => <Feature key={f as string} on={on as boolean} em={em as boolean}>{f as string}</Feature>)}
           </ul>
 
           <button onClick={onLaunch} className="reset" style={{
@@ -2459,7 +2553,13 @@ function Pricing({ onLaunch }) {
   );
 }
 
-function Feature({ children, on, em }) {
+interface FeatureProps {
+  children: React.ReactNode;
+  on: boolean;
+  em?: boolean;
+}
+
+function Feature({ children, on, em }: FeatureProps) {
   return (
     <li style={{
       display: 'flex', alignItems: 'flex-start', gap: 10,
@@ -2486,7 +2586,11 @@ function Feature({ children, on, em }) {
    Closing CTA band
    ========================================================================= */
 
-function ClosingCTA({ onLaunch }) {
+interface ClosingCTAProps {
+  onLaunch: () => void;
+}
+
+function ClosingCTA({ onLaunch }: ClosingCTAProps) {
   return (
     <section style={{
       padding: '96px 32px',
@@ -2564,14 +2668,14 @@ function ClosingCTA({ onLaunch }) {
    Shared styles
    ========================================================================= */
 
-const eyebrow = {
+const eyebrow: React.CSSProperties = {
   display: 'inline-block',
   fontSize: 11, fontWeight: 600,
   color: 'oklch(0.78 0.12 265)',
   letterSpacing: '0.18em', textTransform: 'uppercase',
   marginBottom: 18,
 };
-const sectionTitle = {
+const sectionTitle: React.CSSProperties = {
   margin: 0,
   fontSize: 'clamp(34px, 5vw, 52px)',
   lineHeight: 1.05,
@@ -2579,19 +2683,19 @@ const sectionTitle = {
   fontWeight: 600,
   textWrap: 'balance',
 };
-const italicAccent = {
+const italicAccent: React.CSSProperties = {
   fontFamily: '"Source Serif Pro", Georgia, serif',
   fontStyle: 'italic', fontWeight: 400,
   background: 'linear-gradient(110deg, oklch(0.92 0.04 265), oklch(0.78 0.16 285))',
   WebkitBackgroundClip: 'text', backgroundClip: 'text',
   color: 'transparent',
 };
-const sectionSubtitle = {
+const sectionSubtitle: React.CSSProperties = {
   margin: '20px auto 0', maxWidth: 560,
   fontSize: 16, color: 'var(--fg-muted)',
   lineHeight: 1.5, textWrap: 'pretty',
 };
-const listStyle = {
+const listStyle: React.CSSProperties = {
   margin: 0, padding: 0, listStyle: 'none',
   display: 'flex', flexDirection: 'column', gap: 4,
   flex: 1,
@@ -2601,7 +2705,11 @@ const listStyle = {
    Composer
    ========================================================================= */
 
-function Landing({ onLaunch }) {
+interface LandingProps {
+  onLaunch: () => void;
+}
+
+function Landing({ onLaunch }: LandingProps) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     function onScroll() { setScrolled(window.scrollY > 8); }
@@ -2628,7 +2736,11 @@ function Landing({ onLaunch }) {
    Generic placeholder tool view
    ========================================================================= */
 
-function PlaceholderTool({ tool }) {
+interface PlaceholderToolProps {
+  tool: any;
+}
+
+function PlaceholderTool({ tool }: PlaceholderToolProps) {
   const Ico = Icon[tool.icon];
   return (
     <div style={{
@@ -2694,7 +2806,11 @@ function PlaceholderTool({ tool }) {
    Footer
    ========================================================================= */
 
-function Footer({ onBackToLanding }) {
+interface FooterProps {
+  onBackToLanding: (() => void) | null;
+}
+
+function Footer({ onBackToLanding }: FooterProps) {
   return (
     <footer style={{
       marginTop: 60,
@@ -2779,7 +2895,12 @@ const socialStyle = {
   textDecoration: 'none', cursor: 'pointer',
 };
 
-function FooterCol({ title, links }) {
+interface FooterColProps {
+  title: string;
+  links: string[];
+}
+
+function FooterCol({ title, links }: FooterColProps) {
   return (
     <div>
       <div style={{
@@ -2817,7 +2938,7 @@ function App() {
   }, [view, isLanding, isDashboard]);
 
   /* keyboard shortcuts — only active inside the app */
-  useKeydown(useCallback(e => {
+  useKeydown(useCallback((e: KeyboardEvent) => {
     if (isLanding) return;
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
       e.preventDefault();
@@ -2836,7 +2957,7 @@ function App() {
     setView('home');
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
   }
-  function openTool(id) {
+  function openTool(id: string) {
     setView(id);
     setPalette(false);
     setLauncher(false);
