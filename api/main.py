@@ -8,12 +8,13 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from engines.tool_ai_formatter import generate_document
+from engines.tool_json import process_json
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["*"], # Allow Vercel preview URLs or any domain for local/production cross-origin requests
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -27,6 +28,20 @@ class DocumentRequest(BaseModel):
     is_html: bool
     theme: str
     export_format: str
+
+class JsonRequest(BaseModel):
+    content: str
+    action: str # "Format" | "Auto-Repair" | "Minify"
+
+@app.post("/api/json")
+def format_json_endpoint(request: JsonRequest):
+    try:
+        # Calls the in-memory parsing and regex repair helper
+        result = process_json(request.content, request.action)
+        return result
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/format")
 def format_document(request: DocumentRequest):

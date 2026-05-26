@@ -2050,7 +2050,11 @@ function LandingNav({ onLaunch, scrolled }: LandingNavProps) {
       backdropFilter: scrolled ? 'blur(20px) saturate(140%)' : 'none',
       transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
     }} className="landing-nav">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      {/* Brand Logo - Clickable link taking user back to marketing root / */}
+      <a href="/" className="reset" style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        textDecoration: 'none', color: 'inherit', cursor: 'pointer'
+      }}>
         <div style={{
           width: 30, height: 30, borderRadius: 8,
           background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
@@ -2060,15 +2064,20 @@ function LandingNav({ onLaunch, scrolled }: LandingNavProps) {
           <Icon.Command size={16} strokeWidth={2.2} style={{ color: 'white' }} />
         </div>
         <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em' }}>mysaas</span>
-      </div>
+      </a>
 
       <nav style={{ display: 'flex', gap: 2, marginLeft: 24 }} className="landing-nav-links">
-        {['Tools', 'Pricing', 'Changelog', 'Docs'].map(l => (
-          <a key={l} href={'#' + l.toLowerCase()} className="reset top-link" style={{
+        {[
+          { label: 'Tools', path: '/dashboard' },
+          { label: 'Pricing', path: '/pricing' },
+          { label: 'Changelog', path: '/changelog' },
+          { label: 'Docs', path: '/docs' },
+        ].map(item => (
+          <a key={item.label} href={item.path} className="reset top-link" style={{
             fontSize: 13, color: 'var(--fg-muted)',
             padding: '7px 12px', borderRadius: 6,
             textDecoration: 'none', cursor: 'pointer',
-          }}>{l}</a>
+          }}>{item.label}</a>
         ))}
       </nav>
 
@@ -2368,7 +2377,11 @@ function LandingHero({ onLaunch }: LandingHeroProps) {
         >
           Launch app <Icon.ArrowRight size={15} strokeWidth={2.2}/>
         </button>
-        <a href="#pricing" className="reset" style={{
+        <button onClick={(e) => {
+          e.preventDefault();
+          document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+          window.history.pushState(null, '', '#pricing');
+        }} className="reset" style={{
           display: 'inline-flex', alignItems: 'center', gap: 7,
           padding: '14px 18px',
           background: 'oklch(0.20 0.008 250 / 0.5)',
@@ -2380,7 +2393,7 @@ function LandingHero({ onLaunch }: LandingHeroProps) {
           backdropFilter: 'blur(8px)',
         }}>
           See pricing
-        </a>
+        </button>
       </div>
 
       <div style={{
@@ -2436,62 +2449,77 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
         gap: 14,
       }}>
         {CATEGORIES.map(cat => (
-          <div key={cat.id} onClick={onLaunch} style={{
+          <div key={cat.id} style={{
             padding: 22,
             background: cat.pro
               ? `linear-gradient(180deg, ${tint(cat.hue, 0.30, 0.08, 0.15)}, ${tint(cat.hue, 0.20, 0.04, 0.05)})`
               : 'oklch(0.175 0.008 250 / 0.6)',
             border: `1px solid ${cat.pro ? tintBorder(cat.hue) : 'var(--border)'}`,
             borderRadius: 14,
-            cursor: 'pointer',
-            transition: 'transform 0.2s, border-color 0.2s, background 0.2s',
+            transition: 'transform 0.25s, border-color 0.25s, background 0.25s',
             position: 'relative', overflow: 'hidden',
+            display: 'flex', flexDirection: 'column', gap: 12,
           }}
           className="suite-card"
           onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = tintBorder(cat.hue); }}
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; if (!cat.pro) e.currentTarget.style.borderColor = 'var(--border)'; }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-              <span style={{
-                width: 7, height: 7, borderRadius: '50%',
-                background: tintFg(cat.hue),
-                boxShadow: `0 0 10px ${tintFg(cat.hue)}`,
-              }} />
-              <span style={{
-                fontSize: 11, fontWeight: 600,
-                color: cat.pro ? tintFg(cat.hue) : 'var(--fg-dim)',
-                letterSpacing: '0.10em', textTransform: 'uppercase',
-              }}>{cat.label}</span>
-              <div style={{ flex: 1 }} />
-            </div>
-            <div style={{
-              fontSize: 17, fontWeight: 600,
-              color: 'var(--fg)', letterSpacing: '-0.015em',
-              marginBottom: 8,
-              lineHeight: 1.25,
-              textWrap: 'pretty',
-            }}>{cat.tagline}</div>
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+            {/* Category header link */}
+            <a href={`/category/${cat.id}`} className="reset" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <span style={{
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: tintFg(cat.hue),
+                  boxShadow: `0 0 10px ${tintFg(cat.hue)}`,
+                }} />
+                <span style={{
+                  fontSize: 11, fontWeight: 600,
+                  color: cat.pro ? tintFg(cat.hue) : 'var(--fg-dim)',
+                  letterSpacing: '0.10em', textTransform: 'uppercase',
+                }}>{cat.label}</span>
+                <div style={{ flex: 1 }} />
+              </div>
+              <div style={{
+                fontSize: 17, fontWeight: 600,
+                color: 'var(--fg)', letterSpacing: '-0.015em',
+                marginBottom: 8,
+                lineHeight: 1.25,
+                textWrap: 'pretty',
+              }}>{cat.tagline}</div>
+            </a>
+
+            {/* Crawlable list of individual tools */}
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
               {cat.tools.slice(0, 4).map(t => {
-                const Ico = Icon[t.icon];
+                const Ico = Icon[t.icon] || Icon.Sparkles;
                 return (
-                  <li key={t.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 8,
-                    padding: '5px 0',
-                    fontSize: 12.5, color: 'var(--fg-muted)',
-                  }}>
-                    <Ico size={11} strokeWidth={1.8} style={{ color: 'var(--fg-subtle)', flexShrink: 0 }}/>
-                    <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
+                  <li key={t.id}>
+                    <a href={`/tools/${t.id}`} className="reset" style={{
+                      display: 'flex', alignItems: 'center', gap: 8,
+                      padding: '5px 0',
+                      fontSize: 12.5, color: 'var(--fg-muted)',
+                      textDecoration: 'none',
+                      transition: 'color 0.15s',
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.color = tintFg(cat.hue); }}
+                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--fg-muted)'; }}
+                    >
+                      <Ico size={11} strokeWidth={1.8} style={{ color: 'var(--fg-subtle)', flexShrink: 0 }}/>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
+                    </a>
                   </li>
                 );
               })}
               {cat.tools.length > 4 && (
-                <li style={{
-                  marginTop: 6, fontSize: 11, color: 'var(--fg-subtle)',
-                  display: 'flex', alignItems: 'center', gap: 5,
-                }}>
-                  <span>and more</span>
-                  <Icon.ArrowRight size={10} />
+                <li style={{ marginTop: 4 }}>
+                  <a href={`/category/${cat.id}`} className="reset" style={{
+                    fontSize: 11, color: 'var(--fg-subtle)',
+                    display: 'flex', alignItems: 'center', gap: 5,
+                    textDecoration: 'none',
+                  }}>
+                    <span>and more</span>
+                    <Icon.ArrowRight size={10} />
+                  </a>
                 </li>
               )}
             </ul>
@@ -2508,9 +2536,10 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
 
 interface PricingProps {
   onLaunch: () => void;
+  onEnterprise: () => void;
 }
 
-function Pricing({ onLaunch }: PricingProps) {
+function Pricing({ onLaunch, onEnterprise }: PricingProps) {
   return (
     <section id="pricing" style={{
       maxWidth: 1080, margin: '0 auto',
@@ -2642,7 +2671,7 @@ function Pricing({ onLaunch }: PricingProps) {
         textAlign: 'center', marginTop: 28,
         fontSize: 12.5, color: 'var(--fg-dim)',
       }}>
-        Need SOC2, SSO, or on-prem? <a href="#" style={{ color: 'var(--fg-muted)', textDecoration: 'underline', textDecorationColor: 'var(--border-strong)' }}>Talk to us about Enterprise</a>.
+        Need SOC2, SSO, or on-prem? <a href="#" onClick={(e) => { e.preventDefault(); onEnterprise(); }} style={{ color: 'var(--fg-muted)', textDecoration: 'underline', textDecorationColor: 'var(--border-strong)' }}>Talk to us about Enterprise</a>.
       </p>
     </section>
   );
@@ -2741,7 +2770,7 @@ function ClosingCTA({ onLaunch }: ClosingCTAProps) {
             }}>
               Launch app <Icon.ArrowRight size={15} strokeWidth={2.2}/>
             </button>
-            <a href="#tools" className="reset" style={{
+            <a href="/dashboard" className="reset" style={{
               display: 'inline-flex', alignItems: 'center', gap: 7,
               padding: '14px 18px',
               background: 'oklch(0.20 0.008 250 / 0.5)',
@@ -2749,6 +2778,7 @@ function ClosingCTA({ onLaunch }: ClosingCTAProps) {
               color: 'var(--fg)',
               fontWeight: 500, fontSize: 15,
               borderRadius: 11, cursor: 'pointer',
+              textDecoration: 'none',
             }}>
               Browse every tool
             </a>
@@ -2802,9 +2832,10 @@ const listStyle: React.CSSProperties = {
 
 interface LandingProps {
   onLaunch: () => void;
+  onEnterprise: () => void;
 }
 
-function Landing({ onLaunch }: LandingProps) {
+function Landing({ onLaunch, onEnterprise }: LandingProps) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     function onScroll() { setScrolled(window.scrollY > 8); }
@@ -2817,7 +2848,7 @@ function Landing({ onLaunch }: LandingProps) {
       <LandingNav onLaunch={onLaunch} scrolled={scrolled} />
       <LandingHero onLaunch={onLaunch} />
       <SuitePreview onLaunch={onLaunch} />
-      <Pricing onLaunch={onLaunch} />
+      <Pricing onLaunch={onLaunch} onEnterprise={onEnterprise} />
       <ClosingCTA onLaunch={onLaunch} />
     </div>
   );
@@ -2830,6 +2861,461 @@ function Landing({ onLaunch }: LandingProps) {
 /* =========================================================================
    Generic placeholder tool view
    ========================================================================= */
+
+interface JsonToolProps {
+  tool: any;
+}
+
+function JsonTool({ tool }: JsonToolProps) {
+  const [inputText, setInputText] = useState('');
+  const [outputText, setOutputText] = useState('');
+  const [inputMethod, setInputMethod] = useState<'paste' | 'upload'>('paste');
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'success' | 'repaired' | 'already_valid' | 'error' | 'fatal_error'>('idle');
+  const [errorDetails, setErrorDetails] = useState<string | null>(null);
+  const [copying, setCopying] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const activeHue = tool.hue ?? 195; // Developer & Code is Cyan (195)
+
+  // Real-time details
+  const charsCount = inputText.length;
+  const linesCount = inputText ? inputText.split('\n').length : 0;
+  const sizeKb = charsCount ? (charsCount / 1024).toFixed(2) : '0.00';
+
+  const API_BASE = typeof window !== 'undefined' && window.location.hostname === 'localhost'
+    ? 'http://localhost:8000'
+    : 'https://my-saas-mezp.onrender.com';
+
+  async function handleAction(action: 'Format' | 'Auto-Repair' | 'Minify') {
+    if (!inputText.trim()) {
+      setStatus('error');
+      setErrorDetails('Input is empty. Please paste or upload some JSON first.');
+      return;
+    }
+
+    setLoading(true);
+    setStatus('idle');
+    setErrorDetails(null);
+
+    try {
+      const response = await fetch(`${API_BASE}/api/json`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: inputText,
+          action: action,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('API server returned an error.');
+      }
+
+      const res = await response.json();
+      setStatus(res.status);
+      
+      if (res.status === 'success' || res.status === 'already_valid' || res.status === 'repaired') {
+        setOutputText(res.output);
+        if (res.status === 'repaired' || res.status === 'already_valid') {
+          setErrorDetails(res.error_details);
+        }
+      } else {
+        setOutputText('');
+        setErrorDetails(res.error_details);
+      }
+    } catch (e: any) {
+      setStatus('fatal_error');
+      setErrorDetails(`Connection failed: Could not reach the backend high-compute parser. ${e.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function handleClear() {
+    setInputText('');
+    setOutputText('');
+    setStatus('idle');
+    setErrorDetails(null);
+  }
+
+  async function handleCopy() {
+    if (copying || !outputText) return;
+    setCopying(true);
+    try {
+      await navigator.clipboard.writeText(outputText);
+    } catch (err) {}
+    setTimeout(() => setCopying(false), 2000);
+  }
+
+  function handleDownload() {
+    if (!outputText) return;
+    const blob = new Blob([outputText], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `MySaaS_Formatted_Data.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // File loading
+  function handleFileLoad(file: File) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setInputText(e.target.result as string);
+        setStatus('idle');
+        setErrorDetails(null);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function onDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragOver(true);
+  }
+  function onDragLeave() {
+    setIsDragOver(false);
+  }
+  function onDrop(e: React.DragEvent) {
+    e.preventDefault();
+    setIsDragOver(false);
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleFileLoad(e.dataTransfer.files[0]);
+    }
+  }
+
+  const Ico = Icon[tool.icon] || Icon.Braces;
+
+  return (
+    <div style={{
+      maxWidth: 1240, margin: '0 auto',
+      padding: '40px 24px 80px',
+    }} className="fade-in">
+      
+      {/* Breadcrumb Header */}
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        fontSize: 11.5, color: 'var(--fg-dim)',
+        marginBottom: 14,
+      }} className="mono">
+        <span style={{ color: tintFg(tool.hue) }}>{tool.categoryLabel}</span>
+        <span>/</span>
+        <span style={{ color: 'var(--fg-muted)' }}>{tool.id}</span>
+      </div>
+
+      {/* Tool Identity Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
+        <div style={{
+          width: 52, height: 52, borderRadius: 12,
+          background: tint(tool.hue),
+          border: `1px solid ${tintBorder(tool.hue)}`,
+          color: tintFg(tool.hue),
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: `0 0 24px ${tint(tool.hue, 0.4, 0.1, 0.1)}`,
+        }}>
+          <Ico size={24} strokeWidth={2} />
+        </div>
+        <div>
+          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: 'white', letterSpacing: '-0.02em' }}>{tool.name}</h1>
+          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--fg-muted)' }}>{tool.tagline}</p>
+        </div>
+      </div>
+
+      {/* Two Column Layout Panel */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))',
+        gap: 24,
+        alignItems: 'start',
+      }} className="tools-split-layout">
+        
+        {/* Left Side: Input & Operations */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{
+            background: 'oklch(0.16 0.006 250 / 0.7)',
+            border: '1px solid var(--border)',
+            borderRadius: 14,
+            padding: '20px 24px',
+            display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+            
+            {/* Input Selection Header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ display: 'flex', gap: 6, background: 'oklch(0.12 0.004 250)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
+                <button onClick={() => setInputMethod('paste')} className="reset mono" style={{
+                  padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
+                  background: inputMethod === 'paste' ? 'oklch(0.20 0.008 250)' : 'transparent',
+                  color: inputMethod === 'paste' ? 'white' : 'var(--fg-muted)',
+                  cursor: 'pointer',
+                }}>Paste Text</button>
+                <button onClick={() => setInputMethod('upload')} className="reset mono" style={{
+                  padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
+                  background: inputMethod === 'upload' ? 'oklch(0.20 0.008 250)' : 'transparent',
+                  color: inputMethod === 'upload' ? 'white' : 'var(--fg-muted)',
+                  cursor: 'pointer',
+                }}>Upload File</button>
+              </div>
+
+              <div>
+                <button onClick={handleClear} className="reset mono" style={{
+                  padding: '6px 12px', fontSize: 11.5, fontWeight: 500, borderRadius: 6,
+                  color: 'oklch(0.70 0.12 15)', border: '1px solid oklch(0.70 0.12 15 / 0.2)',
+                  cursor: 'pointer',
+                }}>Clear Input</button>
+              </div>
+            </div>
+
+            {/* Input Form Elements */}
+            {inputMethod === 'paste' ? (
+              <textarea
+                placeholder="Paste raw, messy, or broken JSON payload here..."
+                value={inputText}
+                onChange={e => setInputText(e.target.value)}
+                style={{
+                  width: '100%', height: 320, padding: 16, borderRadius: 10,
+                  background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                  color: 'white', fontFamily: '"Fira Code", monospace', fontSize: 13,
+                  outline: 'none', resize: 'none', boxSizing: 'border-box',
+                  lineHeight: 1.5,
+                }}
+              />
+            ) : (
+              <div
+                onDragOver={onDragOver}
+                onDragLeave={onDragLeave}
+                onDrop={onDrop}
+                onClick={() => fileInputRef.current?.click()}
+                style={{
+                  width: '100%', height: 320, borderRadius: 10,
+                  border: `2px dashed ${isDragOver ? tintFg(tool.hue) : 'var(--border)'}`,
+                  background: isDragOver ? tint(tool.hue, 0.18, 0.04, 0.06) : 'oklch(0.12 0.004 250)',
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer', transition: 'background 0.2s, border-color 0.2s',
+                  boxSizing: 'border-box', padding: 24, textAlign: 'center',
+                }}
+              >
+                <input
+                  type="file"
+                  accept=".json"
+                  ref={fileInputRef}
+                  onChange={e => e.target.files?.[0] && handleFileLoad(e.target.files[0])}
+                  style={{ display: 'none' }}
+                />
+                <Icon.FileDown size={36} style={{ color: isDragOver ? tintFg(tool.hue) : 'var(--fg-dim)', marginBottom: 14 }} />
+                <span style={{ fontSize: 14.5, fontWeight: 500, color: 'white', display: 'block', marginBottom: 6 }}>
+                  {inputText ? '📄 File Loaded Successfully' : 'Drag and drop your .json file here'}
+                </span>
+                <span style={{ fontSize: 12.5, color: 'var(--fg-subtle)' }}>
+                  {inputText ? `Click here to replace file (${sizeKb} KB)` : 'or click to browse local files'}
+                </span>
+              </div>
+            )}
+
+            {/* Input Metric readouts */}
+            <div style={{
+              display: 'flex', gap: 16, fontSize: 11.5, color: 'var(--fg-subtle)',
+              borderTop: '1px solid var(--border)', paddingTop: 14,
+            }} className="mono">
+              <div>Chars: <span style={{ color: 'white' }}>{charsCount}</span></div>
+              <div>Lines: <span style={{ color: 'white' }}>{linesCount}</span></div>
+              <div>Size: <span style={{ color: 'white' }}>{sizeKb} KB</span></div>
+            </div>
+          </div>
+
+          {/* Action Operations Bar */}
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 10,
+          }}>
+            <button
+              onClick={() => handleAction('Format')}
+              disabled={loading}
+              className="reset"
+              style={{
+                width: '100%', padding: '14px', borderRadius: 10,
+                background: tint(tool.hue),
+                border: `1px solid ${tintBorder(tool.hue)}`,
+                color: tintFg(tool.hue),
+                fontWeight: 600, fontSize: 14,
+                cursor: loading ? 'not-allowed' : 'pointer',
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                transition: 'transform 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+            >
+              {loading ? 'Processing...' : '✨ Format & Validate'}
+            </button>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 10 }}>
+              <button
+                onClick={() => handleAction('Auto-Repair')}
+                disabled={loading}
+                className="reset"
+                style={{
+                  padding: '12px', borderRadius: 10,
+                  background: 'oklch(0.20 0.008 75 / 0.25)',
+                  border: '1px solid oklch(0.75 0.14 75 / 0.2)',
+                  color: 'oklch(0.78 0.16 75)',
+                  fontWeight: 500, fontSize: 13,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                <Icon.HeartPulse size={13} /> Repair Broken JSON
+              </button>
+
+              <button
+                onClick={() => handleAction('Minify')}
+                disabled={loading}
+                className="reset"
+                style={{
+                  padding: '12px', borderRadius: 10,
+                  background: 'oklch(0.18 0.008 250 / 0.6)',
+                  border: '1px solid var(--border)',
+                  color: 'white',
+                  fontWeight: 500, fontSize: 13,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                }}
+              >
+                <Icon.Archive size={13} /> Minify (Compress)
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Side: Output & Status badging */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          
+          {/* Status Alert Banners */}
+          {status !== 'idle' && (
+            <div className="fade-in">
+              {/* Valid Badges */}
+              {(status === 'success' || status === 'already_valid') && (
+                <div style={{
+                  padding: '14px 20px', borderRadius: 10,
+                  background: 'oklch(0.20 0.010 145 / 0.2)',
+                  border: '1px solid oklch(0.75 0.14 145 / 0.3)',
+                  color: 'oklch(0.78 0.16 145)',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5,
+                  boxShadow: '0 0 16px oklch(0.78 0.16 145 / 0.1)',
+                }}>
+                  <Icon.CheckCircle size={15} strokeWidth={2.5} />
+                  <span>
+                    <strong>Valid JSON!</strong> Prettified payload is compiled successfully.
+                    {errorDetails && <span style={{ display: 'block', fontSize: 12, marginTop: 4, opacity: 0.8 }}>({errorDetails})</span>}
+                  </span>
+                </div>
+              )}
+
+              {/* Repaired Badges */}
+              {status === 'repaired' && (
+                <div style={{
+                  padding: '14px 20px', borderRadius: 10,
+                  background: 'oklch(0.20 0.010 75 / 0.25)',
+                  border: '1px solid oklch(0.75 0.14 75 / 0.3)',
+                  color: 'oklch(0.78 0.16 75)',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5,
+                }}>
+                  <Icon.AlertTriangle size={15} strokeWidth={2.5} />
+                  <span>
+                    <strong>Repaired JSON!</strong> {errorDetails}
+                  </span>
+                </div>
+              )}
+
+              {/* Error Badges */}
+              {(status === 'error' || status === 'fatal_error') && (
+                <div style={{
+                  padding: '14px 20px', borderRadius: 10,
+                  background: 'oklch(0.20 0.010 15 / 0.2)',
+                  border: '1px solid oklch(0.70 0.12 15 / 0.3)',
+                  color: 'oklch(0.80 0.10 15)',
+                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5,
+                  lineHeight: 1.4,
+                }}>
+                  <Icon.XCircle size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                  <span>
+                    <strong>Validation Failed:</strong> {errorDetails}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Output Display Card */}
+          <div style={{
+            background: 'oklch(0.16 0.006 250 / 0.7)',
+            border: '1px solid var(--border)',
+            borderRadius: 14,
+            padding: '20px 24px',
+            display: 'flex', flexDirection: 'column', gap: 16,
+          }}>
+            
+            {/* Output Toolbar */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }} className="mono">Formatted Output</div>
+              
+              {outputText && (
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }} className="fade-in">
+                  <button onClick={handleCopy} className="reset mono" style={{
+                    padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
+                    border: '1px solid var(--border)', background: 'oklch(0.12 0.004 250)',
+                    color: copying ? 'oklch(0.78 0.16 145)' : 'white', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    {copying ? <><Icon.Check size={12} /> Copied!</> : <><Icon.Copy size={12} /> Copy JSON</>}
+                  </button>
+                  <button onClick={handleDownload} className="reset mono" style={{
+                    padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
+                    border: '1px solid var(--border)', background: 'oklch(0.12 0.004 250)',
+                    color: 'white', cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 6,
+                  }}>
+                    <Icon.Download size={12} /> Download
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Output code block container */}
+            <div style={{ position: 'relative' }}>
+              <textarea
+                readOnly
+                placeholder="Processed validation output will render here..."
+                value={outputText}
+                style={{
+                  width: '100%', height: 320, padding: 16, borderRadius: 10,
+                  background: 'oklch(0.12 0.004 250 / 0.5)', border: '1px solid var(--border)',
+                  color: outputText ? 'oklch(0.85 0.10 195)' : 'var(--fg-dim)', 
+                  fontFamily: '"Fira Code", monospace', fontSize: 13,
+                  outline: 'none', resize: 'none', boxSizing: 'border-box',
+                  lineHeight: 1.5,
+                }}
+              />
+            </div>
+
+            {/* Output metrics details */}
+            <div style={{
+              display: 'flex', gap: 16, fontSize: 11.5, color: 'var(--fg-subtle)',
+              borderTop: '1px solid var(--border)', paddingTop: 14,
+            }} className="mono">
+              <div>Chars: <span style={{ color: 'white' }}>{outputText.length}</span></div>
+              <div>Lines: <span style={{ color: 'white' }}>{outputText ? outputText.split('\n').length : 0}</span></div>
+              <div>Size: <span style={{ color: 'white' }}>{outputText ? (outputText.length / 1024).toFixed(2) : '0.00'} KB</span></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
 
 interface PlaceholderToolProps {
   tool: any;
@@ -2942,9 +3428,27 @@ function Footer({ onBackToLanding }: FooterProps) {
           </div>
         </div>
 
-        <FooterCol title="Tools" links={['Text & AI', 'Developer & Code', 'Files & Data', 'Images & Media', 'Pro Vault']} />
-        <FooterCol title="Product" links={['Pricing', 'Changelog', 'Roadmap', 'Status', 'Privacy']} />
-        <FooterCol title="Company" links={['About', 'Blog', 'Careers', 'Contact', 'Press kit']} />
+        <FooterCol title="Tools" links={[
+          { label: 'Text & AI', path: '/category/text' },
+          { label: 'Developer & Code', path: '/category/dev' },
+          { label: 'Files & Data', path: '/category/files' },
+          { label: 'Images & Media', path: '/category/media' },
+          { label: 'Pro Vault', path: '/category/pro' }
+        ]} />
+        <FooterCol title="Product" links={[
+          { label: 'Pricing', path: '/pricing' },
+          { label: 'Changelog', path: '/changelog' },
+          { label: 'Roadmap', path: '/changelog#roadmap' },
+          { label: 'Status', path: '/dashboard' },
+          { label: 'Privacy', path: '/about#privacy' }
+        ]} />
+        <FooterCol title="Company" links={[
+          { label: 'About', path: '/about' },
+          { label: 'Blog', path: '/about#blog' },
+          { label: 'Careers', path: '/about#careers' },
+          { label: 'Contact', path: '/about#contact' },
+          { label: 'Press kit', path: '/about#press' }
+        ]} />
       </div>
       <div style={{
         borderTop: '1px solid var(--border)',
@@ -2992,7 +3496,7 @@ const socialStyle = {
 
 interface FooterColProps {
   title: string;
-  links: string[];
+  links: { label: string; path: string }[];
 }
 
 function FooterCol({ title, links }: FooterColProps) {
@@ -3005,9 +3509,11 @@ function FooterCol({ title, links }: FooterColProps) {
       }}>{title}</div>
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {links.map(l => (
-          <li key={l}><a href="#" className="footer-link" style={{
-            fontSize: 12.5, color: 'var(--fg-muted)', textDecoration: 'none',
-          }}>{l}</a></li>
+          <li key={l.label}>
+            <a href={l.path} className="footer-link" style={{
+              fontSize: 12.5, color: 'var(--fg-muted)', textDecoration: 'none',
+            }}>{l.label}</a>
+          </li>
         ))}
       </ul>
     </div>
@@ -3206,9 +3712,10 @@ function ComingSoonStub({ tool }: ComingSoonStubProps) {
    ========================================================================= */
 interface PricingPageProps {
   onLaunch: () => void;
+  onEnterprise: () => void;
 }
 
-function PricingPage({ onLaunch }: PricingPageProps) {
+function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
   return (
     <div style={{
       maxWidth: 1200, margin: '40px auto 120px',
@@ -3311,6 +3818,13 @@ function PricingPage({ onLaunch }: PricingPageProps) {
           }}>Unlock Pro Vault</button>
         </div>
       </div>
+
+      <p style={{
+        textAlign: 'center', marginTop: 36,
+        fontSize: 13, color: 'var(--fg-dim)',
+      }}>
+        Need SOC2, SSO, or on-prem? <a href="#" onClick={(e) => { e.preventDefault(); onEnterprise(); }} style={{ color: 'var(--fg-muted)', textDecoration: 'underline', textDecorationColor: 'var(--border-strong)' }}>Talk to us about Enterprise</a>.
+      </p>
     </div>
   );
 }
@@ -3438,6 +3952,271 @@ Body:
   );
 }
 
+interface ChangelogPageProps {
+  onLaunch: () => void;
+}
+
+function ChangelogPage({ onLaunch }: ChangelogPageProps) {
+  const releases = [
+    {
+      version: 'v1.1.0',
+      date: 'May 27, 2026',
+      badge: 'Major Release',
+      hue: 195, /* Cyan */
+      title: 'JSON Formatter, Validator & Global Navigation Upgrades',
+      items: [
+        'Tool 2 Integration: Full end-to-end launch of the JSON Formatter, Validator, and Auto-Repair tool featuring split-pane comparison view, drag-and-drop file uploads, real-time KB/line metrics, and automatic repair routines.',
+        'Global Navigation Polish: Upgraded all header, footer, and catalog links to true, crawlable relative root paths (/pricing, /docs, /changelog, /dashboard) to enable high-speed client-side soft routing and search engine indexing.',
+        'Dashboard Workspace Refactoring: Renamed the internal workspace paths from /home to /dashboard, providing a premium SaaS application atmosphere.',
+        'Enterprise Intake Flow: Integrated a gorgeous, custom glassmorphic request overlay modal for large teams asking about SSO/SAML, custom compute pipelines, or SOC2.',
+      ],
+    },
+    {
+      version: 'v1.0.0',
+      date: 'May 26, 2026',
+      badge: 'Launch',
+      hue: 265, /* Purple */
+      title: 'Universal AI-to-Doc Formatter Launch',
+      items: [
+        'Universal AI Formatter: Polish raw transcripts and AI-generated outputs instantly into 3 beautiful styles (Modern, Academic, Minimalist) across 5 high-fidelity formats (PDF, DOCX, HTML, TXT, MD).',
+        'Digital Bouncer Architecture: Fully sandboxed thread-level locking mechanisms in the FastAPI backend protect system memory from heavy multi-user PDF compile crashes.',
+        'Visual Style Tokens: Integrated standard oklch color palettes, sleek dark themes, and high-performance interactive controls.'
+      ],
+    },
+  ];
+
+  return (
+    <div style={{
+      maxWidth: 800, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+    }} className="fade-in">
+      <div style={{ marginBottom: 48, textAlign: 'center' }}>
+        <span style={eyebrow}>Software Releases</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Changelog & Updates</h1>
+        <p style={sectionSubtitle}>Follow our daily product iterations as we roll out premium utilities for your data and file workflows.</p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 40, position: 'relative' }}>
+        {/* Vertical Timeline bar */}
+        <div style={{
+          position: 'absolute', left: 16, top: 24, bottom: 24, width: 1,
+          background: 'oklch(0.25 0.008 250 / 0.8)',
+        }} />
+
+        {releases.map((rel) => (
+          <div key={rel.version} style={{ display: 'flex', gap: 24, position: 'relative' }}>
+            {/* Timeline Dot */}
+            <div style={{
+              width: 32, height: 32, borderRadius: '50%',
+              background: 'oklch(0.14 0.005 250)',
+              border: '1px solid var(--border)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0, zIndex: 2,
+            }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: `oklch(0.75 0.14 ${rel.hue})`,
+                boxShadow: `0 0 10px oklch(0.75 0.14 ${rel.hue} / 0.8)`,
+              }} />
+            </div>
+
+            {/* Content card */}
+            <div style={{
+              flex: 1, padding: '24px 28px', borderRadius: 14,
+              background: 'oklch(0.16 0.006 250 / 0.4)',
+              border: '1px solid var(--border)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 18, fontWeight: 600, color: 'white' }} className="mono">{rel.version}</span>
+                <span style={{ fontSize: 13, color: 'var(--fg-subtle)' }}>({rel.date})</span>
+                <span style={{
+                  padding: '3px 8px', borderRadius: 20,
+                  fontSize: 10.5, fontWeight: 600,
+                  background: tint(rel.hue, 0.18, 0.08, 0.15),
+                  border: `1px solid ${tintBorder(rel.hue)}`,
+                  color: tintFg(rel.hue),
+                  textTransform: 'uppercase', letterSpacing: '0.04em',
+                }} className="mono">{rel.badge}</span>
+              </div>
+
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: 'white', margin: '0 0 16px' }}>{rel.title}</h2>
+
+              <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--fg-muted)', fontSize: 14, display: 'flex', flexDirection: 'column', gap: 10, lineHeight: 1.55 }}>
+                {rel.items.map((item, idx) => (
+                  <li key={idx} style={{ listStyleType: 'square' }}>{item}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 48 }}>
+        <button onClick={onLaunch} className="reset" style={{
+          padding: '12px 24px', borderRadius: 9,
+          background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+          color: 'white', fontWeight: 500, fontSize: 14, cursor: 'pointer',
+          boxShadow: '0 4px 12px oklch(0 0 0 / 0.3)',
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.24 0.008 250)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.20 0.008 250)'}
+        >Explore the Dashboard</button>
+      </div>
+    </div>
+  );
+}
+
+interface EnterpriseModalProps {
+  open: boolean;
+  onClose: () => void;
+}
+
+function EnterpriseModal({ open, onClose }: EnterpriseModalProps) {
+  const [email, setEmail] = useState('');
+  const [size, setSize] = useState('10-50');
+  const [notes, setNotes] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  if (!open) return null;
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setSubmitting(true);
+    // Simulate API delay
+    setTimeout(() => {
+      setSubmitting(false);
+      setSubmitted(true);
+    }, 800);
+  }
+
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 100,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20, boxSizing: 'border-box',
+    }} className="fade-in">
+      {/* Backdrop */}
+      <div onClick={onClose} style={{
+        position: 'absolute', inset: 0,
+        background: 'oklch(0.08 0.005 250 / 0.75)',
+        backdropFilter: 'blur(16px)',
+      }} />
+
+      {/* Modal Card */}
+      <div style={{
+        position: 'relative', width: '100%', maxWidth: 460,
+        background: 'oklch(0.16 0.006 250 / 0.85)',
+        border: '1px solid var(--border)',
+        borderRadius: 16,
+        padding: '36px 32px',
+        boxShadow: '0 32px 64px oklch(0 0 0 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.03)',
+        boxSizing: 'border-box',
+      }} className="fade-in-up">
+        {/* Close Button */}
+        <button onClick={onClose} className="reset" style={{
+          position: 'absolute', top: 20, right: 20,
+          width: 32, height: 32, borderRadius: 8,
+          border: '1px solid var(--border)',
+          background: 'oklch(0.20 0.008 250 / 0.5)',
+          color: 'var(--fg-muted)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer',
+        }}>
+          <Icon.X size={15} />
+        </button>
+
+        {!submitted ? (
+          <form onSubmit={handleSubmit}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px', borderRadius: 20, background: 'oklch(0.22 0.010 195 / 0.15)', border: '1px solid oklch(0.75 0.14 195 / 0.2)', fontSize: 11, fontWeight: 600, color: 'oklch(0.82 0.13 195)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 16 }} className="mono">
+              Enterprise Solutions
+            </div>
+            
+            <h2 style={{ fontSize: 24, fontWeight: 600, margin: '0 0 8px', color: 'white', letterSpacing: '-0.020em' }}>Request Credentials</h2>
+            <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
+              Talk to us about custom high-compute capacity, dedicated parser nodes, SOC2 compliance, and SAML/SSO.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Work Email</label>
+                <input required type="email" placeholder="you@company.com" value={email} onChange={e => setEmail(e.target.value)} style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 8,
+                  background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                  color: 'white', fontSize: 14, outline: 'none',
+                  boxSizing: 'border-box',
+                }} />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Company Size</label>
+                <select value={size} onChange={e => setSize(e.target.value)} style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 8,
+                  background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                  color: 'white', fontSize: 14, outline: 'none',
+                  boxSizing: 'border-box',
+                }}>
+                  <option value="10-50">10 to 50 employees</option>
+                  <option value="50-200">50 to 200 employees</option>
+                  <option value="200+">More than 200 employees</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 11.5, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Custom Requirements</label>
+                <textarea rows={3} placeholder="Tell us about your estimated daily API volume or PII scrubber compliance needs..." value={notes} onChange={e => setNotes(e.target.value)} style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 8,
+                  background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                  color: 'white', fontSize: 14, outline: 'none', resize: 'vertical',
+                  boxSizing: 'border-box',
+                }} />
+              </div>
+            </div>
+
+            <button type="submit" disabled={submitting} className="reset" style={{
+              width: '100%', marginTop: 24, padding: '14px', borderRadius: 9,
+              background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+              color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 14,
+              cursor: submitting ? 'not-allowed' : 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              boxShadow: '0 4px 16px oklch(0.82 0.13 250 / 0.15)',
+            }}>
+              {submitting ? 'Transmitting Request...' : 'Send Request'} <Icon.ArrowRight size={13} strokeWidth={2.5} />
+            </button>
+          </form>
+        ) : (
+          <div style={{ textAlign: 'center', padding: '20px 0' }} className="fade-in">
+            <div style={{
+              width: 56, height: 56, borderRadius: '50%',
+              background: 'oklch(0.22 0.010 145 / 0.2)',
+              border: '1px solid oklch(0.75 0.14 145 / 0.4)',
+              color: 'oklch(0.78 0.16 145)',
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: 20,
+              boxShadow: '0 0 20px oklch(0.78 0.16 145 / 0.25)',
+            }}>
+              <Icon.Check size={28} strokeWidth={2.5} />
+            </div>
+
+            <h2 style={{ fontSize: 22, fontWeight: 600, color: 'white', margin: '0 0 10px', letterSpacing: '-0.020em' }}>Request Transmitted!</h2>
+            <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
+              Thank you! An Enterprise Solutions architect will reach out to you at <span className="mono" style={{ color: 'white' }}>{email}</span> within 2 business hours.
+            </p>
+
+            <button onClick={onClose} className="reset" style={{
+              padding: '10px 20px', borderRadius: 8,
+              background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+              color: 'white', fontSize: 13.5, fontWeight: 500, cursor: 'pointer',
+            }}>Close Window</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* =========================================================================
    App root — orchestrates view + overlays
    ========================================================================= */
@@ -3446,8 +4225,10 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   // Determine starting view based on presets
   let initialView = 'landing';
   if (initialSlug) {
-    if (initialSlug === 'pricing' || initialSlug === 'about' || initialSlug === 'docs') {
+    if (initialSlug === 'pricing' || initialSlug === 'about' || initialSlug === 'docs' || initialSlug === 'changelog') {
       initialView = initialSlug;
+    } else if (initialSlug === 'dashboard' || initialSlug === 'home') {
+      initialView = 'home';
     } else if (initialSlug.startsWith('category_')) {
       initialView = initialSlug;
     } else {
@@ -3465,12 +4246,13 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   const [palette, setPalette] = useState(false);
   const [launcher, setLauncher] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [enterpriseOpen, setEnterpriseOpen] = useState(false);
 
   const isLanding = view === 'landing';
   const isDashboard = view === 'home';
 
   const activeTool = useMemo(() => {
-    if (isLanding || isDashboard || view === 'pricing' || view === 'about' || view === 'docs' || view.startsWith('category_')) return null;
+    if (isLanding || isDashboard || view === 'pricing' || view === 'about' || view === 'docs' || view === 'changelog' || view.startsWith('category_')) return null;
     return ALL_TOOLS.find(t => t.id === view);
   }, [view, isLanding, isDashboard]);
 
@@ -3478,11 +4260,12 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   const navigateToView = useCallback((newView: string) => {
     setView(newView);
     let path = '/';
-    if (newView === 'home') path = '/home';
+    if (newView === 'home') path = '/dashboard';
     else if (newView === 'landing') path = '/';
     else if (newView === 'pricing') path = '/pricing';
     else if (newView === 'about') path = '/about';
     else if (newView === 'docs') path = '/docs';
+    else if (newView === 'changelog') path = '/changelog';
     else if (newView.startsWith('category_')) {
       path = `/category/${newView.replace('category_', '')}`;
     } else if (newView !== 'landing' && newView !== 'home') {
@@ -3508,6 +4291,8 @@ export function App({ initialSlug }: { initialSlug?: string }) {
         setView('about');
       } else if (path === '/docs') {
         setView('docs');
+      } else if (path === '/changelog') {
+        setView('changelog');
       } else if (path.startsWith('/category/')) {
         const catId = path.split('/category/')[1];
         setView(`category_${catId}`);
@@ -3544,6 +4329,8 @@ export function App({ initialSlug }: { initialSlug?: string }) {
           navigateToView('about');
         } else if (href === '/docs') {
           navigateToView('docs');
+        } else if (href === '/changelog') {
+          navigateToView('changelog');
         } else if (href.startsWith('/category/')) {
           const catId = href.split('/category/')[1];
           navigateToView(`category_${catId}`);
@@ -3603,9 +4390,10 @@ export function App({ initialSlug }: { initialSlug?: string }) {
       <>
         <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
         <div className="app-root">
-          <Landing onLaunch={launchApp} />
+          <Landing onLaunch={launchApp} onEnterprise={() => setEnterpriseOpen(true)} />
           <Footer onBackToLanding={null} />
         </div>
+        <EnterpriseModal open={enterpriseOpen} onClose={() => setEnterpriseOpen(false)} />
       </>
     );
   }
@@ -3630,16 +4418,19 @@ export function App({ initialSlug }: { initialSlug?: string }) {
               onOpenPalette={() => setPalette(true)}
             />
           )}
-          {view === 'pricing' && <PricingPage onLaunch={launchApp} />}
+          {view === 'pricing' && <PricingPage onLaunch={launchApp} onEnterprise={() => setEnterpriseOpen(true)} />}
           {view === 'about' && <AboutPage onLaunch={launchApp} />}
           {view === 'docs' && <DocsPage onLaunch={launchApp} />}
+          {view === 'changelog' && <ChangelogPage onLaunch={launchApp} />}
           {view.startsWith('category_') && (
             <CategoryHub categoryId={view.replace('category_', '')} onOpenTool={openTool} />
           )}
           {!isDashboard && activeTool && (
             activeTool.id === 'uaf'
               ? <FormatterTool tool={activeTool} initialSlug={initialSlug} />
-              : <ComingSoonStub tool={activeTool} />
+              : activeTool.id === 'json'
+                ? <JsonTool tool={activeTool} />
+                : <ComingSoonStub tool={activeTool} />
           )}
         </main>
 
@@ -3648,6 +4439,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
         <CommandPalette open={palette} onClose={() => setPalette(false)} onPick={openTool} />
         <Launcher open={launcher} onClose={() => setLauncher(false)} onPick={openTool} />
       </div>
+      <EnterpriseModal open={enterpriseOpen} onClose={() => setEnterpriseOpen(false)} />
     </>
   );
 }
