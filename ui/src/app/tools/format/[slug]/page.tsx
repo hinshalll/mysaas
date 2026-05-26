@@ -1,5 +1,6 @@
 import { Metadata } from "next";
-import { App, GLOBAL_CSS, AI_SOURCES, FORMATS } from "../../../page";
+import { App } from "../../../page";
+import { AI_SOURCES, FORMATS } from "../../../config";
 
 interface Props {
   params: Promise<{
@@ -35,10 +36,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DynamicToolPage({ params }: Props) {
   const { slug } = await params;
   
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
-      <App initialSlug={slug} />
-    </>
-  );
+  return <App initialSlug={slug} />;
 }

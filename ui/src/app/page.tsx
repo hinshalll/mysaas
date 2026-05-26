@@ -21,6 +21,7 @@
  *   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+Pro:wght@400;600;700&display=swap');
  */
 import { marked } from 'marked';
+import { AI_SOURCES, THEMES, FORMATS } from './config';
 import React, {
   useState, useEffect, useRef, useMemo, useCallback,
 } from 'react';
@@ -998,29 +999,7 @@ function Select({ value, options, onChange, label, compact }: SelectProps) {
    Tool data + sample
    ========================================================================= */
 
-export const AI_SOURCES = [
-  { value: 'universal',  label: 'Universal Style',  tag: 'auto', desc: 'Default AI styling' },
-  { value: 'chatgpt',    label: 'ChatGPT Style',    tag: 'green', desc: 'Clean layout with soft green accents' },
-  { value: 'claude',     label: 'Claude Style',     tag: 'warm', desc: 'Warm editorial serif layout' },
-  { value: 'gemini',     label: 'Gemini Style',     tag: 'gradient', desc: 'Futuristic gradient elements' },
-  { value: 'deepseek',   label: 'DeepSeek Style',   tag: 'think', desc: 'Indigo accents with structured thinking support' },
-  { value: 'grok',       label: 'Grok Style',       tag: 'cyber', desc: 'High contrast black and white theme' },
-  { value: 'perplexity', label: 'Perplexity Style', tag: 'citations', desc: 'Sleek informational style with citations' },
-];
 
-export const THEMES = [
-  { value: 'modern',     label: 'Modern',     tag: 'default', desc: 'Editorial layout · Inter + Source Serif' },
-  { value: 'academic',   label: 'Academic',   tag: 'A4',      desc: 'Two-column · numbered headings · serif body' },
-  { value: 'minimalist', label: 'Minimalist', tag: 'mono',    desc: 'Pure type · ultra-tight spacing' },
-];
-
-export const FORMATS = [
-  { value: 'pdf',  label: 'PDF',         tag: '.pdf',  desc: 'Vector, embedded fonts' },
-  { value: 'docx', label: 'DOCX',        tag: '.docx', desc: 'Editable in Word, Pages' },
-  { value: 'html', label: 'HTML',        tag: '.html', desc: 'Single-file, self-contained' },
-  { value: 'md',   label: 'Markdown',    tag: '.md',   desc: 'GitHub-flavored' },
-  { value: 'txt',  label: 'Plain text',  tag: '.txt',  desc: 'No formatting, UTF-8' },
-];
 
 const SAMPLE = '# The Cost of Context Switching in Software Teams\n\n' +
 'Most engineering productivity losses are invisible. They don\'t show up in burndown charts or commit histories — they hide in the gap between when an engineer is interrupted and when they return to flow.\n\n' +
@@ -3171,43 +3150,49 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   /* Landing renders its own nav and footer */
   if (isLanding) {
     return (
-      <div className="app-root">
-        <Landing onLaunch={launchApp} />
-        <Footer onBackToLanding={null} />
-      </div>
+      <>
+        <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
+        <div className="app-root">
+          <Landing onLaunch={launchApp} />
+          <Footer onBackToLanding={null} />
+        </div>
+      </>
     );
   }
 
   return (
-    <div className="app-root">
-      <TopBar
-        onOpenPalette={() => setPalette(true)}
-        onOpenLauncher={() => setLauncher(true)}
-        onHome={goHome}
-        activeTool={activeTool}
-        scrolled={scrolled || !isDashboard}
-      />
+    <>
+      <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
+      <div className="app-root">
+        <TopBar
+          onOpenPalette={() => setPalette(true)}
+          onOpenLauncher={() => setLauncher(true)}
+          onHome={goHome}
+          activeTool={activeTool}
+          scrolled={scrolled || !isDashboard}
+        />
 
-      <main>
-        {isDashboard && (
-          <Home
-            onOpenTool={openTool}
-            onOpenLauncher={() => setLauncher(true)}
-            onOpenPalette={() => setPalette(true)}
-          />
-        )}
-        {!isDashboard && activeTool && (
-          activeTool.id === 'uaf'
-            ? <FormatterTool tool={activeTool} initialSlug={initialSlug} />
-            : <PlaceholderTool tool={activeTool} />
-        )}
-      </main>
+        <main>
+          {isDashboard && (
+            <Home
+              onOpenTool={openTool}
+              onOpenLauncher={() => setLauncher(true)}
+              onOpenPalette={() => setPalette(true)}
+            />
+          )}
+          {!isDashboard && activeTool && (
+            activeTool.id === 'uaf'
+              ? <FormatterTool tool={activeTool} initialSlug={initialSlug} />
+              : <PlaceholderTool tool={activeTool} />
+          )}
+        </main>
 
-      <Footer onBackToLanding={backToLanding} />
+        <Footer onBackToLanding={backToLanding} />
 
-      <CommandPalette open={palette} onClose={() => setPalette(false)} onPick={openTool} />
-      <Launcher open={launcher} onClose={() => setLauncher(false)} onPick={openTool} />
-    </div>
+        <CommandPalette open={palette} onClose={() => setPalette(false)} onPick={openTool} />
+        <Launcher open={launcher} onClose={() => setLauncher(false)} onPick={openTool} />
+      </div>
+    </>
   );
 }
 
@@ -3215,10 +3200,4 @@ export function App({ initialSlug }: { initialSlug?: string }) {
 // Default export — drop in app/page.tsx.
 // ---------------------------------------------------------------------------
 export default function Page() {
-  return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
-      <App />
-    </>
-  );
-}
+  return <App />;}
