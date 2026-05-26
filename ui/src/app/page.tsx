@@ -21,7 +21,7 @@
  *   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+Pro:wght@400;600;700&display=swap');
  */
 import { marked } from 'marked';
-import { AI_SOURCES, THEMES, FORMATS } from './config';
+import { AI_SOURCES, THEMES, FORMATS, CATEGORIES, ALL_TOOLS } from './config';
 import React, {
   useState, useEffect, useRef, useMemo, useCallback,
 } from 'react';
@@ -284,82 +284,7 @@ export const GLOBAL_CSS = `:root {
 
 /* ---------- Tools data ---------- */
 /* Each category has its own accent hue so the gallery doesn't read as 25 identical cards. */
-const CATEGORIES = [
-  {
-    id: 'ai',
-    label: 'Text & AI',
-    tagline: 'Tame raw AI output. Polish transcripts. Make text readable.',
-    hue: 265, /* indigo */
-    tools: [
-      { id: 'uaf',   name: 'Universal AI Formatter',           icon: 'Sparkles',      tagline: 'Raw AI output → premium themed documents', featured: true, hot: true },
-      { id: 'conv',  name: 'Entire AI Conversation Formatter', icon: 'MessageSquare', tagline: 'Export full chats with code blocks intact' },
-      { id: 'tran',  name: 'Transcript Cleaner',               icon: 'Mic',           tagline: 'Strip filler, re-punctuate, identify speakers' },
-      { id: 'slug',  name: 'Smart URL Slug Maker',             icon: 'Link2',         tagline: 'Unicode-safe, SEO-friendly slugs at scale' },
-      { id: 'diff',  name: 'Unlimited Text Diff',              icon: 'Diff',          tagline: 'Word-level diffs that scale to entire books' },
-    ],
-  },
-  {
-    id: 'dev',
-    label: 'Developer & Code',
-    tagline: 'The data-wrangling tools you keep tabbing back to.',
-    hue: 195, /* cyan */
-    tools: [
-      { id: 'json',    name: 'JSON Formatter & Validator',  icon: 'Braces',   tagline: 'Format, validate, JSONPath, schema infer' },
-      { id: 'b64',     name: 'Base64 Encoder / Decoder',    icon: 'Binary',   tagline: 'Text, files, data-URIs · streaming' },
-      { id: 'sql',     name: 'SQL Beautifier',              icon: 'Database', tagline: 'Pg / MySQL / SQLite dialect-aware' },
-      { id: 'flat',    name: 'JSON / YAML / CSV Flattener', icon: 'Layers',   tagline: 'Dot-paths, arrays-to-rows, lossless round-trip' },
-      { id: 'xlmd',    name: 'Excel ↔ Markdown Tables',     icon: 'Table',    tagline: 'Round-trip without losing formulas' },
-      { id: 'csv2sql', name: 'CSV → SQL Generator',         icon: 'Terminal', tagline: 'Inferred types, batched INSERTs, schema DDL' },
-    ],
-  },
-  {
-    id: 'files',
-    label: 'Files & Data',
-    tagline: 'Open the unopenable. Repair the broken. Extract the buried.',
-    hue: 145, /* green */
-    tools: [
-      { id: 'mime',   name: 'MIME / File Type Detector',     icon: 'FileSearch', tagline: 'Magic bytes, not extensions' },
-      { id: 'zip',    name: '.zip / .tar Previewer',         icon: 'Archive',    tagline: 'Browse archives in-browser, no download' },
-      { id: 'csvdr',  name: 'CSV Doctor',                    icon: 'HeartPulse', tagline: 'Repair quoting, encoding, line endings' },
-      { id: 'bank',   name: 'Generic PDF Bank Parser',       icon: 'FileText',   tagline: 'Statement → categorized transactions' },
-      { id: 'ocr1',   name: 'PDF Scanned Text Extractor',    icon: 'ScanText',   tagline: 'Layout-aware OCR with column detection' },
-      { id: 'ocr2',   name: 'Screenshot → Excel / Text',     icon: 'Camera',     tagline: 'Table OCR that respects rows and columns', hot: true },
-      { id: 'redact', name: 'Auto-Redactor (PII Scrubber)',  icon: 'Shield',     tagline: 'GDPR-grade redaction, on-device' },
-    ],
-  },
-  {
-    id: 'media',
-    label: 'Images & Media',
-    tagline: 'Convert, scrub, sync, and grab — without uploading.',
-    hue: 25, /* warm orange */
-    tools: [
-      { id: 'heic',  name: 'HEIC → JPG Converter',       icon: 'Image',     tagline: 'Batch convert with EXIF preserved' },
-      { id: 'meta',  name: 'Metadata Scrubber',          icon: 'Eraser',    tagline: 'Strip EXIF, GPS, author from any file' },
-      { id: 'thumb', name: 'Ultimate Thumbnail Grabber', icon: 'Film',      tagline: 'YouTube, Vimeo, TikTok · max-res variants' },
-      { id: 'dup',   name: 'Duplicate Image Finder',     icon: 'Copy',      tagline: 'Perceptual hashing, not byte-identical' },
-      { id: 'qr',    name: 'Custom QR + Logo Maker',     icon: 'QrCode',    tagline: 'Branded QR with logo, color, gradient' },
-      { id: 'subs',  name: 'Subtitle Resyncer',          icon: 'Subtitles', tagline: 'Drift-correct .srt / .vtt by drag-handle' },
-    ],
-  },
-  {
-    id: 'pro',
-    label: 'Pro Vault',
-    tagline: 'Heavyweight tools for teams. Unlimited runs, branded exports, full history.',
-    hue: 75, /* amber */
-    pro: true,
-    tools: [
-      { id: 'pdiff', name: 'Visual PDF Diff Checker',          icon: 'GitCompare', tagline: 'Pixel + semantic diff across versions', pro: true },
-      { id: 'hpdf',  name: 'HTML → Print-Ready PDF',           icon: 'Printer',    tagline: 'Bleed, crop marks, color profiles', pro: true },
-      { id: 'batch', name: 'Batch Processing Engine',          icon: 'Layers3',    tagline: 'Run any tool against 500 files at once', pro: true },
-      { id: 'hist',  name: 'Saved History & Branded Exports',  icon: 'BookMarked', tagline: 'Version every run, brand every output', pro: true },
-    ],
-  },
-];
 
-/* Flat lookup for command palette */
-const ALL_TOOLS = CATEGORIES.flatMap(c =>
-  c.tools.map(t => ({ ...t, category: c.id, categoryLabel: c.label, hue: c.hue }))
-);
 
 function fuzzyMatch(query: string, target: string) {
   if (!query) return { score: 1, matched: false };
@@ -1556,7 +1481,6 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
             <Stat label="words" value={words.toLocaleString()} />
             <Stat label="lines" value={lines.toLocaleString()} />
           </div>
-          <div style={{ width: 140 }}><Select compact value={aiSource} options={AI_SOURCES} onChange={setAiSource} /></div>
           <div style={{ width: 140 }}><Select compact value={theme} options={THEMES} onChange={setTheme} /></div>
           <div style={{ width: 120 }}><Select compact value={format} options={FORMATS} onChange={setFormat} /></div>
           <button
@@ -3091,11 +3015,453 @@ function FooterCol({ title, links }: FooterColProps) {
 }
 
 /* =========================================================================
+   CategoryHub Component
+   ========================================================================= */
+interface CategoryHubProps {
+  categoryId: string;
+  onOpenTool: (id: string) => void;
+}
+
+function CategoryHub({ categoryId, onOpenTool }: CategoryHubProps) {
+  const category = CATEGORIES.find(c => c.id === categoryId);
+  if (!category) return null;
+
+  return (
+    <div style={{
+      maxWidth: 1200, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+    }} className="fade-in">
+      <div style={{ marginBottom: 36 }}>
+        <span style={{
+          display: 'inline-block', fontSize: 11, fontWeight: 600,
+          color: tintFg(category.hue), letterSpacing: '0.15em', textTransform: 'uppercase',
+          marginBottom: 12,
+        }} className="mono">
+          Category Hub
+        </span>
+        <h1 style={{
+          margin: 0, fontSize: 38, fontWeight: 600,
+          letterSpacing: '-0.025em',
+        }}>{category.label}</h1>
+        <p style={{
+          margin: '10px 0 0', fontSize: 15,
+          color: 'var(--fg-muted)', maxWidth: 600, lineHeight: 1.5,
+        }}>{category.tagline}</p>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+        gap: 16,
+      }}>
+        {category.tools.map(t => (
+          <ToolCard key={t.id} tool={{ ...t, hue: category.hue }} onClick={() => onOpenTool(t.id)} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   ComingSoonStub Component
+   ========================================================================= */
+interface ComingSoonStubProps {
+  tool: any;
+}
+
+function ComingSoonStub({ tool }: ComingSoonStubProps) {
+  const Ico = ImageIcon; // Fallback or icon lookup
+  const activeHue = tool.hue ?? 265;
+  const [email, setEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  function handleSubscribe(e: React.FormEvent) {
+    e.preventDefault();
+    if (email.trim()) {
+      setSubscribed(true);
+      setEmail('');
+    }
+  }
+
+  return (
+    <div style={{
+      maxWidth: 680, margin: '60px auto 120px',
+      padding: '48px 32px',
+      background: 'oklch(0.175 0.008 250 / 0.7)',
+      border: '1px solid var(--border)',
+      borderRadius: 16,
+      boxShadow: '0 24px 64px oklch(0 0 0 / 0.4), inset 0 1px 0 oklch(1 0 0 / 0.03)',
+      textAlign: 'center',
+    }} className="fade-in-up">
+      <div style={{
+        width: 64, height: 64, borderRadius: 14,
+        background: `oklch(0.22 0.010 ${activeHue} / 0.8)`,
+        border: `1px solid oklch(0.45 0.10 ${activeHue} / 0.4)`,
+        color: `oklch(0.82 0.13 ${activeHue})`,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        marginBottom: 24,
+        boxShadow: `0 0 32px oklch(0.78 0.16 ${activeHue} / 0.2)`,
+      }}>
+        <Sparkles size={28} strokeWidth={2} />
+      </div>
+
+      <div style={{
+        display: 'inline-flex', alignItems: 'center', gap: 6,
+        padding: '4px 10px', borderRadius: 20,
+        background: 'oklch(0.20 0.010 75 / 0.15)',
+        border: '1px solid oklch(0.75 0.14 75 / 0.2)',
+        fontSize: 11, fontWeight: 600, color: 'oklch(0.78 0.16 75)',
+        textTransform: 'uppercase', letterSpacing: '0.05em',
+        marginBottom: 16,
+      }} className="mono">
+        Active Development
+      </div>
+
+      <h1 style={{
+        margin: 0, fontSize: 32, fontWeight: 600,
+        letterSpacing: '-0.02em', lineHeight: 1.1,
+      }}>{tool.name}</h1>
+      
+      <p style={{
+        margin: '12px auto 0', fontSize: 15,
+        color: 'var(--fg-muted)', maxWidth: 480, lineHeight: 1.5,
+      }}>
+        {tool.tagline}. We are currently building the high-compute backend parser engine for this tool.
+      </p>
+
+      <div style={{
+        margin: '36px auto', maxWidth: 400,
+        background: 'oklch(0.15 0.006 250 / 0.4)',
+        border: '1px solid var(--border)',
+        borderRadius: 12, padding: '16px 20px',
+        textAlign: 'left',
+      }}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">
+          Development Stage
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, fontSize: 13 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--fg-muted)' }}>
+            <span style={{ color: 'oklch(0.78 0.16 145)' }}>✓</span>
+            <span>Frontend Component Structure</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--fg-muted)' }}>
+            <span style={{ color: 'oklch(0.78 0.16 145)' }}>✓</span>
+            <span>Dynamic URL pSEO Indexing</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ color: `oklch(0.78 0.16 ${activeHue})` }}>⚡</span>
+            <span style={{ fontWeight: 500 }}>Backend Parser Logic & Sandbox</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--fg-dim)' }}>
+            <span>○</span>
+            <span>API Deployment & High-Compute Hook</span>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ maxWidth: 440, margin: '0 auto' }}>
+        {subscribed ? (
+          <div style={{
+            background: 'oklch(0.18 0.010 145 / 0.1)',
+            border: '1px solid oklch(0.78 0.16 145 / 0.3)',
+            borderRadius: 8, padding: '12px 18px',
+            color: 'oklch(0.82 0.13 145)', fontSize: 13.5, fontWeight: 500,
+          }} className="fade-in">
+            🎉 You have successfully joined the beta waiting list!
+          </div>
+        ) : (
+          <form onSubmit={handleSubscribe} style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              placeholder="Enter your email to get sandbox access"
+              style={{
+                flex: 1, padding: '10px 14px',
+                background: 'oklch(0.15 0.006 250)',
+                border: '1px solid var(--border)',
+                borderRadius: 8, color: 'white', fontSize: 13,
+                outline: 'none',
+              }}
+            />
+            <button type="submit" className="reset" style={{
+              padding: '10px 16px',
+              background: `linear-gradient(180deg, oklch(0.72 0.18 ${activeHue}), oklch(0.62 0.20 ${activeHue}))`,
+              color: 'white', fontWeight: 500, fontSize: 13,
+              borderRadius: 8, cursor: 'pointer',
+              boxShadow: `0 1px 0 oklch(1 0 0 / 0.25) inset, 0 4px 12px oklch(0.50 0.20 ${activeHue} / 0.25)`,
+            }}>
+              Join Waitlist
+            </button>
+          </form>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   PricingPage Component
+   ========================================================================= */
+interface PricingPageProps {
+  onLaunch: () => void;
+}
+
+function PricingPage({ onLaunch }: PricingPageProps) {
+  return (
+    <div style={{
+      maxWidth: 1200, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+    }} className="fade-in">
+      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+        <span style={eyebrow}>Monetization & Plans</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Simple, transparent pricing</h1>
+        <p style={sectionSubtitle}>Choose the perfect tier for your workflow. Get high-fidelity documents and parsed datasets instantly.</p>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gap: 24,
+        alignItems: 'stretch',
+        maxWidth: 1080, margin: '0 auto',
+      }}>
+        {/* Tier 1 */}
+        <div style={{
+          padding: 32, borderRadius: 16,
+          background: 'oklch(0.16 0.006 250 / 0.4)',
+          border: '1px solid var(--border)',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.12 265)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 1: Free</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px' }}>Zero-Compute</h2>
+          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>$0 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ forever</span></div>
+          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Perfect for quick daily copy-pastes and text utilities.</p>
+          <ul style={{ ...listStyle, marginBottom: 32 }}>
+            <Feature on={true}>Unlimited daily usage on Free Tools</Feature>
+            <Feature on={true}>Universal AI Formatter (Tool 1)</Feature>
+            <Feature on={true}>JSON Formatter & Validator</Feature>
+            <Feature on={false}>Bulk & batch statements processing</Feature>
+          </ul>
+          <button onClick={onLaunch} className="reset" style={{
+            width: '100%', padding: '12px', borderRadius: 8,
+            background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+            color: 'white', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
+            textAlign: 'center', marginTop: 'auto',
+          }}>Get Started</button>
+        </div>
+
+        {/* Tier 2 */}
+        <div style={{
+          padding: 32, borderRadius: 16,
+          background: 'oklch(0.18 0.008 250 / 0.6)',
+          border: '1px solid oklch(0.72 0.18 265 / 0.3)',
+          boxShadow: '0 16px 40px oklch(0.50 0.20 265 / 0.15)',
+          display: 'flex', flexDirection: 'column',
+          position: 'relative',
+        }}>
+          <div style={{
+            position: 'absolute', top: 16, right: 16,
+            background: 'oklch(0.72 0.18 265)', color: 'white',
+            fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 12,
+            textTransform: 'uppercase', letterSpacing: '0.05em',
+          }} className="mono">Popular</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.72 0.18 265)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 2: Metered</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px' }}>Moderate-Compute</h2>
+          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>2 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>free runs / day</span></div>
+          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Full access to locked parsers, OCR, bank statements, and subtitle resyncer tools.</p>
+          <ul style={{ ...listStyle, marginBottom: 32 }}>
+            <Feature on={true}>2 free runs/day on Tier 2 Tools</Feature>
+            <Feature on={true}>Screenshot to Excel & PDF Extractor</Feature>
+            <Feature on={true}>Generic PDF Bank Parser</Feature>
+            <Feature on={true}>Auto-Redactor & Subtitle Syncer</Feature>
+          </ul>
+          <button onClick={onLaunch} className="reset" style={{
+            width: '100%', padding: '12px', borderRadius: 8,
+            background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+            color: 'white', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
+            textAlign: 'center', marginTop: 'auto',
+            boxShadow: '0 4px 14px oklch(0.50 0.20 265 / 0.3)',
+          }}>Try Metered Free</button>
+        </div>
+
+        {/* Tier 3 */}
+        <div style={{
+          padding: 32, borderRadius: 16,
+          background: 'oklch(0.16 0.006 250 / 0.4)',
+          border: '1px solid var(--border)',
+          display: 'flex', flexDirection: 'column',
+        }}>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.12 265)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 3: Pro</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px' }}>Pro Workspace</h2>
+          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>$9 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ month</span></div>
+          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>For heavy workflows, B2B parsing, teams, and high-volume parsing.</p>
+          <ul style={{ ...listStyle, marginBottom: 32 }}>
+            <Feature on={true} em={true}>Unlimited daily runs on all tools</Feature>
+            <Feature on={true} em={true}>Visual PDF Diff Checker</Feature>
+            <Feature on={true} em={true}>Bulk & Batch process 500 files</Feature>
+            <Feature on={true} em={true}>Custom branded exports & watermarks</Feature>
+          </ul>
+          <button onClick={onLaunch} className="reset" style={{
+            width: '100%', padding: '12px', borderRadius: 8,
+            background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+            color: 'white', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
+            textAlign: 'center', marginTop: 'auto',
+          }}>Unlock Pro Vault</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   AboutPage Component
+   ========================================================================= */
+interface AboutPageProps {
+  onLaunch: () => void;
+}
+
+function AboutPage({ onLaunch }: AboutPageProps) {
+  return (
+    <div style={{
+      maxWidth: 800, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+    }} className="fade-in">
+      <div style={{ marginBottom: 40 }}>
+        <span style={eyebrow}>Monetization & Philosophy</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>The Global Utility SaaS</h1>
+      </div>
+
+      <div style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--fg-muted)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <p>
+          Welcome to <strong style={{ color: 'white' }}>MySaaS</strong>—a collection of lightweight, blazing-fast, serverless-grade utility tools built directly for developers, creators, and professionals.
+        </p>
+        
+        <h2 style={{ fontSize: 20, color: 'white', fontWeight: 600, margin: '24px 0 8px' }}>Our Mission: Extreme Speed, Total Privacy</h2>
+        <p>
+          Most modern websites have become bloated, filled with megabytes of tracking pixels, advertising banners, and slow server-side loops. We believe that simple, daily file operations—like scrubbing metadata, formatting JSON, synching subtitles, or converting HEIC images—should run in milliseconds right inside your browser without leaking any private details.
+        </p>
+
+        <h2 style={{ fontSize: 20, color: 'white', fontWeight: 600, margin: '24px 0 8px' }}>Monetization Model: Metered Freemium & PPP</h2>
+        <p>
+          To make this tool accessible worldwide, we leverage **Purchasing Power Parity (PPP)** pricing:
+        </p>
+        <ul style={{ listStyle: 'disc', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <li><strong>Tier 1 (Free)</strong>: Unlimited daily usage on low-compute developer tools. 100% free forever, supported by clean ad networks.</li>
+          <li><strong>Tier 2 (Metered)</strong>: 2 free daily runs on heavier operations (OCR, PDF statements, scanned extraction).</li>
+          <li><strong>Tier 3 (Pro)</strong>: High-fidelity B2B utilities, saved history database, and batch processing up to 500 files at once for $9/month globally or ₹199/month in India/Domestic.</li>
+        </ul>
+
+        <h2 style={{ fontSize: 20, color: 'white', fontWeight: 600, margin: '24px 0 8px' }}>Secure Infrastructure: The Digital Bouncer</h2>
+        <p>
+          Our backend engine utilizes a custom-built **Digital Bouncer (threading.Lock)** protecting Render's 512MB memory limits. This ensures that heavy serverless tasks queue safely without blowing out server costs or causing memory leakage crashes, keeping the hosting extremely light, cheap, and robust.
+        </p>
+        
+        <div style={{ marginTop: 24 }}>
+          <button onClick={onLaunch} className="reset" style={{
+            padding: '12px 24px', borderRadius: 8,
+            background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+            color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+            boxShadow: '0 4px 14px oklch(0.50 0.20 265 / 0.3)',
+          }}>Launch Dashboard</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   DocsPage Component
+   ========================================================================= */
+interface DocsPageProps {
+  onLaunch: () => void;
+}
+
+function DocsPage({ onLaunch }: DocsPageProps) {
+  return (
+    <div style={{
+      maxWidth: 800, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+    }} className="fade-in">
+      <div style={{ marginBottom: 40 }}>
+        <span style={eyebrow}>Technical Docs</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Developer Documentation</h1>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+        <div>
+          <h2 style={{ fontSize: 18, color: 'white', fontWeight: 600, marginBottom: 8 }}>1. Single-Message AI Formatter API</h2>
+          <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6, marginBottom: 12 }}>
+            You can programmatically format raw AI text by posting to the unified Python/FastAPI endpoint:
+          </p>
+          <pre style={{
+            background: 'oklch(0.15 0.006 250)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '14px 18px', overflowX: 'auto',
+            fontSize: 12.5, color: 'oklch(0.82 0.13 195)', lineHeight: 1.5,
+          }} className="mono">
+{`POST /api/format
+Headers: { "Content-Type": "application/json" }
+Body:
+{
+  "content": "raw_markdown_text",
+  "is_html": true,
+  "theme": "modern",       // 'modern' | 'academic' | 'minimalist'
+  "export_format": "pdf"  // 'pdf' | 'docx' | 'html' | 'txt' | 'md'
+}`}
+          </pre>
+        </div>
+
+        <div>
+          <h2 style={{ fontSize: 18, color: 'white', fontWeight: 600, marginBottom: 8 }}>2. Rate Limits & Fair-Use</h2>
+          <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+            Our Free Tier operates on on-device scripts running locally in the browser, meaning zero rate limits. Server-side API formatting endpoints operate a Fair-Use protector to ensure service availability for all users.
+          </p>
+        </div>
+
+        <div>
+          <h2 style={{ fontSize: 18, color: 'white', fontWeight: 600, marginBottom: 8 }}>3. Security & Compliance</h2>
+          <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+            Any files uploaded or text processed through the tools catalog is analyzed and streamed directly. We do not store, scan, or log document contents inside database instances, protecting data integrity.
+          </p>
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <button onClick={onLaunch} className="reset" style={{
+            padding: '10px 18px', borderRadius: 8,
+            background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+            color: 'white', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
+          }}>Go to App</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
    App root — orchestrates view + overlays
    ========================================================================= */
 
 export function App({ initialSlug }: { initialSlug?: string }) {
-  const [view, setView] = useState(initialSlug ? 'uaf' : 'landing'); // 'landing' | 'home' | toolId
+  // Determine starting view based on presets
+  let initialView = 'landing';
+  if (initialSlug) {
+    if (initialSlug === 'pricing' || initialSlug === 'about' || initialSlug === 'docs') {
+      initialView = initialSlug;
+    } else if (initialSlug.startsWith('category_')) {
+      initialView = initialSlug;
+    } else {
+      const parts = initialSlug.split('-to-');
+      if (parts.length === 2) {
+        initialView = 'uaf';
+      } else {
+        const matched = ALL_TOOLS.find(t => t.id === initialSlug);
+        if (matched) initialView = initialSlug;
+      }
+    }
+  }
+
+  const [view, setView] = useState(initialView);
   const [palette, setPalette] = useState(false);
   const [launcher, setLauncher] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -3104,9 +3470,93 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   const isDashboard = view === 'home';
 
   const activeTool = useMemo(() => {
-    if (isLanding || isDashboard) return null;
+    if (isLanding || isDashboard || view === 'pricing' || view === 'about' || view === 'docs' || view.startsWith('category_')) return null;
     return ALL_TOOLS.find(t => t.id === view);
   }, [view, isLanding, isDashboard]);
+
+  // Helper to dynamically update browser URL path without page reloading
+  const navigateToView = useCallback((newView: string) => {
+    setView(newView);
+    let path = '/';
+    if (newView === 'home') path = '/home';
+    else if (newView === 'landing') path = '/';
+    else if (newView === 'pricing') path = '/pricing';
+    else if (newView === 'about') path = '/about';
+    else if (newView === 'docs') path = '/docs';
+    else if (newView.startsWith('category_')) {
+      path = `/category/${newView.replace('category_', '')}`;
+    } else if (newView !== 'landing' && newView !== 'home') {
+      path = `/tools/${newView}`;
+    }
+    
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', path);
+    }
+  }, []);
+
+  // Sync browser back/forward buttons perfectly
+  useEffect(() => {
+    function onPopState() {
+      const path = window.location.pathname;
+      if (path === '/' || path === '/landing') {
+        setView('landing');
+      } else if (path === '/home' || path === '/dashboard') {
+        setView('home');
+      } else if (path === '/pricing') {
+        setView('pricing');
+      } else if (path === '/about') {
+        setView('about');
+      } else if (path === '/docs') {
+        setView('docs');
+      } else if (path.startsWith('/category/')) {
+        const catId = path.split('/category/')[1];
+        setView(`category_${catId}`);
+      } else if (path.startsWith('/tools/')) {
+        const toolId = path.split('/tools/')[1];
+        setView(toolId);
+      }
+    }
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // Intercept all internal HTML anchor link clicks globally to trigger soft state routing
+  useEffect(() => {
+    function handleLinkClick(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      const anchor = target.closest('a');
+      if (!anchor) return;
+      
+      const href = anchor.getAttribute('href');
+      if (!href) return;
+      
+      // Check if it's an internal link
+      if (href.startsWith('/') && !href.startsWith('//')) {
+        e.preventDefault();
+        
+        if (href === '/' || href === '/landing') {
+          navigateToView('landing');
+        } else if (href === '/home' || href === '/dashboard') {
+          navigateToView('home');
+        } else if (href === '/pricing') {
+          navigateToView('pricing');
+        } else if (href === '/about') {
+          navigateToView('about');
+        } else if (href === '/docs') {
+          navigateToView('docs');
+        } else if (href.startsWith('/category/')) {
+          const catId = href.split('/category/')[1];
+          navigateToView(`category_${catId}`);
+        } else if (href.startsWith('/tools/')) {
+          const toolId = href.split('/tools/')[1];
+          navigateToView(toolId);
+        }
+      }
+    }
+    
+    document.addEventListener('click', handleLinkClick);
+    return () => document.removeEventListener('click', handleLinkClick);
+  }, [navigateToView]);
 
   /* keyboard shortcuts — only active inside the app */
   useKeydown(useCallback((e: KeyboardEvent) => {
@@ -3125,23 +3575,23 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   }, []);
 
   function launchApp() {
-    setView('home');
+    navigateToView('home');
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
   }
   function openTool(id: string) {
-    setView(id);
+    navigateToView(id);
     setPalette(false);
     setLauncher(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   function goHome() {
-    setView('home');
+    navigateToView('home');
     setPalette(false);
     setLauncher(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
   function backToLanding() {
-    setView('landing');
+    navigateToView('landing');
     setPalette(false);
     setLauncher(false);
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
@@ -3180,10 +3630,16 @@ export function App({ initialSlug }: { initialSlug?: string }) {
               onOpenPalette={() => setPalette(true)}
             />
           )}
+          {view === 'pricing' && <PricingPage onLaunch={launchApp} />}
+          {view === 'about' && <AboutPage onLaunch={launchApp} />}
+          {view === 'docs' && <DocsPage onLaunch={launchApp} />}
+          {view.startsWith('category_') && (
+            <CategoryHub categoryId={view.replace('category_', '')} onOpenTool={openTool} />
+          )}
           {!isDashboard && activeTool && (
             activeTool.id === 'uaf'
               ? <FormatterTool tool={activeTool} initialSlug={initialSlug} />
-              : <PlaceholderTool tool={activeTool} />
+              : <ComingSoonStub tool={activeTool} />
           )}
         </main>
 
