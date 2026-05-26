@@ -54,7 +54,7 @@ const Icon: Record<string, React.ComponentType<any>> = {
 };
 
 
-const GLOBAL_CSS = `:root {
+export const GLOBAL_CSS = `:root {
     --bg:           oklch(0.135 0.005 250);
     --bg-elev-1:    oklch(0.175 0.008 250);
     --bg-elev-2:    oklch(0.21  0.010 250);
@@ -998,12 +998,23 @@ function Select({ value, options, onChange, label, compact }: SelectProps) {
    Tool data + sample
    ========================================================================= */
 
-const THEMES = [
+export const AI_SOURCES = [
+  { value: 'universal',  label: 'Universal Style',  tag: 'auto', desc: 'Default AI styling' },
+  { value: 'chatgpt',    label: 'ChatGPT Style',    tag: 'green', desc: 'Clean layout with soft green accents' },
+  { value: 'claude',     label: 'Claude Style',     tag: 'warm', desc: 'Warm editorial serif layout' },
+  { value: 'gemini',     label: 'Gemini Style',     tag: 'gradient', desc: 'Futuristic gradient elements' },
+  { value: 'deepseek',   label: 'DeepSeek Style',   tag: 'think', desc: 'Indigo accents with structured thinking support' },
+  { value: 'grok',       label: 'Grok Style',       tag: 'cyber', desc: 'High contrast black and white theme' },
+  { value: 'perplexity', label: 'Perplexity Style', tag: 'citations', desc: 'Sleek informational style with citations' },
+];
+
+export const THEMES = [
   { value: 'modern',     label: 'Modern',     tag: 'default', desc: 'Editorial layout · Inter + Source Serif' },
   { value: 'academic',   label: 'Academic',   tag: 'A4',      desc: 'Two-column · numbered headings · serif body' },
   { value: 'minimalist', label: 'Minimalist', tag: 'mono',    desc: 'Pure type · ultra-tight spacing' },
 ];
-const FORMATS = [
+
+export const FORMATS = [
   { value: 'pdf',  label: 'PDF',         tag: '.pdf',  desc: 'Vector, embedded fonts' },
   { value: 'docx', label: 'DOCX',        tag: '.docx', desc: 'Editable in Word, Pages' },
   { value: 'html', label: 'HTML',        tag: '.html', desc: 'Single-file, self-contained' },
@@ -1145,12 +1156,28 @@ const miniBtn = {
 
 interface FormatterToolProps {
   tool: any;
+  initialSlug?: string;
 }
 
-function FormatterTool({ tool }: FormatterToolProps) {
+function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
+  // Determine starting AI and Format presets based on slug
+  let defaultAi = AI_SOURCES[0];
+  let defaultFormat = FORMATS[0];
+
+  if (initialSlug) {
+    const parts = initialSlug.split('-to-');
+    if (parts.length === 2) {
+      const matchedAi = AI_SOURCES.find(a => a.value === parts[0]);
+      const matchedFmt = FORMATS.find(f => f.value === parts[1]);
+      if (matchedAi) defaultAi = matchedAi;
+      if (matchedFmt) defaultFormat = matchedFmt;
+    }
+  }
+
   const [text, setText] = useState(SAMPLE);
+  const [aiSource, setAiSource] = useState(defaultAi);
   const [theme, setTheme] = useState(THEMES[0]);
-  const [format, setFormat] = useState(FORMATS[0]);
+  const [format, setFormat] = useState(defaultFormat);
   const [generating, setGenerating] = useState(false);
   const [generated, setGenerated] = useState(false);
   const [activeMarks, setActiveMarks] = useState<any>({});
@@ -1163,6 +1190,93 @@ function FormatterTool({ tool }: FormatterToolProps) {
   const lines = useMemo(() => text.split(/\n/).length, [text]);
 
   const [downloading, setDownloading] = useState(false);
+  const [detectedAi, setDetectedAi] = useState<string | null>(null);
+  const [copying, setCopying] = useState(false);
+
+  // Dynamic accent hue depending on the AI brand style
+  const hueOverrides: Record<string, number> = {
+    chatgpt: 145, // ChatGPT soft green
+    claude: 35, // Claude warm copper
+    gemini: 250, // Gemini gradient indigo
+    deepseek: 265, // DeepSeek royal indigo
+    grok: 0, // Grok monochromatic cyber
+    perplexity: 195, // Perplexity bright teal
+  };
+  const activeHue = aiSource.value !== 'universal' ? (hueOverrides[aiSource.value] ?? tool.hue) : tool.hue;
+
+  // Auto-detection triggers whenever pasted text changes
+  useEffect(() => {
+    if (!text.trim()) {
+      setDetectedAi(null);
+      return;
+    }
+
+    if (text.includes('<think>') || text.includes('</think>')) {
+      if (aiSource.value !== 'deepseek') setDetectedAi('deepseek');
+      else setDetectedAi(null);
+    } else if (text.includes('<antThinking>') || text.includes('Assistant:') || text.includes('<claude_chat>')) {
+      if (aiSource.value !== 'claude') setDetectedAi('claude');
+      else setDetectedAi(null);
+    } else if (text.includes('**ChatGPT:**') || text.includes('### ChatGPT')) {
+      if (aiSource.value !== 'chatgpt') setDetectedAi('chatgpt');
+      else setDetectedAi(null);
+    } else if (/\[\d+\]/.test(text) && (text.includes('perplexity') || text.includes('Sources') || text.includes('View Sources'))) {
+      if (aiSource.value !== 'perplexity') setDetectedAi('perplexity');
+      else setDetectedAi(null);
+    } else if (text.includes('Gemini:') || text.includes('**Gemini**')) {
+      if (aiSource.value !== 'gemini') setDetectedAi('gemini');
+      else setDetectedAi(null);
+    } else if (text.includes('Grok:') || text.includes('**Grok**')) {
+      if (aiSource.value !== 'grok') setDetectedAi('grok');
+      else setDetectedAi(null);
+    } else {
+      setDetectedAi(null);
+    }
+  }, [text, aiSource.value]);
+
+  // Premium context-aware clipboard copy handler
+  async function handleCopy() {
+    if (copying) return;
+    setCopying(true);
+    try {
+      const isTextMode = format.value === 'md' || format.value === 'txt';
+      let finalContent = isTextMode ? editorRef.current?.value : editorRef.current?.innerHTML;
+      if (!finalContent) finalContent = text; // fallback
+
+      if (format.value === 'md') {
+        await navigator.clipboard.writeText(finalContent);
+      } else if (format.value === 'txt') {
+        const plainText = stripMarkdown(finalContent);
+        await navigator.clipboard.writeText(plainText);
+      } else {
+        // Formatted Rich Text visual copy
+        const htmlContent = pendingHtml || marked.parse(text);
+        const plainText = stripMarkdown(text);
+        
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const textBlob = new Blob([plainText], { type: 'text/plain' });
+        
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            'text/html': blob,
+            'text/plain': textBlob,
+          })
+        ]);
+      }
+      alert('Copied successfully!');
+    } catch (e: any) {
+      // Fallback to text copy
+      try {
+        const plain = editorRef.current?.innerText || stripMarkdown(text);
+        await navigator.clipboard.writeText(plain);
+        alert('Copied text successfully!');
+      } catch (err: any) {
+        alert('Failed to copy to clipboard: ' + err.message);
+      }
+    } finally {
+      setCopying(false);
+    }
+  }
 
   function handleGenerate() {
     if (!text.trim() || generating) return;
@@ -1307,19 +1421,25 @@ function FormatterTool({ tool }: FormatterToolProps) {
             fontSize: 11.5, color: 'var(--fg-dim)',
             marginBottom: 12,
           }} className="mono">
-            <span style={{ color: tintFg(tool.hue) }}>{tool.categoryLabel}</span>
+            <span style={{ color: tintFg(activeHue) }}>{tool.categoryLabel}</span>
             <span>/</span>
-            <span style={{ color: 'var(--fg-muted)' }}>universal-ai-formatter</span>
+            <span style={{ color: 'var(--fg-muted)' }}>{aiSource.value === 'universal' ? 'universal-ai-formatter' : `${aiSource.value}-to-${format.value}`}</span>
           </div>
           <h1 style={{
             margin: 0, fontSize: 36, fontWeight: 600,
             letterSpacing: '-0.025em', lineHeight: 1.08,
-          }}>Universal AI-to-Doc Formatter</h1>
+          }}>
+            {aiSource.value !== 'universal' 
+              ? `${aiSource.label.replace(' Style', '')} to ${format.label} Formatter` 
+              : 'Universal AI-to-Doc Formatter'}
+          </h1>
           <p style={{
             margin: '10px 0 0', fontSize: 15,
             color: 'var(--fg-muted)', maxWidth: 620, lineHeight: 1.5,
           }}>
-            Paste raw output from ChatGPT, Claude, Gemini. Generate a themed document, then fine-tune it directly in the editor before exporting.
+            {aiSource.value !== 'universal'
+              ? `Paste raw output from ${aiSource.label.replace(' Style', '')}. Generate a themed document, then fine-tune it directly in the editor before exporting as a premium ${format.label}.`
+              : 'Paste raw output from ChatGPT, Claude, Gemini, DeepSeek, Grok, or Perplexity. Generate a themed document, then fine-tune it directly in the editor before exporting.'}
           </p>
         </div>
 
@@ -1372,6 +1492,56 @@ function FormatterTool({ tool }: FormatterToolProps) {
           <button onClick={() => { setText(''); taRef.current?.focus(); }} className="reset" style={{ ...miniBtn, color: text ? 'var(--fg-muted)' : 'var(--fg-dim)' }}>Clear</button>
         </div>
 
+        {/* AI Source Auto-detection Recommendation Banner */}
+        {detectedAi && (
+          <div style={{
+            background: `oklch(0.20 0.010 ${hueOverrides[detectedAi] ?? 265} / 0.75)`,
+            borderBottom: '1px solid var(--border)',
+            padding: '10px 16px',
+            fontSize: 12.5,
+            display: 'flex', alignItems: 'center', gap: 10,
+            color: 'var(--fg-muted)',
+          }} className="fade-in">
+            <span style={{ display: 'inline-flex', alignItems: 'center', color: `oklch(0.78 0.16 ${hueOverrides[detectedAi] ?? 265})` }}>
+              <Icon.Sparkles size={13} strokeWidth={2.2} />
+            </span>
+            <span>
+              Detected **{AI_SOURCES.find(a => a.value === detectedAi)?.label.replace(' Style', '')}** formatting. Optimize layout styling?
+            </span>
+            <div style={{ flex: 1 }} />
+            <button
+              onClick={() => {
+                const matched = AI_SOURCES.find(a => a.value === detectedAi);
+                if (matched) setAiSource(matched);
+                setDetectedAi(null);
+              }}
+              className="reset"
+              style={{
+                cursor: 'pointer',
+                padding: '4px 10px',
+                background: `oklch(0.72 0.18 ${hueOverrides[detectedAi] ?? 265})`,
+                color: 'white',
+                fontSize: 11.5, fontWeight: 600,
+                borderRadius: 5,
+                boxShadow: '0 1px 3px oklch(0 0 0 / 0.15)',
+              }}
+            >
+              Apply Style
+            </button>
+            <button
+              onClick={() => setDetectedAi(null)}
+              className="reset"
+              style={{
+                cursor: 'pointer',
+                fontSize: 11.5, color: 'var(--fg-dim)',
+                padding: '4px 6px',
+              }}
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
+
         <textarea
           ref={taRef}
           value={text}
@@ -1407,8 +1577,9 @@ function FormatterTool({ tool }: FormatterToolProps) {
             <Stat label="words" value={words.toLocaleString()} />
             <Stat label="lines" value={lines.toLocaleString()} />
           </div>
-          <div style={{ width: 180 }}><Select compact value={theme} options={THEMES} onChange={setTheme} /></div>
-          <div style={{ width: 150 }}><Select compact value={format} options={FORMATS} onChange={setFormat} /></div>
+          <div style={{ width: 140 }}><Select compact value={aiSource} options={AI_SOURCES} onChange={setAiSource} /></div>
+          <div style={{ width: 140 }}><Select compact value={theme} options={THEMES} onChange={setTheme} /></div>
+          <div style={{ width: 120 }}><Select compact value={format} options={FORMATS} onChange={setFormat} /></div>
           <button
             onClick={handleGenerate}
             disabled={!text.trim() || generating}
@@ -1419,12 +1590,12 @@ function FormatterTool({ tool }: FormatterToolProps) {
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '9px 14px',
               background: generating
-                ? 'oklch(0.55 0.12 265)'
-                : 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+                ? `oklch(0.55 0.12 ${activeHue})`
+                : `linear-gradient(180deg, oklch(0.72 0.18 ${activeHue}), oklch(0.62 0.20 ${activeHue}))`,
               color: 'white',
               fontWeight: 500, fontSize: 13,
               borderRadius: 8,
-              boxShadow: '0 1px 0 oklch(1 0 0 / 0.25) inset, 0 0 0 1px oklch(0.50 0.14 265 / 0.5), 0 4px 14px oklch(0.50 0.20 265 / 0.30)',
+              boxShadow: `0 1px 0 oklch(1 0 0 / 0.25) inset, 0 0 0 1px oklch(0.50 0.14 ${activeHue} / 0.5), 0 4px 14px oklch(0.50 0.20 ${activeHue} / 0.30)`,
               whiteSpace: 'nowrap',
             }}
           >
@@ -1490,6 +1661,27 @@ function FormatterTool({ tool }: FormatterToolProps) {
                 }}
                 title="Discard edits and re-render from source markdown">
                   <Icon.Loader size={11} strokeWidth={2}/> Re-render
+                </button>
+
+                <button onClick={handleCopy} disabled={copying} className="reset" style={{
+                  cursor: copying ? 'wait' : 'pointer',
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '7px 12px',
+                  background: 'oklch(0.22 0.010 250)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 7,
+                  fontSize: 12, fontWeight: 500,
+                  color: 'var(--fg-muted)',
+                }}
+                title="Copy formatted output to your clipboard">
+                  {copying ? (
+                    <><Icon.Loader size={11} strokeWidth={2} /> Copying...</>
+                  ) : (
+                    <>
+                      <Icon.Copy size={11} strokeWidth={2} />
+                      {format.value === 'md' ? 'Copy Markdown' : format.value === 'txt' ? 'Copy Plain Text' : 'Copy Rich Text'}
+                    </>
+                  )}
                 </button>
                 
                 <button onClick={handleDownload} disabled={downloading} className="reset" style={{
@@ -2923,8 +3115,8 @@ function FooterCol({ title, links }: FooterColProps) {
    App root — orchestrates view + overlays
    ========================================================================= */
 
-function App() {
-  const [view, setView] = useState('landing'); // 'landing' | 'home' | toolId
+export function App({ initialSlug }: { initialSlug?: string }) {
+  const [view, setView] = useState(initialSlug ? 'uaf' : 'landing'); // 'landing' | 'home' | toolId
   const [palette, setPalette] = useState(false);
   const [launcher, setLauncher] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -3006,7 +3198,7 @@ function App() {
         )}
         {!isDashboard && activeTool && (
           activeTool.id === 'uaf'
-            ? <FormatterTool tool={activeTool} />
+            ? <FormatterTool tool={activeTool} initialSlug={initialSlug} />
             : <PlaceholderTool tool={activeTool} />
         )}
       </main>
