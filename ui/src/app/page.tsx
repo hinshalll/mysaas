@@ -36,6 +36,7 @@ import {
   GitBranch, Zap, Check, Globe,
   List, ListOrdered, Quote, Code, Link as LucideLink,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
+  Sun, Moon,
 } from 'lucide-react';
 
 // Map our legacy icon names to lucide-react components.
@@ -52,6 +53,7 @@ const Icon: Record<string, React.ComponentType<any>> = {
   List, ListOrdered, Quote, Code,
   LinkIcon: LucideLink, Eraser2: Eraser,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
+  Sun, Moon,
 };
 
 
@@ -71,6 +73,24 @@ export const GLOBAL_CSS = `:root {
 
     --accent:       oklch(0.68 0.18 265);
     --pro:          oklch(0.78 0.16 75);
+  }
+
+  :root.light {
+    --bg:           oklch(0.985 0.003 250);
+    --bg-elev-1:    oklch(0.965 0.004 250);
+    --bg-elev-2:    oklch(0.94  0.005 250);
+    --bg-hover:     oklch(0.915 0.006 250);
+
+    --border:       oklch(0.885 0.006 250);
+    --border-strong: oklch(0.81  0.010 250);
+
+    --fg:           oklch(0.165 0.006 250);
+    --fg-muted:     oklch(0.36  0.010 250);
+    --fg-subtle:    oklch(0.48  0.012 250);
+    --fg-dim:       oklch(0.60  0.010 250);
+
+    --accent:       oklch(0.58 0.16 265);
+    --pro:          oklch(0.62 0.14 75);
   }
 
   * { box-sizing: border-box; }
@@ -97,6 +117,13 @@ export const GLOBAL_CSS = `:root {
       radial-gradient(900px 700px at 100% -10%, oklch(0.26 0.07 305 / 0.22), transparent 60%),
       radial-gradient(800px 800px at 50% 110%, oklch(0.24 0.06 200 / 0.15), transparent 60%);
   }
+
+  :root.light body::before {
+    background:
+      radial-gradient(1000px 700px at 0% -10%, oklch(0.85 0.08 265 / 0.14), transparent 60%),
+      radial-gradient(900px 700px at 100% -10%, oklch(0.85 0.07 305 / 0.10), transparent 60%),
+      radial-gradient(800px 800px at 50% 110%, oklch(0.88 0.06 200 / 0.08), transparent 60%);
+  }
   /* Tiny grain texture */
   body::after {
     content: "";
@@ -104,6 +131,31 @@ export const GLOBAL_CSS = `:root {
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
   }
   .app-root { position: relative; z-index: 1; }
+
+  .glass-card {
+    background: linear-gradient(180deg, oklch(0.20 0.04 265 / 0.55), oklch(0.16 0.02 265 / 0.35));
+    border: 1px solid oklch(0.40 0.08 265 / 0.35);
+    box-shadow: 0 20px 50px oklch(0.15 0.08 265 / 0.15), inset 0 1px 0 oklch(1 0 0 / 0.05);
+    border-radius: 16px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+  }
+  .glass-card:hover {
+    border-color: oklch(0.45 0.10 265 / 0.5);
+    box-shadow: 0 24px 60px oklch(0.15 0.08 265 / 0.22);
+  }
+
+  :root.light .glass-card {
+    background: linear-gradient(180deg, oklch(0.965 0.004 250 / 0.8), oklch(0.94 0.005 250 / 0.6));
+    border: 1px solid oklch(0.55 0.08 265 / 0.15);
+    box-shadow: 0 20px 50px oklch(250 0 0 / 0.03), inset 0 1px 0 oklch(1 0 0 / 0.8);
+  }
+  :root.light .glass-card:hover {
+    border-color: oklch(0.55 0.08 265 / 0.25);
+    box-shadow: 0 24px 60px oklch(250 0 0 / 0.06);
+  }
 
   /* Resets / utilities */
   .reset { all: unset; }
@@ -354,9 +406,11 @@ interface TopBarProps {
   onHome: () => void;
   activeTool: any;
   scrolled: boolean;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
 }
 
-function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled }: TopBarProps) {
+function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, theme, onToggleTheme }: TopBarProps) {
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -429,17 +483,21 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled }:
       <a href="/pricing" className="reset top-link" style={topLink}>Pricing</a>
       <a href="/docs" className="reset top-link" style={topLink}>Docs</a>
 
-      <button className="reset" style={{
-        padding: '8px 14px',
-        background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.88 0.005 250))',
-        color: 'oklch(0.18 0.008 250)',
-        fontWeight: 500,
-        fontSize: 13,
-        borderRadius: 8,
+      {/* Theme Toggle Switch */}
+      <button onClick={onToggleTheme} className="reset theme-toggle-btn" style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 32, height: 32, borderRadius: 8,
         cursor: 'pointer',
-        boxShadow: '0 1px 0 oklch(1 0 0 / 0.3) inset, 0 1px 2px oklch(0 0 0 / 0.5)',
-        letterSpacing: '-0.005em',
-      }}>Get started</button>
+        fontSize: 13, color: 'var(--fg-muted)',
+        background: 'oklch(0.20 0.008 250 / 0.5)',
+        border: '1px solid var(--border)',
+        transition: 'background 0.15s, color 0.15s, transform 0.15s',
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.24 0.010 250 / 0.85)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.20 0.008 250 / 0.5)'}
+      title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
+        {theme === 'dark' ? <Icon.Sun size={15} /> : <Icon.Moon size={15} />}
+      </button>
     </header>
   );
 }
@@ -549,7 +607,26 @@ function CommandPalette({ open, onClose, onPick }: CommandPaletteProps) {
               background: 'var(--bg-elev-2)', cursor: 'pointer',
             }}>clear</button>
           )}
-          <kbd className="kbd">esc</kbd>
+          <kbd
+            onClick={onClose}
+            className="kbd"
+            style={{
+              cursor: 'pointer',
+              userSelect: 'none',
+              transition: 'background 0.15s, border-color 0.15s',
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.background = 'var(--bg-hover)';
+              e.currentTarget.style.borderColor = 'var(--border-strong)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.background = '';
+              e.currentTarget.style.borderColor = '';
+            }}
+            title="Close Search (Esc)"
+          >
+            esc
+          </kbd>
         </div>
 
         {/* Results */}
@@ -1792,10 +1869,6 @@ function WelcomeStrip({ onOpenLauncher, onOpenPalette }: WelcomeStripProps) {
             <span>Quick find</span>
             <kbd className="kbd" style={{ marginLeft: 4 }}>⌘K</kbd>
           </button>
-          <button onClick={onOpenLauncher} className="reset" style={quickBtn}>
-            <Icon.Grid size={13} />
-            <span>Browse all</span>
-          </button>
         </div>
       </div>
 
@@ -2717,9 +2790,10 @@ function Feature({ children, on, em }: FeatureProps) {
 
 interface ClosingCTAProps {
   onLaunch: () => void;
+  onBrowseTools: () => void;
 }
 
-function ClosingCTA({ onLaunch }: ClosingCTAProps) {
+function ClosingCTA({ onLaunch, onBrowseTools }: ClosingCTAProps) {
   return (
     <section style={{
       padding: '96px 32px',
@@ -2775,7 +2849,7 @@ function ClosingCTA({ onLaunch }: ClosingCTAProps) {
             }}>
               Launch app <Icon.ArrowRight size={15} strokeWidth={2.2}/>
             </button>
-            <a href="/dashboard" className="reset" style={{
+            <button onClick={onBrowseTools} className="reset" style={{
               display: 'inline-flex', alignItems: 'center', gap: 7,
               padding: '14px 18px',
               background: 'oklch(0.20 0.008 250 / 0.5)',
@@ -2783,10 +2857,9 @@ function ClosingCTA({ onLaunch }: ClosingCTAProps) {
               color: 'var(--fg)',
               fontWeight: 500, fontSize: 15,
               borderRadius: 11, cursor: 'pointer',
-              textDecoration: 'none',
             }}>
               Browse every tool
-            </a>
+            </button>
           </div>
         </div>
       </div>
@@ -2838,9 +2911,10 @@ const listStyle: React.CSSProperties = {
 interface LandingProps {
   onLaunch: () => void;
   onEnterprise: () => void;
+  onBrowseTools: () => void;
 }
 
-function Landing({ onLaunch, onEnterprise }: LandingProps) {
+function Landing({ onLaunch, onEnterprise, onBrowseTools }: LandingProps) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     function onScroll() { setScrolled(window.scrollY > 8); }
@@ -2854,7 +2928,7 @@ function Landing({ onLaunch, onEnterprise }: LandingProps) {
       <LandingHero onLaunch={onLaunch} />
       <SuitePreview onLaunch={onLaunch} />
       <Pricing onLaunch={onLaunch} onEnterprise={onEnterprise} />
-      <ClosingCTA onLaunch={onLaunch} />
+      <ClosingCTA onLaunch={onLaunch} onBrowseTools={onBrowseTools} />
     </div>
   );
 }
@@ -3597,13 +3671,8 @@ function ComingSoonStub({ tool }: ComingSoonStubProps) {
   return (
     <div style={{
       maxWidth: 680, margin: '60px auto 120px',
-      padding: '48px 32px',
-      background: 'oklch(0.175 0.008 250 / 0.7)',
-      border: '1px solid var(--border)',
-      borderRadius: 16,
-      boxShadow: '0 24px 64px oklch(0 0 0 / 0.4), inset 0 1px 0 oklch(1 0 0 / 0.03)',
       textAlign: 'center',
-    }} className="fade-in-up">
+    }} className="glass-card fade-in-up">
       <div style={{
         width: 64, height: 64, borderRadius: 14,
         background: `oklch(0.22 0.010 ${activeHue} / 0.8)`,
@@ -3616,21 +3685,24 @@ function ComingSoonStub({ tool }: ComingSoonStubProps) {
         <Sparkles size={28} strokeWidth={2} />
       </div>
 
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 6,
-        padding: '4px 10px', borderRadius: 20,
-        background: 'oklch(0.20 0.010 75 / 0.15)',
-        border: '1px solid oklch(0.75 0.14 75 / 0.2)',
-        fontSize: 11, fontWeight: 600, color: 'oklch(0.78 0.16 75)',
-        textTransform: 'uppercase', letterSpacing: '0.05em',
-        marginBottom: 16,
-      }} className="mono">
-        Active Development
+      <div>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          padding: '4px 10px', borderRadius: 20,
+          background: 'oklch(0.20 0.010 75 / 0.15)',
+          border: '1px solid oklch(0.75 0.14 75 / 0.2)',
+          fontSize: 11, fontWeight: 600, color: 'oklch(0.78 0.16 75)',
+          textTransform: 'uppercase', letterSpacing: '0.05em',
+          marginBottom: 16,
+        }} className="mono">
+          Active Development
+        </div>
       </div>
 
       <h1 style={{
         margin: 0, fontSize: 32, fontWeight: 600,
         letterSpacing: '-0.02em', lineHeight: 1.1,
+        color: 'var(--fg)',
       }}>{tool.name}</h1>
       
       <p style={{
@@ -3642,7 +3714,7 @@ function ComingSoonStub({ tool }: ComingSoonStubProps) {
 
       <div style={{
         margin: '36px auto', maxWidth: 400,
-        background: 'oklch(0.15 0.006 250 / 0.4)',
+        background: 'var(--bg-elev-1)',
         border: '1px solid var(--border)',
         borderRadius: 12, padding: '16px 20px',
         textAlign: 'left',
@@ -3659,7 +3731,7 @@ function ComingSoonStub({ tool }: ComingSoonStubProps) {
             <span style={{ color: 'oklch(0.78 0.16 145)' }}>✓</span>
             <span>Dynamic URL pSEO Indexing</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--fg)' }}>
             <span style={{ color: `oklch(0.78 0.16 ${activeHue})` }}>⚡</span>
             <span style={{ fontWeight: 500 }}>Backend Parser Logic & Sandbox</span>
           </div>
@@ -3687,12 +3759,12 @@ function ComingSoonStub({ tool }: ComingSoonStubProps) {
               required
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="Enter your email to get sandbox access"
+              placeholder="Enter your email for beta access"
               style={{
                 flex: 1, padding: '10px 14px',
-                background: 'oklch(0.15 0.006 250)',
+                background: 'var(--bg-elev-1)',
                 border: '1px solid var(--border)',
-                borderRadius: 8, color: 'white', fontSize: 13,
+                borderRadius: 8, color: 'var(--fg)', fontSize: 13,
                 outline: 'none',
               }}
             />
@@ -3721,14 +3793,27 @@ interface PricingPageProps {
 }
 
 function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
+  // Access global theme context safely from document if needed
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+
   return (
     <div style={{
       maxWidth: 1200, margin: '40px auto 120px',
       padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
     }} className="fade-in">
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+      {/* Subpage ambient top-center glow */}
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative', zIndex: 1 }}>
         <span style={eyebrow}>Monetization & Plans</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Simple, transparent pricing</h1>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Simple, transparent pricing</h1>
         <p style={sectionSubtitle}>Choose the perfect tier for your workflow. Get high-fidelity documents and parsed datasets instantly.</p>
       </div>
 
@@ -3738,17 +3823,14 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
         gap: 24,
         alignItems: 'stretch',
         maxWidth: 1080, margin: '0 auto',
+        position: 'relative',
+        zIndex: 1,
       }}>
         {/* Tier 1 */}
-        <div style={{
-          padding: 32, borderRadius: 16,
-          background: 'oklch(0.16 0.006 250 / 0.4)',
-          border: '1px solid var(--border)',
-          display: 'flex', flexDirection: 'column',
-        }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.12 265)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 1: Free</div>
-          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px' }}>Zero-Compute</h2>
-          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>$0 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ forever</span></div>
+        <div className="glass-card">
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 1: Free</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Zero-Compute</h2>
+          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>$0 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ forever</span></div>
           <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Perfect for quick daily copy-pastes and text utilities.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
             <Feature on={true}>Unlimited daily usage on Free Tools</Feature>
@@ -3758,30 +3840,33 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           </ul>
           <button onClick={onLaunch} className="reset" style={{
             width: '100%', padding: '12px', borderRadius: 8,
-            background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-            color: 'white', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
+            background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+            color: 'var(--fg)', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
             textAlign: 'center', marginTop: 'auto',
-          }}>Get Started</button>
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
+          >Get Started</button>
         </div>
 
         {/* Tier 2 */}
-        <div style={{
-          padding: 32, borderRadius: 16,
-          background: 'oklch(0.18 0.008 250 / 0.6)',
-          border: '1px solid oklch(0.72 0.18 265 / 0.3)',
-          boxShadow: '0 16px 40px oklch(0.50 0.20 265 / 0.15)',
-          display: 'flex', flexDirection: 'column',
+        <div className="glass-card" style={{
+          borderColor: 'var(--accent)',
+          boxShadow: isLight 
+            ? '0 24px 80px oklch(0.58 0.16 265 / 0.08), inset 0 1px 0 oklch(1 0 0 / 0.8)' 
+            : '0 24px 80px oklch(0.50 0.20 265 / 0.18), inset 0 1px 0 oklch(1 0 0 / 0.05)',
           position: 'relative',
         }}>
           <div style={{
             position: 'absolute', top: 16, right: 16,
-            background: 'oklch(0.72 0.18 265)', color: 'white',
+            background: 'var(--accent)', color: 'white',
             fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 12,
             textTransform: 'uppercase', letterSpacing: '0.05em',
           }} className="mono">Popular</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.72 0.18 265)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 2: Metered</div>
-          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px' }}>Moderate-Compute</h2>
-          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>2 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>free runs / day</span></div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 2: Metered</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Moderate-Compute</h2>
+          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>2 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>free runs / day</span></div>
           <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Full access to locked parsers, OCR, bank statements, and subtitle resyncer tools.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
             <Feature on={true}>2 free runs/day on Tier 2 Tools</Feature>
@@ -3799,15 +3884,10 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
         </div>
 
         {/* Tier 3 */}
-        <div style={{
-          padding: 32, borderRadius: 16,
-          background: 'oklch(0.16 0.006 250 / 0.4)',
-          border: '1px solid var(--border)',
-          display: 'flex', flexDirection: 'column',
-        }}>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.12 265)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 3: Pro</div>
-          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px' }}>Pro Workspace</h2>
-          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8 }}>$9 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ month</span></div>
+        <div className="glass-card">
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 3: Pro</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Pro Workspace</h2>
+          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>$9 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ month</span></div>
           <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>For heavy workflows, B2B parsing, teams, and high-volume parsing.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
             <Feature on={true} em={true}>Unlimited daily runs on all tools</Feature>
@@ -3817,16 +3897,21 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           </ul>
           <button onClick={onLaunch} className="reset" style={{
             width: '100%', padding: '12px', borderRadius: 8,
-            background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-            color: 'white', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
+            background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+            color: 'var(--fg)', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
             textAlign: 'center', marginTop: 'auto',
-          }}>Unlock Pro Vault</button>
+            transition: 'background 0.15s',
+          }}
+          onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+          onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
+          >Unlock Pro Vault</button>
         </div>
       </div>
 
       <p style={{
         textAlign: 'center', marginTop: 36,
         fontSize: 13, color: 'var(--fg-dim)',
+        position: 'relative', zIndex: 1,
       }}>
         Need SOC2, SSO, or on-prem? <a href="#" onClick={(e) => { e.preventDefault(); onEnterprise(); }} style={{ color: 'var(--fg-muted)', textDecoration: 'underline', textDecorationColor: 'var(--border-strong)' }}>Talk to us about Enterprise</a>.
       </p>
@@ -3842,48 +3927,68 @@ interface AboutPageProps {
 }
 
 function AboutPage({ onLaunch }: AboutPageProps) {
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+
   return (
     <div style={{
-      maxWidth: 800, margin: '40px auto 120px',
+      maxWidth: 880, margin: '40px auto 120px',
       padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
     }} className="fade-in">
-      <div style={{ marginBottom: 40 }}>
+      {/* Subpage ambient top-center glow */}
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ textAlign: 'center', marginBottom: 40, position: 'relative', zIndex: 1 }}>
         <span style={eyebrow}>Monetization & Philosophy</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>The Global Utility SaaS</h1>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>The Global Utility SaaS</h1>
       </div>
 
-      <div style={{ fontSize: 15, lineHeight: 1.7, color: 'var(--fg-muted)', display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <p>
-          Welcome to <strong style={{ color: 'white' }}>MySaaS</strong>—a collection of lightweight, blazing-fast, serverless-grade utility tools built directly for developers, creators, and professionals.
-        </p>
-        
-        <h2 style={{ fontSize: 20, color: 'white', fontWeight: 600, margin: '24px 0 8px' }}>Our Mission: Extreme Speed, Total Privacy</h2>
-        <p>
-          Most modern websites have become bloated, filled with megabytes of tracking pixels, advertising banners, and slow server-side loops. We believe that simple, daily file operations—like scrubbing metadata, formatting JSON, synching subtitles, or converting HEIC images—should run in milliseconds right inside your browser without leaking any private details.
-        </p>
+      <div className="glass-card" style={{ position: 'relative', zIndex: 1, padding: '40px clamp(24px, 5vw, 48px)' }}>
+        <div style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--fg-muted)', display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <p style={{ fontSize: 16 }}>
+            Welcome to <strong style={{ color: 'var(--fg)' }}>MySaaS</strong>—a collection of lightweight, blazing-fast, serverless-grade utility tools built directly for developers, creators, and professionals.
+          </p>
+          
+          <h2 style={{ fontSize: 20, color: 'var(--fg)', fontWeight: 600, margin: '24px 0 8px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Our Mission: Extreme Speed, Total Privacy</h2>
+          <p>
+            Most modern websites have become bloated, filled with megabytes of tracking pixels, advertising banners, and slow server-side loops. We believe that simple, daily file operations—like scrubbing metadata, formatting JSON, synching subtitles, or converting HEIC images—should run in milliseconds right inside your browser without leaking any private details.
+          </p>
 
-        <h2 style={{ fontSize: 20, color: 'white', fontWeight: 600, margin: '24px 0 8px' }}>Monetization Model: Metered Freemium & PPP</h2>
-        <p>
-          To make this tool accessible worldwide, we leverage **Purchasing Power Parity (PPP)** pricing:
-        </p>
-        <ul style={{ listStyle: 'disc', paddingLeft: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <li><strong>Tier 1 (Free)</strong>: Unlimited daily usage on low-compute developer tools. 100% free forever, supported by clean ad networks.</li>
-          <li><strong>Tier 2 (Metered)</strong>: 2 free daily runs on heavier operations (OCR, PDF statements, scanned extraction).</li>
-          <li><strong>Tier 3 (Pro)</strong>: High-fidelity B2B utilities, saved history database, and batch processing up to 500 files at once for $9/month globally or ₹199/month in India/Domestic.</li>
-        </ul>
+          <h2 style={{ fontSize: 20, color: 'var(--fg)', fontWeight: 600, margin: '24px 0 8px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Monetization Model: Metered Freemium & PPP</h2>
+          <p>
+            To make this tool accessible worldwide, we leverage **Purchasing Power Parity (PPP)** pricing:
+          </p>
+          <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
+              <strong style={{ color: 'var(--fg)' }}>Tier 1 (Free)</strong>: Unlimited daily usage on low-compute developer tools. 100% free forever, supported by clean ad networks.
+            </li>
+            <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
+              <strong style={{ color: 'var(--fg)' }}>Tier 2 (Metered)</strong>: 2 free daily runs on heavier operations (OCR, PDF bank statements, scanned extraction).
+            </li>
+            <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
+              <strong style={{ color: 'var(--fg)' }}>Tier 3 (Pro)</strong>: High-fidelity B2B utilities, saved history database, and batch processing up to 500 files at once for $9/month globally or ₹199/month in India/Domestic.
+            </li>
+          </ul>
 
-        <h2 style={{ fontSize: 20, color: 'white', fontWeight: 600, margin: '24px 0 8px' }}>Secure Infrastructure: The Digital Bouncer</h2>
-        <p>
-          Our backend engine utilizes a custom-built **Digital Bouncer (threading.Lock)** protecting Render's 512MB memory limits. This ensures that heavy serverless tasks queue safely without blowing out server costs or causing memory leakage crashes, keeping the hosting extremely light, cheap, and robust.
-        </p>
-        
-        <div style={{ marginTop: 24 }}>
-          <button onClick={onLaunch} className="reset" style={{
-            padding: '12px 24px', borderRadius: 8,
-            background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
-            color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-            boxShadow: '0 4px 14px oklch(0.50 0.20 265 / 0.3)',
-          }}>Launch Dashboard</button>
+          <h2 style={{ fontSize: 20, color: 'var(--fg)', fontWeight: 600, margin: '24px 0 8px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Secure Infrastructure: The Digital Bouncer</h2>
+          <p>
+            Our backend engine utilizes a custom-built **Digital Bouncer (threading.Lock)** protecting Render's 512MB memory limits. This ensures that heavy serverless tasks queue safely without blowing out server costs or causing memory leakage crashes, keeping the hosting extremely light, cheap, and robust.
+          </p>
+          
+          <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
+            <button onClick={onLaunch} className="reset" style={{
+              padding: '12px 28px', borderRadius: 9,
+              background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+              color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+              boxShadow: '0 4px 14px oklch(0.50 0.20 265 / 0.3)',
+            }}>Launch Dashboard</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3898,28 +4003,41 @@ interface DocsPageProps {
 }
 
 function DocsPage({ onLaunch }: DocsPageProps) {
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+
   return (
     <div style={{
-      maxWidth: 800, margin: '40px auto 120px',
+      maxWidth: 880, margin: '40px auto 120px',
       padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
     }} className="fade-in">
-      <div style={{ marginBottom: 40 }}>
+      {/* Subpage ambient top-center glow */}
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ textAlign: 'center', marginBottom: 40, position: 'relative', zIndex: 1 }}>
         <span style={eyebrow}>Technical Docs</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Developer Documentation</h1>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Developer Documentation</h1>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
-        <div>
-          <h2 style={{ fontSize: 18, color: 'white', fontWeight: 600, marginBottom: 8 }}>1. Single-Message AI Formatter API</h2>
-          <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6, marginBottom: 12 }}>
-            You can programmatically format raw AI text by posting to the unified Python/FastAPI endpoint:
-          </p>
-          <pre style={{
-            background: 'oklch(0.15 0.006 250)', border: '1px solid var(--border)',
-            borderRadius: 8, padding: '14px 18px', overflowX: 'auto',
-            fontSize: 12.5, color: 'oklch(0.82 0.13 195)', lineHeight: 1.5,
-          }} className="mono">
-{`POST /api/format
+      <div className="glass-card" style={{ position: 'relative', zIndex: 1, padding: '40px clamp(24px, 5vw, 48px)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+          <div>
+            <h2 style={{ fontSize: 18, color: 'var(--fg)', fontWeight: 600, marginBottom: 8 }}>1. Single-Message AI Formatter API</h2>
+            <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6, marginBottom: 12 }}>
+              You can programmatically format raw AI text by posting to the unified Python/FastAPI endpoint:
+            </p>
+            <pre style={{
+              background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+              borderRadius: 8, padding: '14px 18px', overflowX: 'auto',
+              fontSize: 12.5, color: isLight ? 'oklch(0.55 0.15 265)' : 'oklch(0.80 0.10 195)', lineHeight: 1.5,
+            }} className="mono">
+  {`POST /api/format
 Headers: { "Content-Type": "application/json" }
 Body:
 {
@@ -3928,29 +4046,34 @@ Body:
   "theme": "modern",       // 'modern' | 'academic' | 'minimalist'
   "export_format": "pdf"  // 'pdf' | 'docx' | 'html' | 'txt' | 'md'
 }`}
-          </pre>
-        </div>
+            </pre>
+          </div>
 
-        <div>
-          <h2 style={{ fontSize: 18, color: 'white', fontWeight: 600, marginBottom: 8 }}>2. Rate Limits & Fair-Use</h2>
-          <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
-            Our Free Tier operates on on-device scripts running locally in the browser, meaning zero rate limits. Server-side API formatting endpoints operate a Fair-Use protector to ensure service availability for all users.
-          </p>
-        </div>
+          <div>
+            <h2 style={{ fontSize: 18, color: 'var(--fg)', fontWeight: 600, marginBottom: 8 }}>2. Rate Limits & Fair-Use</h2>
+            <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+              Our Free Tier operates on on-device scripts running locally in the browser, meaning zero rate limits. Server-side API formatting endpoints operate a Fair-Use protector to ensure service availability for all users.
+            </p>
+          </div>
 
-        <div>
-          <h2 style={{ fontSize: 18, color: 'white', fontWeight: 600, marginBottom: 8 }}>3. Security & Compliance</h2>
-          <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
-            Any files uploaded or text processed through the tools catalog is analyzed and streamed directly. We do not store, scan, or log document contents inside database instances, protecting data integrity.
-          </p>
-        </div>
+          <div>
+            <h2 style={{ fontSize: 18, color: 'var(--fg)', fontWeight: 600, marginBottom: 8 }}>3. Security & Compliance</h2>
+            <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+              Any files uploaded or text processed through the tools catalog is analyzed and streamed directly. We do not store, scan, or log document contents inside database instances, protecting data integrity.
+            </p>
+          </div>
 
-        <div style={{ marginTop: 12 }}>
-          <button onClick={onLaunch} className="reset" style={{
-            padding: '10px 18px', borderRadius: 8,
-            background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-            color: 'white', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
-          }}>Go to App</button>
+          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+            <button onClick={onLaunch} className="reset" style={{
+              padding: '12px 24px', borderRadius: 9,
+              background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+              color: 'var(--fg)', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
+              transition: 'background 0.15s',
+            }}
+            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
+            >Go to App</button>
+          </div>
         </div>
       </div>
     </div>
@@ -3962,6 +4085,8 @@ interface ChangelogPageProps {
 }
 
 function ChangelogPage({ onLaunch }: ChangelogPageProps) {
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+
   const releases = [
     {
       version: 'v1.1.0',
@@ -3992,20 +4117,30 @@ function ChangelogPage({ onLaunch }: ChangelogPageProps) {
 
   return (
     <div style={{
-      maxWidth: 800, margin: '40px auto 120px',
+      maxWidth: 880, margin: '40px auto 120px',
       padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
     }} className="fade-in">
-      <div style={{ marginBottom: 48, textAlign: 'center' }}>
+      {/* Subpage ambient top-center glow */}
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ marginBottom: 48, textAlign: 'center', position: 'relative', zIndex: 1 }}>
         <span style={eyebrow}>Software Releases</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Changelog & Updates</h1>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Changelog & Updates</h1>
         <p style={sectionSubtitle}>Follow our daily product iterations as we roll out premium utilities for your data and file workflows.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 40, position: 'relative' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 40, position: 'relative', zIndex: 1 }}>
         {/* Vertical Timeline bar */}
         <div style={{
           position: 'absolute', left: 16, top: 24, bottom: 24, width: 1,
-          background: 'oklch(0.25 0.008 250 / 0.8)',
+          background: 'var(--border)',
         }} />
 
         {releases.map((rel) => (
@@ -4013,7 +4148,7 @@ function ChangelogPage({ onLaunch }: ChangelogPageProps) {
             {/* Timeline Dot */}
             <div style={{
               width: 32, height: 32, borderRadius: '50%',
-              background: 'oklch(0.14 0.005 250)',
+              background: 'var(--bg-elev-1)',
               border: '1px solid var(--border)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0, zIndex: 2,
@@ -4021,18 +4156,16 @@ function ChangelogPage({ onLaunch }: ChangelogPageProps) {
               <span style={{
                 width: 8, height: 8, borderRadius: '50%',
                 background: `oklch(0.75 0.14 ${rel.hue})`,
-                boxShadow: `0 0 10px oklch(0.75 0.14 ${rel.hue} / 0.8)`,
+                boxShadow: isLight ? 'none' : `0 0 10px oklch(0.75 0.14 ${rel.hue} / 0.8)`,
               }} />
             </div>
 
             {/* Content card */}
-            <div style={{
-              flex: 1, padding: '24px 28px', borderRadius: 14,
-              background: 'oklch(0.16 0.006 250 / 0.4)',
-              border: '1px solid var(--border)',
+            <div className="glass-card" style={{
+              flex: 1, padding: '24px 28px',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 18, fontWeight: 600, color: 'white' }} className="mono">{rel.version}</span>
+                <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--fg)' }} className="mono">{rel.version}</span>
                 <span style={{ fontSize: 13, color: 'var(--fg-subtle)' }}>({rel.date})</span>
                 <span style={{
                   padding: '3px 8px', borderRadius: 20,
@@ -4044,7 +4177,7 @@ function ChangelogPage({ onLaunch }: ChangelogPageProps) {
                 }} className="mono">{rel.badge}</span>
               </div>
 
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: 'white', margin: '0 0 16px' }}>{rel.title}</h2>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--fg)', margin: '0 0 16px' }}>{rel.title}</h2>
 
               <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--fg-muted)', fontSize: 14, display: 'flex', flexDirection: 'column', gap: 10, lineHeight: 1.55 }}>
                 {rel.items.map((item, idx) => (
@@ -4056,16 +4189,16 @@ function ChangelogPage({ onLaunch }: ChangelogPageProps) {
         ))}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 48 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 48, position: 'relative', zIndex: 1 }}>
         <button onClick={onLaunch} className="reset" style={{
           padding: '12px 24px', borderRadius: 9,
-          background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-          color: 'white', fontWeight: 500, fontSize: 14, cursor: 'pointer',
-          boxShadow: '0 4px 12px oklch(0 0 0 / 0.3)',
+          background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+          color: 'var(--fg)', fontWeight: 500, fontSize: 14, cursor: 'pointer',
+          boxShadow: '0 4px 12px oklch(0 0 0 / 0.15)',
           transition: 'background 0.15s',
         }}
-        onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.24 0.008 250)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.20 0.008 250)'}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
         >Explore the Dashboard</button>
       </div>
     </div>
@@ -4080,6 +4213,8 @@ interface RoadmapPageProps {
 }
 
 function RoadmapPage({ onLaunch }: RoadmapPageProps) {
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+
   const milestones = [
     {
       quarter: 'Q2 2026',
@@ -4114,35 +4249,49 @@ function RoadmapPage({ onLaunch }: RoadmapPageProps) {
   ];
 
   const statusColors: Record<string, { bg: string; fg: string; label: string }> = {
-    'in-progress': { bg: 'oklch(0.22 0.06 195 / 0.3)', fg: 'oklch(0.78 0.14 195)', label: 'In Progress' },
-    'planned': { bg: 'oklch(0.22 0.04 265 / 0.2)', fg: 'oklch(0.65 0.10 265)', label: 'Planned' },
+    'in-progress': {
+      bg: isLight ? 'oklch(0.92 0.04 195)' : 'oklch(0.22 0.06 195 / 0.3)',
+      fg: isLight ? 'oklch(0.48 0.12 195)' : 'oklch(0.78 0.14 195)',
+      label: 'In Progress',
+    },
+    'planned': {
+      bg: isLight ? 'oklch(0.94 0.03 265)' : 'oklch(0.22 0.04 265 / 0.2)',
+      fg: isLight ? 'oklch(0.52 0.10 265)' : 'oklch(0.65 0.10 265)',
+      label: 'Planned',
+    },
   };
 
   return (
     <div style={{
-      maxWidth: 800, margin: '40px auto 120px',
+      maxWidth: 880, margin: '40px auto 120px',
       padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
     }} className="fade-in">
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+      {/* Subpage ambient top-center glow */}
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative', zIndex: 1 }}>
         <span style={eyebrow}>Product Vision</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Roadmap</h1>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Roadmap</h1>
         <p style={sectionSubtitle}>What we're building next. Priorities shift based on user demand—tell us what matters most.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 32, position: 'relative', zIndex: 1 }}>
         {milestones.map((ms) => (
-          <div key={ms.quarter} style={{
-            padding: '28px 32px', borderRadius: 16,
-            background: 'oklch(0.16 0.006 250 / 0.4)',
-            border: '1px solid var(--border)',
-          }}>
+          <div key={ms.quarter} className="glass-card">
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
               <span style={{
                 width: 10, height: 10, borderRadius: '50%',
                 background: `oklch(0.75 0.14 ${ms.hue})`,
-                boxShadow: `0 0 10px oklch(0.75 0.14 ${ms.hue} / 0.8)`,
+                boxShadow: isLight ? 'none' : `0 0 10px oklch(0.75 0.14 ${ms.hue} / 0.8)`,
               }} />
-              <span style={{ fontSize: 18, fontWeight: 600, color: 'white' }} className="mono">{ms.quarter}</span>
+              <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--fg)' }} className="mono">{ms.quarter}</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {ms.items.map((item) => {
@@ -4151,8 +4300,8 @@ function RoadmapPage({ onLaunch }: RoadmapPageProps) {
                   <div key={item.title} style={{
                     display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                     padding: '10px 14px', borderRadius: 10,
-                    background: 'oklch(0.14 0.005 250 / 0.5)',
-                    border: '1px solid oklch(0.25 0.010 250 / 0.5)',
+                    background: 'var(--bg-elev-1)',
+                    border: '1px solid var(--border)',
                   }}>
                     <span style={{ fontSize: 14, color: 'var(--fg-muted)', fontWeight: 500 }}>{item.title}</span>
                     <span style={{
@@ -4168,19 +4317,6 @@ function RoadmapPage({ onLaunch }: RoadmapPageProps) {
           </div>
         ))}
       </div>
-
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 48 }}>
-        <button onClick={onLaunch} className="reset" style={{
-          padding: '12px 24px', borderRadius: 9,
-          background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-          color: 'white', fontWeight: 500, fontSize: 14, cursor: 'pointer',
-          boxShadow: '0 4px 12px oklch(0 0 0 / 0.3)',
-          transition: 'background 0.15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.24 0.008 250)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.20 0.008 250)'}
-        >Explore the Dashboard</button>
-      </div>
     </div>
   );
 }
@@ -4194,52 +4330,71 @@ interface ContactPageProps {
 
 function ContactPage({ onLaunch }: ContactPageProps) {
   const [sent, setSent] = useState(false);
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
 
   return (
     <div style={{
-      maxWidth: 640, margin: '40px auto 120px',
+      maxWidth: 720, margin: '40px auto 120px',
       padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
     }} className="fade-in">
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+      {/* Subpage ambient top-center glow */}
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ textAlign: 'center', marginBottom: 40, position: 'relative', zIndex: 1 }}>
         <span style={eyebrow}>Get In Touch</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Contact Us</h1>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Contact Us</h1>
         <p style={sectionSubtitle}>Have a question, feature request, or partnership opportunity? We'd love to hear from you.</p>
       </div>
 
       {!sent ? (
-        <div style={{
-          padding: 32, borderRadius: 16,
-          background: 'oklch(0.16 0.006 250 / 0.4)',
-          border: '1px solid var(--border)',
-        }}>
+        <div className="glass-card" style={{ position: 'relative', zIndex: 1, padding: '36px clamp(20px, 5vw, 40px)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Email</label>
               <input type="email" placeholder="you@example.com" style={{
                 width: '100%', padding: '11px 14px', borderRadius: 8,
-                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
                 color: 'var(--fg)', fontSize: 14, outline: 'none',
                 boxSizing: 'border-box',
-              }} />
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--bg-elev-2)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-elev-1)'; }}
+              />
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Subject</label>
               <input type="text" placeholder="Feature request, bug report, partnership…" style={{
                 width: '100%', padding: '11px 14px', borderRadius: 8,
-                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
                 color: 'var(--fg)', fontSize: 14, outline: 'none',
                 boxSizing: 'border-box',
-              }} />
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--bg-elev-2)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-elev-1)'; }}
+              />
             </div>
             <div>
               <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Message</label>
               <textarea rows={5} placeholder="Tell us what's on your mind…" style={{
                 width: '100%', padding: '11px 14px', borderRadius: 8,
-                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
                 color: 'var(--fg)', fontSize: 14, outline: 'none',
                 resize: 'vertical', fontFamily: 'inherit',
                 boxSizing: 'border-box',
-              }} />
+                transition: 'border-color 0.15s, background 0.15s',
+              }}
+              onFocus={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'var(--bg-elev-2)'; }}
+              onBlur={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-elev-1)'; }}
+              />
             </div>
             <button onClick={() => setSent(true)} className="reset" style={{
               width: '100%', padding: '12px', borderRadius: 8,
@@ -4250,11 +4405,7 @@ function ContactPage({ onLaunch }: ContactPageProps) {
           </div>
         </div>
       ) : (
-        <div style={{
-          textAlign: 'center', padding: '48px 32px', borderRadius: 16,
-          background: 'oklch(0.16 0.006 250 / 0.4)',
-          border: '1px solid var(--border)',
-        }}>
+        <div className="glass-card" style={{ textAlign: 'center', padding: '48px 32px', position: 'relative', zIndex: 1 }}>
           <div style={{
             width: 56, height: 56, borderRadius: '50%',
             background: 'oklch(0.22 0.010 145 / 0.2)',
@@ -4262,11 +4413,11 @@ function ContactPage({ onLaunch }: ContactPageProps) {
             color: 'oklch(0.78 0.16 145)',
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             marginBottom: 20,
-            boxShadow: '0 0 20px oklch(0.78 0.16 145 / 0.25)',
+            boxShadow: isLight ? 'none' : '0 0 20px oklch(0.78 0.16 145 / 0.25)',
           }}>
             <Icon.Check size={28} strokeWidth={2.5} />
           </div>
-          <h2 style={{ fontSize: 22, fontWeight: 600, color: 'white', margin: '0 0 10px' }}>Message Sent!</h2>
+          <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>Message Sent!</h2>
           <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
             Thank you for reaching out. We'll get back to you within 24 hours.
           </p>
@@ -4284,6 +4435,8 @@ interface PrivacyPageProps {
 }
 
 function PrivacyPage({ onLaunch }: PrivacyPageProps) {
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+
   const sections = [
     {
       title: '1. Data We Collect',
@@ -4313,32 +4466,43 @@ function PrivacyPage({ onLaunch }: PrivacyPageProps) {
 
   return (
     <div style={{
-      maxWidth: 800, margin: '40px auto 120px',
+      maxWidth: 880, margin: '40px auto 120px',
       padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
     }} className="fade-in">
-      <div style={{ marginBottom: 40 }}>
+      {/* Subpage ambient top-center glow */}
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ marginBottom: 40, textAlign: 'center', position: 'relative', zIndex: 1 }}>
         <span style={eyebrow}>Legal</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Privacy Policy</h1>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Privacy Policy</h1>
         <p style={{ fontSize: 13, color: 'var(--fg-dim)', marginTop: 8 }}>Last updated: May 27, 2026</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
-        {sections.map((s) => (
-          <div key={s.title}>
-            <h2 style={{ fontSize: 17, color: 'white', fontWeight: 600, margin: '0 0 10px' }}>{s.title}</h2>
-            <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.65, margin: 0 }}>{s.content}</p>
-          </div>
-        ))}
+      <div className="glass-card" style={{ position: 'relative', zIndex: 1, padding: '40px clamp(24px, 5vw, 48px)', gap: 32 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+          {sections.map((s) => (
+            <div key={s.title}>
+              <h2 style={{ fontSize: 17, color: 'var(--fg)', fontWeight: 600, margin: '0 0 10px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>{s.title}</h2>
+              <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.65, margin: 0 }}>{s.content}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div style={{
-        marginTop: 48, padding: '24px 28px', borderRadius: 14,
-        background: 'oklch(0.16 0.006 250 / 0.4)',
-        border: '1px solid var(--border)',
+      <div className="glass-card" style={{
+        marginTop: 32, padding: '24px 28px',
         textAlign: 'center',
+        position: 'relative', zIndex: 1,
       }}>
         <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
-          Questions about our privacy practices? <a href="/contact" style={{ color: 'var(--accent)', textDecoration: 'underline', textDecorationColor: 'oklch(0.68 0.18 265 / 0.4)' }}>Contact us</a> and we'll respond within 24 hours.
+          Questions about our privacy practices? <a href="/contact" style={{ color: 'var(--accent)', textDecoration: 'underline', textDecorationColor: 'var(--accent)' }}>Contact us</a> and we'll respond within 24 hours.
         </p>
       </div>
     </div>
@@ -4353,6 +4517,8 @@ interface BlogPageProps {
 }
 
 function BlogPage({ onLaunch }: BlogPageProps) {
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+
   const posts = [
     {
       title: 'Why We Built MySaaS: The Case for On-Device Utilities',
@@ -4379,27 +4545,28 @@ function BlogPage({ onLaunch }: BlogPageProps) {
 
   return (
     <div style={{
-      maxWidth: 800, margin: '40px auto 120px',
+      maxWidth: 880, margin: '40px auto 120px',
       padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
     }} className="fade-in">
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+      {/* Subpage ambient top-center glow */}
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative', zIndex: 1 }}>
         <span style={eyebrow}>Engineering & Product</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Blog</h1>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Blog</h1>
         <p style={sectionSubtitle}>Behind-the-scenes engineering, product decisions, and the thinking that shapes our tools.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, position: 'relative', zIndex: 1 }}>
         {posts.map((post) => (
-          <article key={post.title} style={{
-            padding: '28px 32px', borderRadius: 16,
-            background: 'oklch(0.16 0.006 250 / 0.4)',
-            border: '1px solid var(--border)',
-            cursor: 'pointer',
-            transition: 'border-color 0.15s, background 0.15s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.background = 'oklch(0.18 0.008 250 / 0.5)'; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.16 0.006 250 / 0.4)'; }}
-          >
+          <article key={post.title} className="glass-card" style={{ cursor: 'pointer' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
               <span style={{
                 width: 8, height: 8, borderRadius: '50%',
@@ -4408,7 +4575,7 @@ function BlogPage({ onLaunch }: BlogPageProps) {
               <span style={{ fontSize: 12, color: 'var(--fg-dim)' }}>{post.date}</span>
               <span style={{ fontSize: 11, color: 'var(--fg-dim)', marginLeft: 'auto' }} className="mono">{post.readTime}</span>
             </div>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'white', margin: '0 0 10px', lineHeight: 1.3 }}>{post.title}</h2>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px', lineHeight: 1.3 }}>{post.title}</h2>
             <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.55 }}>{post.excerpt}</p>
             <div style={{ marginTop: 14 }}>
               <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
@@ -4598,10 +4765,87 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   }
 
   const [view, setView] = useState(initialView);
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark');
   const [palette, setPalette] = useState(false);
   const [launcher, setLauncher] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
+
+  // Initialize theme from localStorage on client side mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme') as 'dark' | 'light';
+      if (savedTheme === 'light' || savedTheme === 'dark') {
+        setTheme(savedTheme);
+      }
+    }
+  }, []);
+
+  // Update theme changes to DOM and localStorage
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const root = document.documentElement;
+      if (theme === 'light') {
+        root.classList.add('light');
+      } else {
+        root.classList.remove('light');
+      }
+      localStorage.setItem('theme', theme);
+    }
+  }, [theme]);
+
+  const toggleTheme = useCallback(() => {
+    setTheme(t => t === 'dark' ? 'light' : 'dark');
+  }, []);
+
+  // Dynamic browser title resolver
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    
+    let title = 'MySaaS - Premium Online Utilities Hub';
+    if (view === 'landing') {
+      title = 'MySaaS - Stop Googling Tiny Tools. Start Finishing.';
+    } else if (view === 'home') {
+      title = 'Dashboard & Workspace - Premium SaaS Tools Hub';
+    } else if (view === 'pricing') {
+      title = 'Simple & Fair Pricing - Premium SaaS Tools Hub';
+    } else if (view === 'about') {
+      title = 'Our Vision & Core Philosophy - Premium SaaS Tools Hub';
+    } else if (view === 'docs') {
+      title = 'Developer Documentation & Technical Guide - Premium SaaS Tools Hub';
+    } else if (view === 'changelog') {
+      title = 'Changelog & Product Updates - Premium SaaS Tools Hub';
+    } else if (view === 'roadmap') {
+      title = 'Product Roadmap - MySaaS Tools Hub';
+    } else if (view === 'contact') {
+      title = 'Contact Us - MySaaS Tools Hub';
+    } else if (view === 'privacy') {
+      title = 'Privacy Policy - MySaaS Tools Hub';
+    } else if (view === 'blog') {
+      title = 'Blog - MySaaS Tools Hub';
+    } else if (view.startsWith('category_')) {
+      const catId = view.replace('category_', '');
+      const cat = CATEGORIES.find(c => c.id === catId);
+      title = `${cat ? cat.label : 'Category'} Tools Catalog - Premium Utilities Hub`;
+    } else {
+      const tool = ALL_TOOLS.find(t => t.id === view);
+      if (tool) {
+        title = `${tool.name} - Premium Online Utility Tool`;
+      }
+    }
+    
+    document.title = title;
+  }, [view]);
+
+  // Dynamic Scroll Restoration - instantly jump to top on view change
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const hasHash = window.location.hash;
+      if (!hasHash) {
+        window.scrollTo(0, 0);
+      }
+    }
+  }, [view]);
 
   const isLanding = view === 'landing';
   const isDashboard = view === 'home';
@@ -4772,15 +5016,15 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
   }
 
-  /* Landing renders its own nav and footer */
   if (isLanding) {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
         <div className="app-root">
-          <Landing onLaunch={launchApp} onEnterprise={() => setEnterpriseOpen(true)} />
+          <Landing onLaunch={launchApp} onEnterprise={() => setEnterpriseOpen(true)} onBrowseTools={() => setLauncher(true)} />
           <Footer onBackToLanding={null} />
         </div>
+        <Launcher open={launcher} onClose={() => setLauncher(false)} onPick={openTool} />
         <EnterpriseModal open={enterpriseOpen} onClose={() => setEnterpriseOpen(false)} />
       </>
     );
@@ -4796,6 +5040,8 @@ export function App({ initialSlug }: { initialSlug?: string }) {
           onHome={goHome}
           activeTool={activeTool}
           scrolled={scrolled || !isDashboard}
+          theme={theme}
+          onToggleTheme={toggleTheme}
         />
 
         <main>
