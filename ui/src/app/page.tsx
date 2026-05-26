@@ -370,9 +370,9 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled }:
       transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
     }}>
       {/* Brand */}
-      <button onClick={onHome} className="reset" style={{
+      <a href="/" className="reset" style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        cursor: 'pointer',
+        cursor: 'pointer', textDecoration: 'none', color: 'inherit',
       }}>
         <div style={{
           width: 28, height: 28, borderRadius: 7,
@@ -387,7 +387,7 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled }:
           letterSpacing: '-0.018em',
           color: 'var(--fg)',
         }}>mysaas</span>
-      </button>
+      </a>
 
       {/* Tools launcher pill — center on desktop, hidden on mobile (use ⌘K instead) */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
@@ -426,8 +426,8 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled }:
         <kbd className="kbd">⌘K</kbd>
       </button>
 
-      <a href="#pricing" className="reset top-link" style={topLink}>Pricing</a>
-      <a href="#docs" className="reset top-link" style={topLink}>Docs</a>
+      <a href="/pricing" className="reset top-link" style={topLink}>Pricing</a>
+      <a href="/docs" className="reset top-link" style={topLink}>Docs</a>
 
       <button className="reset" style={{
         padding: '8px 14px',
@@ -467,6 +467,11 @@ function CommandPalette({ open, onClose, onPick }: CommandPaletteProps) {
   const listRef = useRef<HTMLDivElement>(null);
 
   const results = useMemo(() => searchTools(q).slice(0, 12), [q]);
+
+  // Global Escape key handler — works even when input is not focused
+  useKeydown(useCallback((e: KeyboardEvent) => {
+    if (open && e.key === 'Escape') onClose();
+  }, [open, onClose]));
 
   useEffect(() => {
     if (open) {
@@ -3438,16 +3443,16 @@ function Footer({ onBackToLanding }: FooterProps) {
         <FooterCol title="Product" links={[
           { label: 'Pricing', path: '/pricing' },
           { label: 'Changelog', path: '/changelog' },
-          { label: 'Roadmap', path: '/changelog#roadmap' },
+          { label: 'Roadmap', path: '/roadmap' },
           { label: 'Status', path: '/dashboard' },
-          { label: 'Privacy', path: '/about#privacy' }
+          { label: 'Privacy', path: '/privacy' }
         ]} />
         <FooterCol title="Company" links={[
           { label: 'About', path: '/about' },
-          { label: 'Blog', path: '/about#blog' },
-          { label: 'Careers', path: '/about#careers' },
-          { label: 'Contact', path: '/about#contact' },
-          { label: 'Press kit', path: '/about#press' }
+          { label: 'Blog', path: '/blog' },
+          { label: 'Docs', path: '/docs' },
+          { label: 'Contact', path: '/contact' },
+          { label: 'Changelog', path: '/changelog' }
         ]} />
       </div>
       <div style={{
@@ -4067,6 +4072,356 @@ function ChangelogPage({ onLaunch }: ChangelogPageProps) {
   );
 }
 
+/* =========================================================================
+   RoadmapPage Component
+   ========================================================================= */
+interface RoadmapPageProps {
+  onLaunch: () => void;
+}
+
+function RoadmapPage({ onLaunch }: RoadmapPageProps) {
+  const milestones = [
+    {
+      quarter: 'Q2 2026',
+      hue: 265,
+      items: [
+        { title: 'Screenshot → Excel (OCR)', status: 'in-progress' },
+        { title: 'PDF Bank Statement Parser', status: 'in-progress' },
+        { title: 'Subtitle Re-syncer', status: 'planned' },
+        { title: 'HEIC / WebP Batch Converter', status: 'planned' },
+      ],
+    },
+    {
+      quarter: 'Q3 2026',
+      hue: 195,
+      items: [
+        { title: 'Auto-Redactor (PII Scrubber)', status: 'planned' },
+        { title: 'Visual PDF Diff Checker', status: 'planned' },
+        { title: 'QR Code Generator & Reader', status: 'planned' },
+        { title: 'Team Workspaces & Sharing', status: 'planned' },
+      ],
+    },
+    {
+      quarter: 'Q4 2026',
+      hue: 75,
+      items: [
+        { title: 'API Access & Webhooks', status: 'planned' },
+        { title: 'Custom Branded Exports', status: 'planned' },
+        { title: 'Batch Processing (500 files)', status: 'planned' },
+        { title: 'SOC2 Compliance & SSO', status: 'planned' },
+      ],
+    },
+  ];
+
+  const statusColors: Record<string, { bg: string; fg: string; label: string }> = {
+    'in-progress': { bg: 'oklch(0.22 0.06 195 / 0.3)', fg: 'oklch(0.78 0.14 195)', label: 'In Progress' },
+    'planned': { bg: 'oklch(0.22 0.04 265 / 0.2)', fg: 'oklch(0.65 0.10 265)', label: 'Planned' },
+  };
+
+  return (
+    <div style={{
+      maxWidth: 800, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+    }} className="fade-in">
+      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+        <span style={eyebrow}>Product Vision</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Roadmap</h1>
+        <p style={sectionSubtitle}>What we're building next. Priorities shift based on user demand—tell us what matters most.</p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 40 }}>
+        {milestones.map((ms) => (
+          <div key={ms.quarter} style={{
+            padding: '28px 32px', borderRadius: 16,
+            background: 'oklch(0.16 0.006 250 / 0.4)',
+            border: '1px solid var(--border)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+              <span style={{
+                width: 10, height: 10, borderRadius: '50%',
+                background: `oklch(0.75 0.14 ${ms.hue})`,
+                boxShadow: `0 0 10px oklch(0.75 0.14 ${ms.hue} / 0.8)`,
+              }} />
+              <span style={{ fontSize: 18, fontWeight: 600, color: 'white' }} className="mono">{ms.quarter}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              {ms.items.map((item) => {
+                const st = statusColors[item.status];
+                return (
+                  <div key={item.title} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '10px 14px', borderRadius: 10,
+                    background: 'oklch(0.14 0.005 250 / 0.5)',
+                    border: '1px solid oklch(0.25 0.010 250 / 0.5)',
+                  }}>
+                    <span style={{ fontSize: 14, color: 'var(--fg-muted)', fontWeight: 500 }}>{item.title}</span>
+                    <span style={{
+                      fontSize: 10, fontWeight: 600,
+                      padding: '3px 8px', borderRadius: 12,
+                      background: st.bg, color: st.fg,
+                      textTransform: 'uppercase', letterSpacing: '0.04em',
+                    }} className="mono">{st.label}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 48 }}>
+        <button onClick={onLaunch} className="reset" style={{
+          padding: '12px 24px', borderRadius: 9,
+          background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+          color: 'white', fontWeight: 500, fontSize: 14, cursor: 'pointer',
+          boxShadow: '0 4px 12px oklch(0 0 0 / 0.3)',
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.24 0.008 250)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.20 0.008 250)'}
+        >Explore the Dashboard</button>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   ContactPage Component
+   ========================================================================= */
+interface ContactPageProps {
+  onLaunch: () => void;
+}
+
+function ContactPage({ onLaunch }: ContactPageProps) {
+  const [sent, setSent] = useState(false);
+
+  return (
+    <div style={{
+      maxWidth: 640, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+    }} className="fade-in">
+      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+        <span style={eyebrow}>Get In Touch</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Contact Us</h1>
+        <p style={sectionSubtitle}>Have a question, feature request, or partnership opportunity? We'd love to hear from you.</p>
+      </div>
+
+      {!sent ? (
+        <div style={{
+          padding: 32, borderRadius: 16,
+          background: 'oklch(0.16 0.006 250 / 0.4)',
+          border: '1px solid var(--border)',
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Email</label>
+              <input type="email" placeholder="you@example.com" style={{
+                width: '100%', padding: '11px 14px', borderRadius: 8,
+                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                color: 'var(--fg)', fontSize: 14, outline: 'none',
+                boxSizing: 'border-box',
+              }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Subject</label>
+              <input type="text" placeholder="Feature request, bug report, partnership…" style={{
+                width: '100%', padding: '11px 14px', borderRadius: 8,
+                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                color: 'var(--fg)', fontSize: 14, outline: 'none',
+                boxSizing: 'border-box',
+              }} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-muted)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Message</label>
+              <textarea rows={5} placeholder="Tell us what's on your mind…" style={{
+                width: '100%', padding: '11px 14px', borderRadius: 8,
+                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                color: 'var(--fg)', fontSize: 14, outline: 'none',
+                resize: 'vertical', fontFamily: 'inherit',
+                boxSizing: 'border-box',
+              }} />
+            </div>
+            <button onClick={() => setSent(true)} className="reset" style={{
+              width: '100%', padding: '12px', borderRadius: 8,
+              background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+              color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+              boxShadow: '0 4px 14px oklch(0.50 0.20 265 / 0.3)',
+            }}>Send Message</button>
+          </div>
+        </div>
+      ) : (
+        <div style={{
+          textAlign: 'center', padding: '48px 32px', borderRadius: 16,
+          background: 'oklch(0.16 0.006 250 / 0.4)',
+          border: '1px solid var(--border)',
+        }}>
+          <div style={{
+            width: 56, height: 56, borderRadius: '50%',
+            background: 'oklch(0.22 0.010 145 / 0.2)',
+            border: '1px solid oklch(0.75 0.14 145 / 0.4)',
+            color: 'oklch(0.78 0.16 145)',
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            marginBottom: 20,
+            boxShadow: '0 0 20px oklch(0.78 0.16 145 / 0.25)',
+          }}>
+            <Icon.Check size={28} strokeWidth={2.5} />
+          </div>
+          <h2 style={{ fontSize: 22, fontWeight: 600, color: 'white', margin: '0 0 10px' }}>Message Sent!</h2>
+          <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
+            Thank you for reaching out. We'll get back to you within 24 hours.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* =========================================================================
+   PrivacyPage Component
+   ========================================================================= */
+interface PrivacyPageProps {
+  onLaunch: () => void;
+}
+
+function PrivacyPage({ onLaunch }: PrivacyPageProps) {
+  const sections = [
+    {
+      title: '1. Data We Collect',
+      content: 'We collect minimal usage analytics (page views, tool usage counts) via privacy-first analytics. We do not collect, store, or transmit any document contents, file data, or personally identifiable information through our tool processing pipeline. Files processed through on-device tools never leave your browser.',
+    },
+    {
+      title: '2. On-Device Processing',
+      content: 'The majority of our tools execute entirely within your browser using WebAssembly and JavaScript. Your files are processed locally on your device and are never uploaded to our servers unless you explicitly use a server-side tool (clearly labeled).',
+    },
+    {
+      title: '3. Server-Side Processing',
+      content: 'For tools that require server-side compute (PDF generation, OCR, bank statement parsing), files are streamed directly to memory, processed, and the result is returned immediately. We do not persist, cache, or log any uploaded content. Processing buffers are cleared after each request.',
+    },
+    {
+      title: '4. Cookies & Tracking',
+      content: 'We use only essential cookies for session management and user preferences (theme, last-used tool). We do not use third-party tracking pixels, advertising cookies, or fingerprinting technologies.',
+    },
+    {
+      title: '5. Third-Party Services',
+      content: 'We use Vercel for hosting and Render for backend compute during our prototype phase. Both services comply with GDPR and SOC2 standards. We do not share any user data with third parties for marketing or advertising purposes.',
+    },
+    {
+      title: '6. Your Rights',
+      content: 'You can request deletion of your account and all associated data at any time by contacting us. Since we store minimal data, most users have effectively zero stored personal information beyond their email address (if registered).',
+    },
+  ];
+
+  return (
+    <div style={{
+      maxWidth: 800, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+    }} className="fade-in">
+      <div style={{ marginBottom: 40 }}>
+        <span style={eyebrow}>Legal</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Privacy Policy</h1>
+        <p style={{ fontSize: 13, color: 'var(--fg-dim)', marginTop: 8 }}>Last updated: May 27, 2026</p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+        {sections.map((s) => (
+          <div key={s.title}>
+            <h2 style={{ fontSize: 17, color: 'white', fontWeight: 600, margin: '0 0 10px' }}>{s.title}</h2>
+            <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.65, margin: 0 }}>{s.content}</p>
+          </div>
+        ))}
+      </div>
+
+      <div style={{
+        marginTop: 48, padding: '24px 28px', borderRadius: 14,
+        background: 'oklch(0.16 0.006 250 / 0.4)',
+        border: '1px solid var(--border)',
+        textAlign: 'center',
+      }}>
+        <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
+          Questions about our privacy practices? <a href="/contact" style={{ color: 'var(--accent)', textDecoration: 'underline', textDecorationColor: 'oklch(0.68 0.18 265 / 0.4)' }}>Contact us</a> and we'll respond within 24 hours.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   BlogPage Component
+   ========================================================================= */
+interface BlogPageProps {
+  onLaunch: () => void;
+}
+
+function BlogPage({ onLaunch }: BlogPageProps) {
+  const posts = [
+    {
+      title: 'Why We Built MySaaS: The Case for On-Device Utilities',
+      date: 'May 27, 2026',
+      excerpt: 'Most file-processing websites upload your data to a server, process it, and send it back. We asked: what if the processing never left your browser?',
+      hue: 265,
+      readTime: '4 min read',
+    },
+    {
+      title: 'Introducing the Universal AI Formatter',
+      date: 'May 26, 2026',
+      excerpt: 'Copy-paste from ChatGPT, Gemini, or Claude and get a beautifully formatted PDF, DOCX, or HTML document in seconds. Here\'s how it works under the hood.',
+      hue: 195,
+      readTime: '6 min read',
+    },
+    {
+      title: 'Our Pricing Philosophy: Metered Freemium with PPP',
+      date: 'May 25, 2026',
+      excerpt: 'How we designed a pricing model that keeps core tools free forever while sustainably funding compute-heavy operations like OCR and PDF parsing.',
+      hue: 75,
+      readTime: '3 min read',
+    },
+  ];
+
+  return (
+    <div style={{
+      maxWidth: 800, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+    }} className="fade-in">
+      <div style={{ textAlign: 'center', marginBottom: 48 }}>
+        <span style={eyebrow}>Engineering & Product</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0' }}>Blog</h1>
+        <p style={sectionSubtitle}>Behind-the-scenes engineering, product decisions, and the thinking that shapes our tools.</p>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {posts.map((post) => (
+          <article key={post.title} style={{
+            padding: '28px 32px', borderRadius: 16,
+            background: 'oklch(0.16 0.006 250 / 0.4)',
+            border: '1px solid var(--border)',
+            cursor: 'pointer',
+            transition: 'border-color 0.15s, background 0.15s',
+          }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--border-strong)'; e.currentTarget.style.background = 'oklch(0.18 0.008 250 / 0.5)'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.16 0.006 250 / 0.4)'; }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+              <span style={{
+                width: 8, height: 8, borderRadius: '50%',
+                background: `oklch(0.75 0.14 ${post.hue})`,
+              }} />
+              <span style={{ fontSize: 12, color: 'var(--fg-dim)' }}>{post.date}</span>
+              <span style={{ fontSize: 11, color: 'var(--fg-dim)', marginLeft: 'auto' }} className="mono">{post.readTime}</span>
+            </div>
+            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'white', margin: '0 0 10px', lineHeight: 1.3 }}>{post.title}</h2>
+            <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.55 }}>{post.excerpt}</p>
+            <div style={{ marginTop: 14 }}>
+              <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                Read more <Icon.ArrowRight size={12} />
+              </span>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 interface EnterpriseModalProps {
   open: boolean;
   onClose: () => void;
@@ -4225,7 +4580,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   // Determine starting view based on presets
   let initialView = 'landing';
   if (initialSlug) {
-    if (initialSlug === 'pricing' || initialSlug === 'about' || initialSlug === 'docs' || initialSlug === 'changelog') {
+    if (initialSlug === 'pricing' || initialSlug === 'about' || initialSlug === 'docs' || initialSlug === 'changelog' || initialSlug === 'roadmap' || initialSlug === 'contact' || initialSlug === 'privacy' || initialSlug === 'blog') {
       initialView = initialSlug;
     } else if (initialSlug === 'dashboard' || initialSlug === 'home') {
       initialView = 'home';
@@ -4252,7 +4607,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   const isDashboard = view === 'home';
 
   const activeTool = useMemo(() => {
-    if (isLanding || isDashboard || view === 'pricing' || view === 'about' || view === 'docs' || view === 'changelog' || view.startsWith('category_')) return null;
+    if (isLanding || isDashboard || view === 'pricing' || view === 'about' || view === 'docs' || view === 'changelog' || view === 'roadmap' || view === 'contact' || view === 'privacy' || view === 'blog' || view.startsWith('category_')) return null;
     return ALL_TOOLS.find(t => t.id === view);
   }, [view, isLanding, isDashboard]);
 
@@ -4266,6 +4621,10 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     else if (newView === 'about') path = '/about';
     else if (newView === 'docs') path = '/docs';
     else if (newView === 'changelog') path = '/changelog';
+    else if (newView === 'roadmap') path = '/roadmap';
+    else if (newView === 'contact') path = '/contact';
+    else if (newView === 'privacy') path = '/privacy';
+    else if (newView === 'blog') path = '/blog';
     else if (newView.startsWith('category_')) {
       path = `/category/${newView.replace('category_', '')}`;
     } else if (newView !== 'landing' && newView !== 'home') {
@@ -4293,6 +4652,14 @@ export function App({ initialSlug }: { initialSlug?: string }) {
         setView('docs');
       } else if (path === '/changelog') {
         setView('changelog');
+      } else if (path === '/roadmap') {
+        setView('roadmap');
+      } else if (path === '/contact') {
+        setView('contact');
+      } else if (path === '/privacy') {
+        setView('privacy');
+      } else if (path === '/blog') {
+        setView('blog');
       } else if (path.startsWith('/category/')) {
         const catId = path.split('/category/')[1];
         setView(`category_${catId}`);
@@ -4315,28 +4682,49 @@ export function App({ initialSlug }: { initialSlug?: string }) {
       const href = anchor.getAttribute('href');
       if (!href) return;
       
-      // Check if it's an internal link
+      // Check if it's an internal link (starts with /)
       if (href.startsWith('/') && !href.startsWith('//')) {
         e.preventDefault();
         
-        if (href === '/' || href === '/landing') {
+        // Strip any hash fragment for view resolution
+        const basePath = href.split('#')[0];
+        const hashFragment = href.includes('#') ? href.split('#')[1] : null;
+        
+        if (basePath === '/' || basePath === '/landing' || basePath === '') {
           navigateToView('landing');
-        } else if (href === '/home' || href === '/dashboard') {
+        } else if (basePath === '/home' || basePath === '/dashboard') {
           navigateToView('home');
-        } else if (href === '/pricing') {
+        } else if (basePath === '/pricing') {
           navigateToView('pricing');
-        } else if (href === '/about') {
+        } else if (basePath === '/about') {
           navigateToView('about');
-        } else if (href === '/docs') {
+        } else if (basePath === '/docs') {
           navigateToView('docs');
-        } else if (href === '/changelog') {
+        } else if (basePath === '/changelog') {
           navigateToView('changelog');
-        } else if (href.startsWith('/category/')) {
-          const catId = href.split('/category/')[1];
+        } else if (basePath === '/roadmap') {
+          navigateToView('roadmap');
+        } else if (basePath === '/contact') {
+          navigateToView('contact');
+        } else if (basePath === '/privacy') {
+          navigateToView('privacy');
+        } else if (basePath === '/blog') {
+          navigateToView('blog');
+        } else if (basePath.startsWith('/category/')) {
+          const catId = basePath.split('/category/')[1];
           navigateToView(`category_${catId}`);
-        } else if (href.startsWith('/tools/')) {
-          const toolId = href.split('/tools/')[1];
+        } else if (basePath.startsWith('/tools/')) {
+          const toolId = basePath.split('/tools/')[1];
           navigateToView(toolId);
+        }
+        
+        // Always scroll to top on navigation, then optionally to hash target
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        if (hashFragment) {
+          setTimeout(() => {
+            const el = document.getElementById(hashFragment);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }, 150);
         }
       }
     }
@@ -4422,6 +4810,10 @@ export function App({ initialSlug }: { initialSlug?: string }) {
           {view === 'about' && <AboutPage onLaunch={launchApp} />}
           {view === 'docs' && <DocsPage onLaunch={launchApp} />}
           {view === 'changelog' && <ChangelogPage onLaunch={launchApp} />}
+          {view === 'roadmap' && <RoadmapPage onLaunch={launchApp} />}
+          {view === 'contact' && <ContactPage onLaunch={launchApp} />}
+          {view === 'privacy' && <PrivacyPage onLaunch={launchApp} />}
+          {view === 'blog' && <BlogPage onLaunch={launchApp} />}
           {view.startsWith('category_') && (
             <CategoryHub categoryId={view.replace('category_', '')} onOpenTool={openTool} />
           )}
