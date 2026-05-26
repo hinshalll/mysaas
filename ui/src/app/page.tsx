@@ -73,6 +73,18 @@ export const GLOBAL_CSS = `:root {
 
     --accent:       oklch(0.68 0.18 265);
     --pro:          oklch(0.78 0.16 75);
+
+    /* Dynamic layouts additions */
+    --bg-topbar:          oklch(0.135 0.005 250 / 0.78);
+    --bg-overlay:         oklch(0.10 0.005 250 / 0.96);
+    --bg-overlay-sticky:  oklch(0.10 0.005 250 / 0.9);
+    --bg-overlay-modal:   oklch(0.06 0.005 250 / 0.6);
+    --bg-modal:           oklch(0.18 0.008 250 / 0.95);
+    --bg-paper-container: radial-gradient(60% 50% at 50% 0%, oklch(0.55 0.18 265 / 0.05), transparent 70%), oklch(0.14 0.005 250);
+    
+    --shadow-card:        inset 0 1px 0 oklch(1 0 0 / 0.02);
+    --shadow-card-hover:  0 8px 32px oklch(0 0 0 / 0.4), 0 0 0 1px var(--border);
+    --shadow-modal:       0 24px 80px oklch(0 0 0 / 0.6), 0 0 0 1px oklch(0 0 0 / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.05);
   }
 
   :root.light {
@@ -91,6 +103,31 @@ export const GLOBAL_CSS = `:root {
 
     --accent:       oklch(0.58 0.16 265);
     --pro:          oklch(0.62 0.14 75);
+
+    /* Dynamic layouts additions */
+    --bg-topbar:          oklch(0.985 0.003 250 / 0.78);
+    --bg-overlay:         oklch(0.99 0.003 250 / 0.96);
+    --bg-overlay-sticky:  oklch(0.99 0.003 250 / 0.9);
+    --bg-overlay-modal:   oklch(0.06 0.005 250 / 0.4);
+    --bg-modal:           oklch(0.995 0.003 250 / 0.95);
+    --bg-paper-container: radial-gradient(60% 50% at 50% 0%, oklch(0.55 0.18 265 / 0.05), transparent 70%), var(--bg-elev-1);
+
+    --shadow-card:        inset 0 1px 0 oklch(1 0 0 / 0.8), 0 2px 8px oklch(0 0 0 / 0.02);
+    --shadow-card-hover:  0 12px 36px oklch(0 0 0 / 0.06), 0 0 0 1px var(--border-strong);
+    --shadow-modal:       0 24px 80px oklch(0 0 0 / 0.08), 0 0 0 1px var(--border), inset 0 1px 0 oklch(1 0 0 / 0.8);
+  }
+
+  :root.light .kbd, :root.light .kbd-sm, :root.light .kbd-inline {
+    background: oklch(0.93 0.005 250) !important;
+  }
+  :root.light .pro-badge {
+    background: oklch(0.92 0.08 75 / 0.6) !important;
+    border-color: oklch(0.62 0.14 75 / 0.4) !important;
+    color: oklch(0.52 0.12 75) !important;
+  }
+  .top-link:hover {
+    background: var(--bg-hover) !important;
+    color: var(--fg) !important;
   }
 
   * { box-sizing: border-box; }
@@ -391,10 +428,23 @@ function useBodyLock(locked: boolean) {
 }
 
 /* Subtle category-tinted background swatch for icon containers */
-const tint = (hue: number, l = 0.30, c = 0.06, alpha = 0.55) =>
-  `oklch(${l} ${c} ${hue} / ${alpha})`;
-const tintFg = (hue: number) => `oklch(0.82 0.13 ${hue})`;
-const tintBorder = (hue: number) => `oklch(0.45 0.10 ${hue} / 0.45)`;
+const isLightMode = () => typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+
+const tint = (hue: number, l?: number, c?: number, alpha?: number) => {
+  const light = isLightMode();
+  const finalL = l !== undefined ? (light ? 1 - l * 0.7 : l) : (light ? 0.94 : 0.30);
+  const finalC = c !== undefined ? (light ? c * 0.7 : c) : (light ? 0.04 : 0.06);
+  const finalA = alpha !== undefined ? alpha : 0.55;
+  return `oklch(${finalL} ${finalC} ${hue} / ${finalA})`;
+};
+
+const tintFg = (hue: number) => {
+  return isLightMode() ? `oklch(0.50 0.18 ${hue})` : `oklch(0.82 0.13 ${hue})`;
+};
+
+const tintBorder = (hue: number) => {
+  return isLightMode() ? `oklch(0.75 0.08 ${hue} / 0.35)` : `oklch(0.45 0.10 ${hue} / 0.45)`;
+};
 
 /* =========================================================================
    Top bar — sticky, blurred, optional contrast
@@ -418,7 +468,7 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
       display: 'flex', alignItems: 'center',
       padding: '0 20px',
       gap: 14,
-      background: scrolled ? 'oklch(0.14 0.005 250 / 0.78)' : 'transparent',
+      background: scrolled ? 'var(--bg-topbar)' : 'transparent',
       borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'transparent'}`,
       backdropFilter: scrolled ? 'blur(20px) saturate(140%)' : 'none',
       transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
@@ -448,7 +498,7 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
         <button onClick={onOpenLauncher} className="reset launcher-pill" style={{
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '7px 14px 7px 12px',
-          background: 'oklch(0.20 0.008 250 / 0.7)',
+          background: 'var(--bg-elev-1)',
           border: '1px solid var(--border)',
           borderRadius: 999,
           fontSize: 13, fontWeight: 500,
@@ -467,7 +517,7 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
       <button onClick={onOpenPalette} className="reset search-btn" style={{
         display: 'flex', alignItems: 'center', gap: 8,
         padding: '7px 10px 7px 12px',
-        background: 'oklch(0.20 0.008 250 / 0.6)',
+        background: 'var(--bg-elev-1)',
         border: '1px solid var(--border)',
         borderRadius: 8,
         fontSize: 12.5,
@@ -489,12 +539,12 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
         width: 32, height: 32, borderRadius: 8,
         cursor: 'pointer',
         fontSize: 13, color: 'var(--fg-muted)',
-        background: 'oklch(0.20 0.008 250 / 0.5)',
+        background: 'var(--bg-elev-1)',
         border: '1px solid var(--border)',
         transition: 'background 0.15s, color 0.15s, transform 0.15s',
       }}
-      onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.24 0.010 250 / 0.85)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.20 0.008 250 / 0.5)'}
+      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-1)'}
       title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
         {theme === 'dark' ? <Icon.Sun size={15} /> : <Icon.Moon size={15} />}
       </button>
@@ -568,17 +618,17 @@ function CommandPalette({ open, onClose, onPick }: CommandPaletteProps) {
   return (
     <div className="fade-in" onClick={onClose} style={{
       position: 'fixed', inset: 0, zIndex: 100,
-      background: 'oklch(0.06 0.005 250 / 0.6)',
+      background: 'var(--bg-overlay-modal)',
       backdropFilter: 'blur(8px)',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
       paddingTop: 'min(15vh, 120px)',
     }}>
       <div onClick={e => e.stopPropagation()} className="scale-in" style={{
         width: 'min(640px, calc(100vw - 32px))',
-        background: 'oklch(0.18 0.008 250 / 0.95)',
+        background: 'var(--bg-modal)',
         border: '1px solid var(--border-strong)',
         borderRadius: 14,
-        boxShadow: '0 24px 80px oklch(0 0 0 / 0.6), 0 0 0 1px oklch(0 0 0 / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.05)',
+        boxShadow: 'var(--shadow-modal)',
         overflow: 'hidden',
       }}>
         {/* Input */}
@@ -655,7 +705,7 @@ function CommandPalette({ open, onClose, onPick }: CommandPaletteProps) {
                   display: 'flex', alignItems: 'center', gap: 12,
                   padding: '10px 12px',
                   borderRadius: 8,
-                  background: active ? 'oklch(0.26 0.025 250)' : 'transparent',
+                  background: active ? 'var(--bg-hover)' : 'transparent',
                   cursor: 'pointer',
                   textAlign: 'left',
                 }}>
@@ -694,7 +744,7 @@ function CommandPalette({ open, onClose, onPick }: CommandPaletteProps) {
           borderTop: '1px solid var(--border)',
           display: 'flex', alignItems: 'center', gap: 14,
           fontSize: 11, color: 'var(--fg-dim)',
-          background: 'oklch(0.15 0.006 250 / 0.6)',
+          background: 'var(--bg-elev-1)',
         }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <kbd className="kbd-sm">↑↓</kbd> navigate
@@ -734,7 +784,7 @@ function Launcher({ open, onClose, onPick }: LauncherProps) {
   return (
     <div className="fade-in" style={{
       position: 'fixed', inset: 0, zIndex: 90,
-      background: 'oklch(0.10 0.005 250 / 0.96)',
+      background: 'var(--bg-overlay)',
       backdropFilter: 'blur(20px)',
       overflowY: 'auto',
     }}>
@@ -743,7 +793,7 @@ function Launcher({ open, onClose, onPick }: LauncherProps) {
         position: 'sticky', top: 0, zIndex: 1,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         padding: '20px 32px',
-        background: 'linear-gradient(180deg, oklch(0.10 0.005 250 / 0.9), transparent)',
+        background: 'linear-gradient(180deg, var(--bg-overlay-sticky), transparent)',
       }}>
         <div>
           <div style={{ fontSize: 11.5, fontWeight: 500, color: 'var(--fg-dim)', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
@@ -831,14 +881,14 @@ function ToolCard({ tool, onClick, compact, large }: ToolCardProps) {
         cursor: 'pointer', textAlign: 'left',
         display: 'flex', flexDirection: 'column', gap: large ? 16 : 12,
         padding: large ? '22px 22px 20px' : '16px 16px 14px',
-        background: hover ? 'oklch(0.21 0.010 250 / 0.85)' : 'oklch(0.175 0.008 250 / 0.6)',
+        background: hover ? 'var(--bg-hover)' : 'var(--bg-elev-1)',
         border: '1px solid',
         borderColor: hover ? tintBorder(tool.hue) : 'var(--border)',
         borderRadius: 12,
         position: 'relative', overflow: 'hidden',
         transition: 'background 0.18s, border-color 0.18s, transform 0.18s',
         transform: hover ? 'translateY(-1px)' : 'none',
-        boxShadow: hover ? `0 8px 32px oklch(0 0 0 / 0.4), 0 0 0 1px ${tintBorder(tool.hue)}` : 'inset 0 1px 0 oklch(1 0 0 / 0.02)',
+        boxShadow: hover ? 'var(--shadow-card-hover)' : 'var(--shadow-card)',
       }}>
       {/* Soft category glow on hover */}
       <span style={{
@@ -1432,7 +1482,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
         <div style={{
           display: 'flex', gap: 6, alignItems: 'center',
           padding: '8px 12px',
-          background: 'oklch(0.18 0.008 250 / 0.6)',
+          background: 'var(--bg-elev-2)',
           border: '1px solid var(--border)',
           borderRadius: 8,
           fontSize: 11.5, color: 'var(--fg-muted)',
@@ -1444,7 +1494,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
 
       {/* Input card */}
       <div style={{
-        background: 'oklch(0.175 0.008 250 / 0.7)',
+        background: 'var(--bg-elev-1)',
         border: '1px solid var(--border)',
         borderRadius: 12,
         overflow: 'visible',
@@ -1454,13 +1504,13 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
           display: 'flex', alignItems: 'center', gap: 8,
           padding: '10px 12px',
           borderBottom: '1px solid var(--border)',
-          background: 'oklch(0.19 0.008 250 / 0.6)',
+          background: 'var(--bg-elev-2)',
         }}>
           <span style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
             fontSize: 11.5, fontWeight: 500, color: 'var(--fg-muted)',
             padding: '3px 9px',
-            background: 'oklch(0.22 0.010 250)',
+            background: 'var(--bg-hover)',
             borderRadius: 5,
           }}>
             <span style={{
@@ -1550,7 +1600,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
           display: 'flex', alignItems: 'center', gap: 12,
           padding: '10px 12px',
           borderTop: '1px solid var(--border)',
-          background: 'oklch(0.16 0.006 250 / 0.5)',
+          background: 'var(--bg-elev-2)',
           flexWrap: 'wrap',
         }} className="tool-controls-row">
           <div style={{
@@ -1606,7 +1656,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
       {(generating || generated) && (
         <div className="fade-in-up" style={{
           marginTop: 24,
-          background: 'oklch(0.175 0.008 250 / 0.6)',
+          background: 'var(--bg-elev-1)',
           border: '1px solid var(--border)',
           borderRadius: 12, overflow: 'hidden',
         }}>
@@ -1614,7 +1664,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
           <div style={{
             padding: '10px 14px',
             borderBottom: '1px solid var(--border)',
-            background: 'oklch(0.19 0.008 250 / 0.5)',
+            background: 'var(--bg-elev-2)',
             display: 'flex', alignItems: 'center', gap: 10,
             flexWrap: 'wrap',
           }}>
@@ -1638,7 +1688,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
                   cursor: 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '7px 10px',
-                  background: 'oklch(0.22 0.010 250)',
+                  background: 'var(--bg-hover)',
                   border: '1px solid var(--border)',
                   borderRadius: 7,
                   fontSize: 12, fontWeight: 500,
@@ -1652,7 +1702,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
                   cursor: copying ? 'wait' : 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '7px 12px',
-                  background: 'oklch(0.22 0.010 250)',
+                  background: 'var(--bg-hover)',
                   border: '1px solid var(--border)',
                   borderRadius: 7,
                   fontSize: 12, fontWeight: 500,
@@ -1696,7 +1746,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
               display: 'flex', alignItems: 'center', gap: 4,
               padding: '8px 12px',
               borderBottom: '1px solid var(--border)',
-              background: 'oklch(0.20 0.009 250 / 0.6)',
+              background: 'var(--bg-elev-2)',
               flexWrap: 'wrap',
             }} className="wysiwyg-toolbar">
               <BlockSelect value={activeMarks.block} onChange={setBlock} />
@@ -1730,7 +1780,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
           {/* Paper area */}
       <div style={{
         padding: 'clamp(20px, 4vw, 48px)',
-        background: 'radial-gradient(60% 50% at 50% 0%, oklch(0.55 0.18 265 / 0.05), transparent 70%), oklch(0.14 0.005 250)',
+        background: 'var(--bg-paper-container)',
         minHeight: 480,
         display: 'flex', justifyContent: 'center',
       }}>
@@ -1782,7 +1832,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
             <div style={{
               padding: '8px 14px',
               borderTop: '1px solid var(--border)',
-              background: 'oklch(0.16 0.006 250 / 0.5)',
+              background: 'var(--bg-elev-2)',
               display: 'flex', alignItems: 'center', gap: 16,
               fontSize: 11, color: 'var(--fg-dim)',
               fontFamily: '"JetBrains Mono", monospace',
@@ -2113,9 +2163,11 @@ function Home({ onOpenTool, onOpenLauncher, onOpenPalette }: HomeProps) {
 interface LandingNavProps {
   onLaunch: () => void;
   scrolled: boolean;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
 }
 
-function LandingNav({ onLaunch, scrolled }: LandingNavProps) {
+function LandingNav({ onLaunch, scrolled, theme, onToggleTheme }: LandingNavProps) {
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -2123,7 +2175,7 @@ function LandingNav({ onLaunch, scrolled }: LandingNavProps) {
       display: 'flex', alignItems: 'center',
       padding: '0 32px',
       gap: 18,
-      background: scrolled ? 'oklch(0.135 0.005 250 / 0.78)' : 'transparent',
+      background: scrolled ? 'var(--bg-topbar)' : 'transparent',
       borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'transparent'}`,
       backdropFilter: scrolled ? 'blur(20px) saturate(140%)' : 'none',
       transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
@@ -2167,18 +2219,20 @@ function LandingNav({ onLaunch, scrolled }: LandingNavProps) {
         cursor: 'pointer',
       }}>Sign in</button>
 
-      <button onClick={onLaunch} className="reset" style={{
-        display: 'inline-flex', alignItems: 'center', gap: 7,
-        padding: '8px 14px',
-        background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
-        color: 'oklch(0.16 0.008 250)',
-        fontWeight: 500, fontSize: 13,
-        borderRadius: 8,
+      {/* Theme Toggle Switch */}
+      <button onClick={onToggleTheme} className="reset theme-toggle-btn" style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+        width: 32, height: 32, borderRadius: 8,
         cursor: 'pointer',
-        boxShadow: '0 1px 0 oklch(1 0 0 / 0.4) inset, 0 1px 3px oklch(0 0 0 / 0.5)',
-        letterSpacing: '-0.005em',
-      }}>
-        Launch app <Icon.ArrowRight size={12} strokeWidth={2.2} />
+        fontSize: 13, color: 'var(--fg-muted)',
+        background: 'var(--bg-elev-1)',
+        border: '1px solid var(--border)',
+        transition: 'background 0.15s, color 0.15s, transform 0.15s',
+      }}
+      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+      onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-1)'}
+      title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
+        {theme === 'dark' ? <Icon.Sun size={15} /> : <Icon.Moon size={15} />}
       </button>
     </header>
   );
@@ -2912,9 +2966,11 @@ interface LandingProps {
   onLaunch: () => void;
   onEnterprise: () => void;
   onBrowseTools: () => void;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
 }
 
-function Landing({ onLaunch, onEnterprise, onBrowseTools }: LandingProps) {
+function Landing({ onLaunch, onEnterprise, onBrowseTools, theme, onToggleTheme }: LandingProps) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     function onScroll() { setScrolled(window.scrollY > 8); }
@@ -2924,7 +2980,7 @@ function Landing({ onLaunch, onEnterprise, onBrowseTools }: LandingProps) {
 
   return (
     <div className="fade-in">
-      <LandingNav onLaunch={onLaunch} scrolled={scrolled} />
+      <LandingNav onLaunch={onLaunch} scrolled={scrolled} theme={theme} onToggleTheme={onToggleTheme} />
       <LandingHero onLaunch={onLaunch} />
       <SuitePreview onLaunch={onLaunch} />
       <Pricing onLaunch={onLaunch} onEnterprise={onEnterprise} />
@@ -3475,7 +3531,7 @@ function Footer({ onBackToLanding }: FooterProps) {
     <footer style={{
       marginTop: 60,
       borderTop: '1px solid var(--border)',
-      background: 'oklch(0.13 0.005 250 / 0.6)',
+      background: 'var(--bg-elev-1)',
     }}>
       <div style={{
         maxWidth: 1280, margin: '0 auto',
@@ -4855,127 +4911,34 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     return ALL_TOOLS.find(t => t.id === view);
   }, [view, isLanding, isDashboard]);
 
-  // Helper to dynamically update browser URL path without page reloading
-  const navigateToView = useCallback((newView: string) => {
-    setView(newView);
-    let path = '/';
-    if (newView === 'home') path = '/dashboard';
-    else if (newView === 'landing') path = '/';
-    else if (newView === 'pricing') path = '/pricing';
-    else if (newView === 'about') path = '/about';
-    else if (newView === 'docs') path = '/docs';
-    else if (newView === 'changelog') path = '/changelog';
-    else if (newView === 'roadmap') path = '/roadmap';
-    else if (newView === 'contact') path = '/contact';
-    else if (newView === 'privacy') path = '/privacy';
-    else if (newView === 'blog') path = '/blog';
-    else if (newView.startsWith('category_')) {
-      path = `/category/${newView.replace('category_', '')}`;
-    } else if (newView !== 'landing' && newView !== 'home') {
-      path = `/tools/${newView}`;
+  // Native navigation handlers
+  function launchApp() {
+    window.location.href = '/dashboard';
+  }
+  
+  function openTool(id: string) {
+    let path = `/tools/${id}`;
+    if (id === 'home' || id === 'dashboard') {
+      path = '/dashboard';
+    } else if (id === 'landing') {
+      path = '/';
+    } else if (['pricing', 'about', 'docs', 'changelog', 'roadmap', 'contact', 'privacy', 'blog'].includes(id)) {
+      path = `/${id}`;
+    } else if (id.includes('-to-')) {
+      path = `/tools/format/${id}`;
+    } else if (id.startsWith('category_')) {
+      path = `/category/${id.replace('category_', '')}`;
     }
-    
-    if (typeof window !== 'undefined') {
-      window.history.pushState(null, '', path);
-    }
-  }, []);
-
-  // Sync browser back/forward buttons perfectly
-  useEffect(() => {
-    function onPopState() {
-      const path = window.location.pathname;
-      if (path === '/' || path === '/landing') {
-        setView('landing');
-      } else if (path === '/home' || path === '/dashboard') {
-        setView('home');
-      } else if (path === '/pricing') {
-        setView('pricing');
-      } else if (path === '/about') {
-        setView('about');
-      } else if (path === '/docs') {
-        setView('docs');
-      } else if (path === '/changelog') {
-        setView('changelog');
-      } else if (path === '/roadmap') {
-        setView('roadmap');
-      } else if (path === '/contact') {
-        setView('contact');
-      } else if (path === '/privacy') {
-        setView('privacy');
-      } else if (path === '/blog') {
-        setView('blog');
-      } else if (path.startsWith('/category/')) {
-        const catId = path.split('/category/')[1];
-        setView(`category_${catId}`);
-      } else if (path.startsWith('/tools/')) {
-        const toolId = path.split('/tools/')[1];
-        setView(toolId);
-      }
-    }
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, []);
-
-  // Intercept all internal HTML anchor link clicks globally to trigger soft state routing
-  useEffect(() => {
-    function handleLinkClick(e: MouseEvent) {
-      const target = e.target as HTMLElement;
-      const anchor = target.closest('a');
-      if (!anchor) return;
-      
-      const href = anchor.getAttribute('href');
-      if (!href) return;
-      
-      // Check if it's an internal link (starts with /)
-      if (href.startsWith('/') && !href.startsWith('//')) {
-        e.preventDefault();
-        
-        // Strip any hash fragment for view resolution
-        const basePath = href.split('#')[0];
-        const hashFragment = href.includes('#') ? href.split('#')[1] : null;
-        
-        if (basePath === '/' || basePath === '/landing' || basePath === '') {
-          navigateToView('landing');
-        } else if (basePath === '/home' || basePath === '/dashboard') {
-          navigateToView('home');
-        } else if (basePath === '/pricing') {
-          navigateToView('pricing');
-        } else if (basePath === '/about') {
-          navigateToView('about');
-        } else if (basePath === '/docs') {
-          navigateToView('docs');
-        } else if (basePath === '/changelog') {
-          navigateToView('changelog');
-        } else if (basePath === '/roadmap') {
-          navigateToView('roadmap');
-        } else if (basePath === '/contact') {
-          navigateToView('contact');
-        } else if (basePath === '/privacy') {
-          navigateToView('privacy');
-        } else if (basePath === '/blog') {
-          navigateToView('blog');
-        } else if (basePath.startsWith('/category/')) {
-          const catId = basePath.split('/category/')[1];
-          navigateToView(`category_${catId}`);
-        } else if (basePath.startsWith('/tools/')) {
-          const toolId = basePath.split('/tools/')[1];
-          navigateToView(toolId);
-        }
-        
-        // Always scroll to top on navigation, then optionally to hash target
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        if (hashFragment) {
-          setTimeout(() => {
-            const el = document.getElementById(hashFragment);
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
-          }, 150);
-        }
-      }
-    }
-    
-    document.addEventListener('click', handleLinkClick);
-    return () => document.removeEventListener('click', handleLinkClick);
-  }, [navigateToView]);
+    window.location.href = path;
+  }
+  
+  function goHome() {
+    window.location.href = '/dashboard';
+  }
+  
+  function backToLanding() {
+    window.location.href = '/';
+  }
 
   /* keyboard shortcuts — only active inside the app */
   useKeydown(useCallback((e: KeyboardEvent) => {
@@ -4993,35 +4956,12 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  function launchApp() {
-    navigateToView('home');
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-  }
-  function openTool(id: string) {
-    navigateToView(id);
-    setPalette(false);
-    setLauncher(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  function goHome() {
-    navigateToView('home');
-    setPalette(false);
-    setLauncher(false);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-  function backToLanding() {
-    navigateToView('landing');
-    setPalette(false);
-    setLauncher(false);
-    window.scrollTo({ top: 0, behavior: 'instant' in window ? 'instant' : 'auto' });
-  }
-
   if (isLanding) {
     return (
       <>
         <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
         <div className="app-root">
-          <Landing onLaunch={launchApp} onEnterprise={() => setEnterpriseOpen(true)} onBrowseTools={() => setLauncher(true)} />
+          <Landing onLaunch={launchApp} onEnterprise={() => setEnterpriseOpen(true)} onBrowseTools={() => setLauncher(true)} theme={theme} onToggleTheme={toggleTheme} />
           <Footer onBackToLanding={null} />
         </div>
         <Launcher open={launcher} onClose={() => setLauncher(false)} onPick={openTool} />
