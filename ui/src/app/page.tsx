@@ -21,6 +21,8 @@
  *   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500&family=Source+Serif+Pro:wght@400;600;700&display=swap');
  */
 import { marked } from 'marked';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { AI_SOURCES, THEMES, FORMATS, CATEGORIES, ALL_TOOLS } from './config';
 import React, {
   useState, useEffect, useRef, useMemo, useCallback,
@@ -474,7 +476,7 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
       transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
     }}>
       {/* Brand */}
-      <a href="/" className="reset" style={{
+      <Link href="/" className="reset" style={{
         display: 'flex', alignItems: 'center', gap: 10,
         cursor: 'pointer', textDecoration: 'none', color: 'inherit',
       }}>
@@ -491,7 +493,7 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
           letterSpacing: '-0.018em',
           color: 'var(--fg)',
         }}>mysaas</span>
-      </a>
+      </Link>
 
       {/* Tools launcher pill — center on desktop, hidden on mobile (use ⌘K instead) */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
@@ -530,8 +532,8 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
         <kbd className="kbd">⌘K</kbd>
       </button>
 
-      <a href="/pricing" className="reset top-link" style={topLink}>Pricing</a>
-      <a href="/docs" className="reset top-link" style={topLink}>Docs</a>
+      <Link href="/pricing" className="reset top-link" style={topLink}>Pricing</Link>
+      <Link href="/docs" className="reset top-link" style={topLink}>Docs</Link>
 
       {/* Theme Toggle Switch */}
       <button onClick={onToggleTheme} className="reset theme-toggle-btn" style={{
@@ -1337,35 +1339,145 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
       let finalContent = isTextMode ? editorRef.current?.value : editorRef.current?.innerHTML;
       if (!finalContent) finalContent = text; // fallback
 
-      const response = await fetch('https://my-saas-mezp.onrender.com/api/format', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          content: finalContent, 
-          is_html: !isTextMode,
-          theme: theme.value,
-          export_format: format.value
-        }),
-      });
+      // Generate the exact CSS styles based on the active theme
+      let themeCss = "";
+      if (theme.value === "academic") {
+        themeCss = `
+          body { font-family: 'Georgia', serif; line-height: 1.7; color: #333; font-size: 11pt; padding: 1in; }
+          h1 { font-size: 24pt; font-weight: bold; margin-bottom: 6px; }
+          h2 { font-size: 16pt; font-style: italic; border-bottom: 1px solid #ccc; margin-top: 24px; }
+          blockquote { border-left: 3px solid #666; padding-left: 12px; font-style: italic; color: #555; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10pt; }
+          th, td { border: 1px solid #444; padding: 10px; text-align: left; }
+          th { background-color: #f4f4f4; font-weight: bold; }
+        `;
+      } else if (theme.value === "minimalist") {
+        themeCss = `
+          body { font-family: 'Courier New', monospace; line-height: 1.5; color: #000; font-size: 10pt; padding: 1in; }
+          h1 { font-size: 18pt; text-transform: uppercase; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+          h2 { font-size: 14pt; margin-top: 20px; }
+          blockquote { border-left: 1px dashed #000; padding-left: 10px; }
+          table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+          th, td { border: 1px dashed #000; padding: 8px; text-align: left; }
+          th { font-weight: bold; border-bottom: 2px solid #000; }
+        `;
+      } else { // modern
+        themeCss = `
+          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #222; font-size: 11pt; padding: 1in; }
+          h1 { font-size: 28pt; font-weight: 700; letter-spacing: -0.02em; color: #111; margin-bottom: 10px; }
+          h2 { font-size: 18pt; font-weight: 600; color: #333; margin-top: 24px; }
+          blockquote { border-left: 4px solid #6366f1; padding-left: 16px; font-style: italic; background: #f8fafc; padding: 10px 16px; }
+          code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
+          pre { background: #1e293b; color: #fff; padding: 16px; border-radius: 8px; overflow-x: auto; }
+          table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 10.5pt; border-radius: 8px; overflow: hidden; }
+          th, td { border: 1px solid #e2e8f0; padding: 12px 16px; text-align: left; }
+          th { background-color: #f8fafc; font-weight: 600; color: #0f172a; }
+          tr:nth-child(even) { background-color: #fbfcfd; }
+        `;
+      }
 
-      if (!response.ok) throw new Error('Failed to generate document from server.');
+      // Add high-fidelity printing properties to ensure background colors, layout margins, and text print perfectly!
+      themeCss += `
+        @media print {
+          body {
+            margin: 0;
+            padding: 1.2in;
+            background: white !important;
+            color: black !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          pre {
+            background: #1e293b !important;
+            color: #fff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          code {
+            background: #f1f5f9 !important;
+            color: #000 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+        @page {
+          size: A4;
+          margin: 0;
+        }
+      `;
 
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      
-      // Use .doc for Word fallback MVP
-      const ext = format.value === 'docx' ? '.doc' : format.tag;
-      a.download = `formatted-doc-${Date.now().toString().slice(-4)}${ext}`;
-      
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      a.remove();
+      const formattedHtml = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>${themeCss}</style>
+        </head>
+        <body>
+          ${isTextMode ? marked.parse(finalContent) : finalContent}
+        </body>
+        </html>
+      `;
+
+      if (format.value === 'pdf') {
+        // --- CLIENT-SIDE STEALTH IFRAME PRINT ---
+        const iframe = document.createElement('iframe');
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.style.zIndex = '-9999';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow?.document;
+        if (!doc) throw new Error("Could not access document inside stealth iframe.");
+        
+        doc.open();
+        doc.write(formattedHtml);
+        doc.close();
+
+        // Give it a tiny moment to parse/load stylesheets
+        await new Promise((resolve) => setTimeout(resolve, 350));
+
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+
+        // Clean up the iframe after the print dialogue closes
+        setTimeout(() => {
+          iframe.remove();
+        }, 1000);
+
+      } else {
+        // --- CLIENT-SIDE BLOB DOWNLOAD FOR OTHER FORMATS ---
+        let blob: Blob;
+        let ext = format.tag;
+
+        if (format.value === 'html') {
+          blob = new Blob([formattedHtml], { type: 'text/html;charset=utf-8' });
+        } else if (format.value === 'docx') {
+          // Word opens HTML formatted content as a document cleanly
+          blob = new Blob([formattedHtml], { type: 'application/msword;charset=utf-8' });
+          ext = '.doc';
+        } else if (format.value === 'md') {
+          blob = new Blob([finalContent], { type: 'text/markdown;charset=utf-8' });
+        } else { // txt
+          blob = new Blob([finalContent], { type: 'text/plain;charset=utf-8' });
+        }
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `formatted-doc-${Date.now().toString().slice(-4)}${ext}`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+      }
 
     } catch (error: any) {
-      alert("Error connecting to Python backend:\n" + error.message);
+      alert("Error generating document locally:\n" + error.message);
     } finally {
       setDownloading(false);
     }
@@ -2181,7 +2293,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme }: LandingNavProp
       transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
     }} className="landing-nav">
       {/* Brand Logo - Clickable link taking user back to marketing root / */}
-      <a href="/" className="reset" style={{
+      <Link href="/" className="reset" style={{
         display: 'flex', alignItems: 'center', gap: 10,
         textDecoration: 'none', color: 'inherit', cursor: 'pointer'
       }}>
@@ -2194,7 +2306,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme }: LandingNavProp
           <Icon.Command size={16} strokeWidth={2.2} style={{ color: 'white' }} />
         </div>
         <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em' }}>mysaas</span>
-      </a>
+      </Link>
 
       <nav style={{ display: 'flex', gap: 2, marginLeft: 24 }} className="landing-nav-links">
         {[
@@ -2203,11 +2315,11 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme }: LandingNavProp
           { label: 'Changelog', path: '/changelog' },
           { label: 'Docs', path: '/docs' },
         ].map(item => (
-          <a key={item.label} href={item.path} className="reset top-link" style={{
+          <Link key={item.label} href={item.path} className="reset top-link" style={{
             fontSize: 13, color: 'var(--fg-muted)',
             padding: '7px 12px', borderRadius: 6,
             textDecoration: 'none', cursor: 'pointer',
-          }}>{item.label}</a>
+          }}>{item.label}</Link>
         ))}
       </nav>
 
@@ -2597,7 +2709,7 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
           onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; if (!cat.pro) e.currentTarget.style.borderColor = 'var(--border)'; }}
           >
             {/* Category header link */}
-            <a href={`/category/${cat.id}`} className="reset" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
+            <Link href={`/category/${cat.id}`} className="reset" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
                 <span style={{
                   width: 7, height: 7, borderRadius: '50%',
@@ -2618,7 +2730,7 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
                 lineHeight: 1.25,
                 textWrap: 'pretty',
               }}>{cat.tagline}</div>
-            </a>
+            </Link>
 
             {/* Crawlable list of individual tools */}
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -2626,7 +2738,7 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
                 const Ico = Icon[t.icon] || Icon.Sparkles;
                 return (
                   <li key={t.id}>
-                    <a href={`/tools/${t.id}`} className="reset" style={{
+                    <Link href={`/tools/${t.id}`} className="reset" style={{
                       display: 'flex', alignItems: 'center', gap: 8,
                       padding: '5px 0',
                       fontSize: 12.5, color: 'var(--fg-muted)',
@@ -2638,20 +2750,20 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
                     >
                       <Ico size={11} strokeWidth={1.8} style={{ color: 'var(--fg-subtle)', flexShrink: 0 }}/>
                       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
-                    </a>
+                    </Link>
                   </li>
                 );
               })}
               {cat.tools.length > 4 && (
                 <li style={{ marginTop: 4 }}>
-                  <a href={`/category/${cat.id}`} className="reset" style={{
+                  <Link href={`/category/${cat.id}`} className="reset" style={{
                     fontSize: 11, color: 'var(--fg-subtle)',
                     display: 'flex', alignItems: 'center', gap: 5,
                     textDecoration: 'none',
                   }}>
                     <span>and more</span>
                     <Icon.ArrowRight size={10} />
-                  </a>
+                  </Link>
                 </li>
               )}
             </ul>
@@ -3645,9 +3757,9 @@ function FooterCol({ title, links }: FooterColProps) {
       <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
         {links.map(l => (
           <li key={l.label}>
-            <a href={l.path} className="footer-link" style={{
+            <Link href={l.path} className="footer-link" style={{
               fontSize: 12.5, color: 'var(--fg-muted)', textDecoration: 'none',
-            }}>{l.label}</a>
+            }}>{l.label}</Link>
           </li>
         ))}
       </ul>
@@ -4800,6 +4912,7 @@ function EnterpriseModal({ open, onClose }: EnterpriseModalProps) {
    ========================================================================= */
 
 export function App({ initialSlug }: { initialSlug?: string }) {
+  const router = useRouter();
   // Determine starting view based on presets
   let initialView = 'landing';
   if (initialSlug) {
@@ -4854,54 +4967,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     setTheme(t => t === 'dark' ? 'light' : 'dark');
   }, []);
 
-  // Dynamic browser title resolver
-  useEffect(() => {
-    if (typeof document === 'undefined') return;
-    
-    let title = 'MySaaS - Premium Online Utilities Hub';
-    if (view === 'landing') {
-      title = 'MySaaS - Stop Googling Tiny Tools. Start Finishing.';
-    } else if (view === 'home') {
-      title = 'Dashboard & Workspace - Premium SaaS Tools Hub';
-    } else if (view === 'pricing') {
-      title = 'Simple & Fair Pricing - Premium SaaS Tools Hub';
-    } else if (view === 'about') {
-      title = 'Our Vision & Core Philosophy - Premium SaaS Tools Hub';
-    } else if (view === 'docs') {
-      title = 'Developer Documentation & Technical Guide - Premium SaaS Tools Hub';
-    } else if (view === 'changelog') {
-      title = 'Changelog & Product Updates - Premium SaaS Tools Hub';
-    } else if (view === 'roadmap') {
-      title = 'Product Roadmap - MySaaS Tools Hub';
-    } else if (view === 'contact') {
-      title = 'Contact Us - MySaaS Tools Hub';
-    } else if (view === 'privacy') {
-      title = 'Privacy Policy - MySaaS Tools Hub';
-    } else if (view === 'blog') {
-      title = 'Blog - MySaaS Tools Hub';
-    } else if (view.startsWith('category_')) {
-      const catId = view.replace('category_', '');
-      const cat = CATEGORIES.find(c => c.id === catId);
-      title = `${cat ? cat.label : 'Category'} Tools Catalog - Premium Utilities Hub`;
-    } else {
-      const tool = ALL_TOOLS.find(t => t.id === view);
-      if (tool) {
-        title = `${tool.name} - Premium Online Utility Tool`;
-      }
-    }
-    
-    document.title = title;
-  }, [view]);
 
-  // Dynamic Scroll Restoration - instantly jump to top on view change
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const hasHash = window.location.hash;
-      if (!hasHash) {
-        window.scrollTo(0, 0);
-      }
-    }
-  }, [view]);
 
   const isLanding = view === 'landing';
   const isDashboard = view === 'home';
@@ -4911,9 +4977,9 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     return ALL_TOOLS.find(t => t.id === view);
   }, [view, isLanding, isDashboard]);
 
-  // Native navigation handlers
+  // Native Next.js client navigation handlers
   function launchApp() {
-    window.location.href = '/dashboard';
+    router.push('/dashboard');
   }
   
   function openTool(id: string) {
@@ -4929,15 +4995,15 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     } else if (id.startsWith('category_')) {
       path = `/category/${id.replace('category_', '')}`;
     }
-    window.location.href = path;
+    router.push(path);
   }
   
   function goHome() {
-    window.location.href = '/dashboard';
+    router.push('/dashboard');
   }
   
   function backToLanding() {
-    window.location.href = '/';
+    router.push('/');
   }
 
   /* keyboard shortcuts — only active inside the app */
