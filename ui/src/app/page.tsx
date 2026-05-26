@@ -374,7 +374,7 @@ function fuzzyMatch(query: string, target: string) {
   return { score: 0, matched: false };
 }
 
-function searchTools(query) {
+function searchTools(query: string) {
   if (!query.trim()) return ALL_TOOLS;
   return ALL_TOOLS
     .map(t => {
