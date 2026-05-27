@@ -23,6 +23,7 @@
 import { marked } from 'marked';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { createPortal } from 'react-dom';
 import { AI_SOURCES, THEMES, FORMATS, CATEGORIES, ALL_TOOLS } from './config';
 import React, {
   useState, useEffect, useRef, useMemo, useCallback,
@@ -1421,8 +1422,21 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
       `;
 
       if (format.value === 'pdf') {
+        // Dynamically compute the OS-specific instruction copy to make it extremely clear for noobs & boomers
+        let instructions = "In the print window, change the 'Destination' dropdown to 'Save as PDF', then click the Save button.";
+        if (typeof navigator !== 'undefined') {
+          const ua = navigator.userAgent;
+          if (/iPhone|iPad|iPod/i.test(ua)) {
+            instructions = "iPhone/iPad Tip: Tap the Share icon (square with upward arrow) at the top-right of the print preview screen, then select 'Save to Files' to save your PDF.";
+          } else if (/Android/i.test(ua)) {
+            instructions = "Android Tip: Tap 'Select printer' at the top, choose 'Save as PDF', and then tap the round PDF download circle icon.";
+          } else if (/Macintosh|MacIntel/i.test(ua)) {
+            instructions = "Mac Tip: In the print window, set 'Destination' to 'Save as PDF' (in Safari, click the 'PDF' dropdown at the bottom-left and select 'Save as PDF').";
+          }
+        }
+
         // Show our beautiful boomer-friendly custom overlay hint immediately
-        setPdfToast("To download as a file: In the print window, change the 'Destination' dropdown to 'Save as PDF', then click the Save button.");
+        setPdfToast(instructions);
 
         // Wait 4.5 seconds so the user has time to read it!
         await new Promise((resolve) => setTimeout(resolve, 4500));
@@ -1970,12 +1984,12 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
               <span>theme={theme.value} · format={format.value}</span>
             </div>
           )}
-      {pdfToast && (
+      {pdfToast && typeof window !== 'undefined' && createPortal(
         <div style={{
           position: 'fixed',
           top: 0, left: 0, right: 0, bottom: 0,
-          zIndex: 99999,
-          background: 'oklch(0.12 0.015 250 / 0.65)',
+          zIndex: 999999,
+          background: 'oklch(0.12 0.015 250 / 0.7)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           display: 'flex',
@@ -2001,12 +2015,12 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
           }} />
           
           <div style={{
-            maxWidth: 440,
+            maxWidth: 460,
             textAlign: 'center',
             padding: '0 24px',
           }}>
             <h3 style={{
-              fontSize: 18,
+              fontSize: 19,
               fontWeight: 600,
               marginBottom: 8,
               color: '#fff',
@@ -2017,7 +2031,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
             </h3>
             <p style={{
               fontSize: 14.5,
-              lineHeight: 1.5,
+              lineHeight: 1.6,
               color: 'oklch(0.9 0.01 250 / 0.95)',
               fontWeight: 400,
               margin: 0,
@@ -2026,7 +2040,8 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
               {pdfToast}
             </p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
         </div>
       )}
