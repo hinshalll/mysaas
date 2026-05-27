@@ -1424,8 +1424,8 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
         // Show our beautiful boomer-friendly custom overlay hint immediately
         setPdfToast("To download as a file: In the print window, change the 'Destination' dropdown to 'Save as PDF', then click the Save button.");
 
-        // Wait 2.5 seconds so the user has time to read it!
-        await new Promise((resolve) => setTimeout(resolve, 2500));
+        // Wait 4.5 seconds so the user has time to read it!
+        await new Promise((resolve) => setTimeout(resolve, 4500));
 
         // --- CLIENT-SIDE STEALTH IFRAME PRINT ---
         const iframe = document.createElement('iframe');
