@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { createPortal } from 'react-dom';
 import { AI_SOURCES, THEMES, FORMATS, CATEGORIES, ALL_TOOLS } from './config';
+import { supabase } from './supabase';
 import React, {
   useState, useEffect, useRef, useMemo, useCallback,
 } from 'react';
@@ -461,9 +462,20 @@ interface TopBarProps {
   scrolled: boolean;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  brandName: string;
+  setBrandName: (name: string) => void;
+  sessionUser: any;
+  isAnonUser: boolean;
+  userPlan: string;
+  onOpenAuthModal: () => void;
+  onSignOut: () => void;
+  onShowPaywall: () => void;
 }
 
-function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, theme, onToggleTheme }: TopBarProps) {
+function TopBar({
+  onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, theme, onToggleTheme,
+  brandName, setBrandName, sessionUser, isAnonUser, userPlan, onOpenAuthModal, onSignOut, onShowPaywall
+}: TopBarProps) {
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -476,10 +488,10 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
       backdropFilter: scrolled ? 'blur(20px) saturate(140%)' : 'none',
       transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
     }}>
-      {/* Brand */}
-      <Link href="/" className="reset" style={{
+      {/* Brand Logo */}
+      <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        cursor: 'pointer', textDecoration: 'none', color: 'inherit',
+        color: 'inherit',
       }}>
         <div style={{
           width: 28, height: 28, borderRadius: 7,
@@ -487,14 +499,35 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
         }}>
-          <Icon.Command size={15} strokeWidth={2.2} style={{ color: 'white' }} />
+          <Icon.Command size={14} strokeWidth={2.2} style={{ color: 'white' }} />
         </div>
-        <span style={{
-          fontSize: 15.5, fontWeight: 600,
-          letterSpacing: '-0.018em',
-          color: 'var(--fg)',
-        }}>mysaas</span>
-      </Link>
+        <input
+          type="text"
+          value={brandName}
+          onChange={(e) => {
+            const newVal = e.target.value;
+            setBrandName(newVal);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('brandName', newVal);
+            }
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--fg)',
+            fontFamily: 'inherit',
+            fontSize: 15.5,
+            fontWeight: 600,
+            letterSpacing: '-0.018em',
+            width: `${Math.max(brandName.length, 1)}ch`,
+            outline: 'none',
+            cursor: 'text',
+            padding: 0,
+            margin: 0,
+          }}
+          title="Click to dynamically rename SaaS"
+        />
+      </div>
 
       {/* Tools launcher pill — center on desktop, hidden on mobile (use ⌘K instead) */}
       <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
@@ -535,6 +568,51 @@ function TopBar({ onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, t
 
       <Link href="/pricing" className="reset top-link" style={topLink}>Pricing</Link>
       <Link href="/docs" className="reset top-link" style={topLink}>Docs</Link>
+      <Link href="/developer" className="reset top-link" style={topLink}>Developer API</Link>
+
+      {/* Auth State */}
+      {sessionUser && !isAnonUser ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <button 
+            onClick={() => openTool('account')} 
+            className="reset top-link" 
+            style={{ 
+              ...topLink, 
+              display: 'inline-flex', 
+              alignItems: 'center', 
+              gap: 6,
+              background: 'var(--bg-elev-1)',
+              border: '1px solid var(--border)',
+              padding: '5px 12px',
+              borderRadius: 20,
+              fontSize: 12,
+              fontWeight: 500,
+              color: 'var(--fg)',
+            }}
+          >
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+            <span>Account ({sessionUser.email.split('@')[0]})</span>
+            {userPlan === 'pro' && <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}>PRO</span>}
+          </button>
+          <button onClick={onSignOut} className="reset top-link" style={topLink}>Sign Out</button>
+        </div>
+      ) : (
+        <button onClick={onOpenAuthModal} className="reset top-link" style={{ ...topLink, color: 'var(--accent)', fontWeight: 600 }}>Sign In / Up</button>
+      )}
+
+      {userPlan !== 'pro' && (
+        <button onClick={onShowPaywall} className="reset" style={{
+          padding: '6px 12px',
+          background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
+          color: 'white',
+          fontWeight: 600,
+          fontSize: 12,
+          borderRadius: 8,
+          cursor: 'pointer',
+          border: 'none',
+          boxShadow: '0 4px 12px oklch(0.50 0.20 280 / 0.3)'
+        }}>Upgrade</button>
+      )}
 
       {/* Theme Toggle Switch */}
       <button onClick={onToggleTheme} className="reset theme-toggle-btn" style={{
@@ -1196,9 +1274,55 @@ const miniBtn = {
 interface FormatterToolProps {
   tool: any;
   initialSlug?: string;
+  brandName: string;
+  userPlan: string;
+  sessionUser: any;
+  onShowPaywall: () => void;
+  supabase: any;
+  checkAndLogUsage: (toolId: string, isTier2: boolean) => Promise<boolean>;
 }
 
-function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
+function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, onShowPaywall, supabase, checkAndLogUsage }: FormatterToolProps) {
+  // Pro Cockpit Features
+  const [removeWatermark, setRemoveWatermark] = useState(false);
+  const [customHeader, setCustomHeader] = useState('');
+  const [customFooter, setCustomFooter] = useState('');
+  const [layoutMode, setLayoutMode] = useState<'standard' | 'compact' | 'zen'>('standard');
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [historyLogs, setHistoryLogs] = useState<any[]>([]);
+
+  async function saveToCloudHistory(fileName: string) {
+    if (!supabase || !sessionUser || sessionUser.is_anonymous) return;
+    try {
+      await supabase.from('saved_history').insert({
+        user_id: sessionUser.id,
+        tool_id: tool.id,
+        file_name: fileName,
+        content_preview: text.slice(0, 100),
+      });
+    } catch (e) {
+      console.error("Failed to save history to cloud:", e);
+    }
+  }
+
+  async function loadCloudHistory() {
+    if (!supabase || !sessionUser || sessionUser.is_anonymous) return;
+    try {
+      const { data, error } = await supabase
+        .from('saved_history')
+        .select('*')
+        .eq('user_id', sessionUser.id)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      
+      if (!error && data) {
+        setHistoryLogs(data);
+      }
+    } catch (e) {
+      console.error("Failed to load history:", e);
+    }
+  }
+
   // Determine starting AI and Format presets based on slug
   let defaultAi = AI_SOURCES[0];
   let defaultFormat = FORMATS[0];
@@ -1318,8 +1442,12 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
     }
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     if (!text.trim() || generating) return;
+
+    const allowed = await checkAndLogUsage(tool.id, false);
+    if (!allowed) return;
+
     setGenerating(true);
     // Just generate the local preview for the editor
     setTimeout(() => {
@@ -1334,12 +1462,42 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
     setDownloading(true);
 
     try {
+      const allowed = await checkAndLogUsage(tool.id, false);
+      if (!allowed) {
+        setDownloading(false);
+        return;
+      }
+
+      // Track this file download inside history table if they are logged in
+      const smartName = `formatted-doc-${Date.now().toString().slice(-4)}${format.tag}`;
+      await saveToCloudHistory(smartName);
+
       // Detect if we are in text/code mode or WYSIWYG mode
       const isTextMode = format.value === 'md' || format.value === 'txt';
       
       // Grab the exact edited content straight from the active editor
       let finalContent = isTextMode ? editorRef.current?.value : editorRef.current?.innerHTML;
       if (!finalContent) finalContent = text; // fallback
+
+      // running headers / footers logic
+      let headerHtml = "";
+      let footerHtml = "";
+      
+      // inject running header if provided
+      if (customHeader) {
+        headerHtml = `<div class="pdf-header">${customHeader}</div>`;
+      }
+      
+      // inject watermark/footer
+      let footerText = customFooter || "";
+      if (!removeWatermark) {
+        if (footerText) footerText += " | ";
+        footerText += `Formatted using ${brandName}`;
+      }
+      
+      if (footerText) {
+        footerHtml = `<div class="pdf-footer">${footerText}</div>`;
+      }
 
       // Generate the exact CSS styles based on the active theme
       let themeCss = "";
@@ -1380,6 +1538,9 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
 
       // Add high-fidelity printing properties to ensure background colors, layout margins, and text print perfectly!
       themeCss += `
+        .pdf-header, .pdf-footer {
+          display: none;
+        }
         @media print {
           body {
             margin: 0;
@@ -1401,6 +1562,32 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
+          .pdf-header {
+            display: block !important;
+            position: fixed;
+            top: 0.4in;
+            left: 1.2in;
+            right: 1.2in;
+            font-size: 8pt;
+            color: #888;
+            text-align: right;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 4px;
+            font-family: sans-serif;
+          }
+          .pdf-footer {
+            display: block !important;
+            position: fixed;
+            bottom: 0.4in;
+            left: 1.2in;
+            right: 1.2in;
+            font-size: 8pt;
+            color: #888;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 4px;
+            font-family: sans-serif;
+          }
         }
         @page {
           size: A4;
@@ -1416,7 +1603,9 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
           <style>${themeCss}</style>
         </head>
         <body>
+          ${headerHtml}
           ${isTextMode ? marked.parse(finalContent) : finalContent}
+          ${footerHtml}
         </body>
         </html>
       `;
@@ -1877,6 +2066,101 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
             )}
           </div>
 
+          {/* Pro Workspace Cockpit Settings */}
+          {generated && (
+            <div style={{
+              padding: '14px 20px',
+              background: 'oklch(0.18 0.010 265 / 0.15)',
+              borderBottom: '1px solid var(--border)',
+              display: 'flex', flexDirection: 'column', gap: 14
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon.Wand size={14} style={{ color: 'var(--pro)' }} />
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Workspace & Branding Cockpit</span>
+                  {userPlan !== 'pro' && (
+                    <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 5px', borderRadius: 4, fontWeight: 700 }}>PRO UPGRADE GATED</span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  {/* Layout selector */}
+                  <label className="mono" style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>Layout:</label>
+                  <select value={layoutMode} onChange={e => setLayoutMode(e.target.value as any)} style={{
+                    background: 'var(--bg-elev-2)', border: '1px solid var(--border)', color: 'white',
+                    fontSize: 12, padding: '4px 8px', borderRadius: 6, outline: 'none'
+                  }}>
+                    <option value="standard">Standard</option>
+                    <option value="compact">Compact</option>
+                    <option value="zen">Zen Focus</option>
+                  </select>
+
+                  {/* History drawer toggle */}
+                  <button onClick={() => { setHistoryOpen(!historyOpen); loadCloudHistory(); }} className="reset" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px',
+                    background: 'var(--bg-elev-2)', border: '1px solid var(--border)', borderRadius: 6,
+                    fontSize: 12, color: 'white', cursor: 'pointer'
+                  }}>
+                    <Icon.BookMarked size={12} />
+                    History
+                  </button>
+                </div>
+              </div>
+
+              {/* Collapsible settings block */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 4 }}>
+                {/* 1. White-label check */}
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12.5, color: 'var(--fg-muted)' }}>
+                  <input
+                    type="checkbox"
+                    checked={removeWatermark}
+                    onChange={e => {
+                      if (userPlan !== 'pro') {
+                        onShowPaywall();
+                      } else {
+                        setRemoveWatermark(e.target.checked);
+                      }
+                    }}
+                    style={{ accentColor: 'var(--accent)' }}
+                  />
+                  <span>White-label (Remove watermark)</span>
+                </label>
+
+                {/* 2. Custom header text input */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Header</label>
+                  <input
+                    type="text"
+                    placeholder={userPlan === 'pro' ? "Header Text..." : "Locked for Pro"}
+                    disabled={userPlan !== 'pro'}
+                    value={customHeader}
+                    onChange={e => setCustomHeader(e.target.value)}
+                    style={{
+                      width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
+                      border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
+                    }}
+                  />
+                </div>
+
+                {/* 3. Custom footer text input */}
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Footer</label>
+                  <input
+                    type="text"
+                    placeholder={userPlan === 'pro' ? "Footer Text..." : "Locked for Pro"}
+                    disabled={userPlan !== 'pro'}
+                    value={customFooter}
+                    onChange={e => setCustomFooter(e.target.value)}
+                    style={{
+                      width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
+                      border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* WYSIWYG toolbar */}
           {generated && format.value !== 'md' && format.value !== 'txt' && (
             <div style={{
@@ -1951,10 +2235,11 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
             onKeyUp={updateActiveMarks} onMouseUp={updateActiveMarks} onFocus={updateActiveMarks}
             className={'paper paper-' + theme.value}
             style={{
-              width: '100%', maxWidth: 760,
+              width: '100%', maxWidth: layoutMode === 'zen' ? '100%' : '760px',
               background: 'oklch(0.97 0.005 250)', color: 'oklch(0.16 0.008 250)',
-              borderRadius: 6, padding: '60px clamp(36px, 6vw, 72px)',
-              boxShadow: '0 2px 4px oklch(0 0 0 / 0.4), 0 24px 80px oklch(0 0 0 / 0.5)',
+              borderRadius: layoutMode === 'zen' ? 0 : 6,
+              padding: layoutMode === 'compact' ? '24px' : layoutMode === 'zen' ? '32px clamp(24px, 5vw, 48px)' : '60px clamp(36px, 6vw, 72px)',
+              boxShadow: layoutMode === 'zen' ? 'none' : '0 2px 4px oklch(0 0 0 / 0.4), 0 24px 80px oklch(0 0 0 / 0.5)',
               outline: 'none', minHeight: 480,
               fontFamily: theme.value === 'minimalist' ? '"JetBrains Mono", ui-monospace, monospace' : theme.value === 'academic' ? '"Source Serif Pro", Georgia, serif' : 'Inter, system-ui, sans-serif',
               fontSize: theme.value === 'minimalist' ? 13.5 : 15,
@@ -2043,6 +2328,44 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
         </div>,
         document.body
       )}
+        </div>
+      )}
+
+      {/* Cloud History Drawer Component */}
+      {historyOpen && (
+        <div style={{
+          position: 'fixed', top: 0, right: 0, bottom: 0, width: 320, zIndex: 1000,
+          background: 'var(--bg-elev-1)', borderLeft: '1px solid var(--border)',
+          boxShadow: '-10px 0 30px oklch(0 0 0 / 0.4)', padding: 24, display: 'flex', flexDirection: 'column'
+        }} className="fade-in">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+            <h4 style={{ fontSize: 16, fontWeight: 600, color: 'white', margin: 0 }}>Cloud History (30 Days)</h4>
+            <button onClick={() => setHistoryOpen(false)} className="reset" style={{ cursor: 'pointer', color: 'var(--fg-subtle)' }}><Icon.X size={16} /></button>
+          </div>
+
+          {!sessionUser || sessionUser.is_anonymous ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, margin: 'auto 0', textAlign: 'center', padding: '0 10px' }}>
+              <Icon.BookMarked size={32} style={{ color: 'var(--fg-dim)', margin: '0 auto' }} />
+              <div style={{ fontSize: 13.5, color: 'var(--fg-muted)' }}>Sign up to synchronize your history securely in the cloud.</div>
+            </div>
+          ) : historyLogs.length === 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, margin: 'auto 0', textAlign: 'center' }}>
+              <Icon.BookMarked size={32} style={{ color: 'var(--fg-dim)', margin: '0 auto' }} />
+              <div style={{ fontSize: 13.5, color: 'var(--fg-muted)' }}>No saved document history yet.</div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', flex: 1 }}>
+              {historyLogs.map((log: any) => (
+                <div key={log.id} style={{
+                  padding: 12, borderRadius: 8, background: 'var(--bg-elev-2)',
+                  border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 4
+                }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.file_name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>{new Date(log.created_at).toLocaleDateString()} · {log.tool_id.toUpperCase()}</div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -2361,9 +2684,16 @@ interface LandingNavProps {
   scrolled: boolean;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  brandName: string;
+  setBrandName: (name: string) => void;
+  sessionUser: any;
+  isAnonUser: boolean;
+  userPlan: string;
+  onOpenAuthModal: () => void;
+  onSignOut: () => void;
 }
 
-function LandingNav({ onLaunch, scrolled, theme, onToggleTheme }: LandingNavProps) {
+function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBrandName, sessionUser, isAnonUser, userPlan, onOpenAuthModal, onSignOut }: LandingNavProps) {
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -2376,10 +2706,10 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme }: LandingNavProp
       backdropFilter: scrolled ? 'blur(20px) saturate(140%)' : 'none',
       transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
     }} className="landing-nav">
-      {/* Brand Logo - Clickable link taking user back to marketing root / */}
-      <Link href="/" className="reset" style={{
+      {/* Brand Logo */}
+      <div style={{
         display: 'flex', alignItems: 'center', gap: 10,
-        textDecoration: 'none', color: 'inherit', cursor: 'pointer'
+        textDecoration: 'none', color: 'inherit'
       }}>
         <div style={{
           width: 30, height: 30, borderRadius: 8,
@@ -2389,8 +2719,33 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme }: LandingNavProp
         }}>
           <Icon.Command size={16} strokeWidth={2.2} style={{ color: 'white' }} />
         </div>
-        <span style={{ fontSize: 16, fontWeight: 600, letterSpacing: '-0.02em' }}>mysaas</span>
-      </Link>
+        <input
+          type="text"
+          value={brandName}
+          onChange={(e) => {
+            const newVal = e.target.value;
+            setBrandName(newVal);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('brandName', newVal);
+            }
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            color: 'var(--fg)',
+            fontFamily: 'inherit',
+            fontSize: 16,
+            fontWeight: 600,
+            letterSpacing: '-0.02em',
+            width: `${Math.max(brandName.length, 1)}ch`,
+            outline: 'none',
+            cursor: 'text',
+            padding: 0,
+            margin: 0,
+          }}
+          title="Click to dynamically rename SaaS"
+        />
+      </div>
 
       <nav style={{ display: 'flex', gap: 2, marginLeft: 24 }} className="landing-nav-links">
         {[
@@ -2398,6 +2753,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme }: LandingNavProp
           { label: 'Pricing', path: '/pricing' },
           { label: 'Changelog', path: '/changelog' },
           { label: 'Docs', path: '/docs' },
+          { label: 'Developer API', path: '/developer' },
         ].map(item => (
           <Link key={item.label} href={item.path} className="reset top-link" style={{
             fontSize: 13, color: 'var(--fg-muted)',
@@ -2409,11 +2765,30 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme }: LandingNavProp
 
       <div style={{ flex: 1 }} />
 
-      <button className="reset top-link" style={{
-        fontSize: 13, color: 'var(--fg-muted)',
-        padding: '8px 12px', borderRadius: 7,
-        cursor: 'pointer',
-      }}>Sign in</button>
+      {/* Auth State (Same as TopBar) */}
+      {sessionUser && !isAnonUser ? (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 8 }}>
+          <Link href="/account" className="reset top-link" style={{ 
+            fontSize: 12.5, 
+            color: 'var(--fg)', 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: 6,
+            background: 'var(--bg-elev-1)',
+            border: '1px solid var(--border)',
+            padding: '5px 12px',
+            borderRadius: 20,
+            textDecoration: 'none',
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+            <span>Account ({sessionUser.email.split('@')[0]})</span>
+            {userPlan === 'pro' && <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}>PRO</span>}
+          </Link>
+          <button onClick={onSignOut} className="reset top-link" style={{ fontSize: 13, color: 'var(--fg-muted)', cursor: 'pointer', background: 'none', border: 'none' }}>Sign Out</button>
+        </div>
+      ) : (
+        <button onClick={onOpenAuthModal} className="reset top-link" style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600, padding: '8px 12px', borderRadius: 7, cursor: 'pointer', marginRight: 8 }}>Sign In / Up</button>
+      )}
 
       {/* Theme Toggle Switch */}
       <button onClick={onToggleTheme} className="reset theme-toggle-btn" style={{
@@ -2865,9 +3240,12 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
 interface PricingProps {
   onLaunch: () => void;
   onEnterprise: () => void;
+  brandName: string;
+  pricingData: any;
+  onShowPaywall: () => void;
 }
 
-function Pricing({ onLaunch, onEnterprise }: PricingProps) {
+function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall }: PricingProps) {
   return (
     <section id="pricing" style={{
       maxWidth: 1080, margin: '0 auto',
@@ -2877,10 +3255,10 @@ function Pricing({ onLaunch, onEnterprise }: PricingProps) {
         <div style={eyebrow}>Pricing</div>
         <h2 style={sectionTitle}>
           Free for everything small.<br/>
-          <span style={italicAccent}>$9 a month for everything else.</span>
+          <span style={italicAccent}>{pricingData.currency}{pricingData.monthly} a month for everything else.</span>
         </h2>
         <p style={sectionSubtitle}>
-          No seats, no per-tool gating, no trial timers. Two plans that just work.
+          No seats, no per-tool gating, no trial timers. Dynamic plans tailored for your region.
         </p>
       </div>
 
@@ -2916,7 +3294,7 @@ function Pricing({ onLaunch, onEnterprise }: PricingProps) {
           <ul style={listStyle}>
             {[
               ['All standard tools', true],
-              ['50 documents / month', true],
+              ['5 free uses / day on Tier 1', true],
               ['Files up to 10 MB', true],
               ['Modern + Minimalist themes', true],
               ['Pro Vault tools', false],
@@ -2962,8 +3340,8 @@ function Pricing({ onLaunch, onEnterprise }: PricingProps) {
               textTransform: 'uppercase', marginBottom: 14,
             }}>Pro</div>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.03em' }}>$9</span>
-              <span style={{ color: 'var(--fg-subtle)', fontSize: 14 }}>/ month, billed annually</span>
+              <span style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.03em' }}>{pricingData.currency}{pricingData.monthly}</span>
+              <span style={{ color: 'var(--fg-subtle)', fontSize: 14 }}>{pricingData.suffix}</span>
             </div>
             <p style={{ margin: '12px 0 0', color: 'var(--fg-muted)', fontSize: 14, lineHeight: 1.5 }}>
               For people who live in their tools.
@@ -2983,7 +3361,7 @@ function Pricing({ onLaunch, onEnterprise }: PricingProps) {
             ].map(([f, on, em]) => <Feature key={f as string} on={on as boolean} em={em as boolean}>{f as string}</Feature>)}
           </ul>
 
-          <button onClick={onLaunch} className="reset" style={{
+          <button onClick={onShowPaywall} className="reset" style={{
             padding: '12px 18px',
             background: 'linear-gradient(180deg, oklch(0.97 0.005 250), oklch(0.86 0.005 250))',
             color: 'oklch(0.14 0.008 250)',
@@ -3164,9 +3542,18 @@ interface LandingProps {
   onBrowseTools: () => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  brandName: string;
+  setBrandName: (name: string) => void;
+  pricingData: any;
+  onShowPaywall: () => void;
+  sessionUser: any;
+  isAnonUser: boolean;
+  userPlan: string;
+  onOpenAuthModal: () => void;
+  onSignOut: () => void;
 }
 
-function Landing({ onLaunch, onEnterprise, onBrowseTools, theme, onToggleTheme }: LandingProps) {
+function Landing({ onLaunch, onEnterprise, onBrowseTools, theme, onToggleTheme, brandName, setBrandName, pricingData, onShowPaywall, sessionUser, isAnonUser, userPlan, onOpenAuthModal, onSignOut }: LandingProps) {
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
     function onScroll() { setScrolled(window.scrollY > 8); }
@@ -3176,12 +3563,103 @@ function Landing({ onLaunch, onEnterprise, onBrowseTools, theme, onToggleTheme }
 
   return (
     <div className="fade-in">
-      <LandingNav onLaunch={onLaunch} scrolled={scrolled} theme={theme} onToggleTheme={onToggleTheme} />
+      <LandingNav onLaunch={onLaunch} scrolled={scrolled} theme={theme} onToggleTheme={onToggleTheme} brandName={brandName} setBrandName={setBrandName} sessionUser={sessionUser} isAnonUser={isAnonUser} userPlan={userPlan} onOpenAuthModal={onOpenAuthModal} onSignOut={onSignOut} />
       <LandingHero onLaunch={onLaunch} />
       <SuitePreview onLaunch={onLaunch} />
-      <Pricing onLaunch={onLaunch} onEnterprise={onEnterprise} />
+      <ApiShowcase onLaunch={onLaunch} brandName={brandName} />
+      <Pricing onLaunch={onLaunch} onEnterprise={onEnterprise} brandName={brandName} pricingData={pricingData} onShowPaywall={onShowPaywall} />
       <ClosingCTA onLaunch={onLaunch} onBrowseTools={onBrowseTools} />
     </div>
+  );
+}
+
+function ApiShowcase({ onLaunch, brandName }: { onLaunch: () => void; brandName: string }) {
+  const cleanBrandDomain = brandName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const displayDomain = cleanBrandDomain ? `${cleanBrandDomain}.com` : 'mysaas.com';
+
+  return (
+    <section id="developer-api" style={{
+      maxWidth: 1100, margin: '0 auto',
+      padding: '40px 32px 64px',
+      position: 'relative',
+    }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gap: 40,
+        alignItems: 'center',
+      }} className="pricing-grid">
+        {/* Info Column */}
+        <div>
+          <span style={{
+            ...eyebrow,
+            color: 'oklch(0.78 0.16 195)', // Cyan text
+            border: '1px solid oklch(0.78 0.16 195 / 0.3)',
+            background: 'oklch(0.18 0.010 195 / 0.1)',
+            padding: '4px 10px',
+            borderRadius: 20,
+            fontSize: 10.5,
+            fontWeight: 600,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+            display: 'inline-block',
+            marginBottom: 16,
+          }} className="mono">⚡ Developer API Integration</span>
+          <h2 style={{ ...sectionTitle, textAlign: 'left', fontSize: 32, lineHeight: 1.15, margin: '0 0 16px' }}>
+            Integrate formatters<br/>
+            <span style={italicAccent}>directly into your scripts.</span>
+          </h2>
+          <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6, marginBottom: 24 }}>
+            Integrate {brandName}'s enterprise-grade JSON, text, and data parser engines directly into your applications, scripts, and workflows. Generate secure keys, test endpoints instantly, and scale.
+          </p>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <Link href="/developer" className="reset" style={{
+              padding: '10px 18px', borderRadius: 8,
+              background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
+              color: 'white', fontWeight: 600, fontSize: 13, textDecoration: 'none', cursor: 'pointer',
+              boxShadow: '0 4px 12px oklch(0.50 0.20 195 / 0.25)',
+              display: 'inline-flex', alignItems: 'center', gap: 8,
+            }}>
+              <span>Get API Key</span>
+              <Icon.ArrowRight size={13} strokeWidth={2.5} />
+            </Link>
+            <Link href="/docs" className="reset" style={{
+              padding: '10px 18px', borderRadius: 8,
+              background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+              color: 'var(--fg)', fontWeight: 500, fontSize: 13, textDecoration: 'none', cursor: 'pointer',
+              display: 'inline-flex', alignItems: 'center',
+            }}>
+              Read Technical Docs
+            </Link>
+          </div>
+        </div>
+
+        {/* Preview Code Terminal Column */}
+        <div className="glass-card" style={{ padding: 24, background: '#0e0f12', border: '1px solid #1c1d22', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
+            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
+            <span style={{ flex: 1 }} />
+            <span style={{ fontSize: 11, color: 'var(--fg-dim)', fontWeight: 600 }} className="mono">cURL REQUEST</span>
+          </div>
+          <pre style={{
+            margin: 0, padding: 0, overflowX: 'auto',
+            fontSize: 11.5, color: 'oklch(0.80 0.10 195)', lineHeight: 1.5,
+            whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+          }} className="mono">
+{`curl -X POST https://api.${displayDomain}/v1/format \\
+  -H "Authorization: Bearer ms_live_prod_active_key" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "tool": "ai-formatter",
+    "content": "Messy transcription text here...",
+    "style": "modern"
+  }'`}
+          </pre>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -3195,9 +3673,14 @@ function Landing({ onLaunch, onEnterprise, onBrowseTools, theme, onToggleTheme }
 
 interface JsonToolProps {
   tool: any;
+  brandName: string;
+  userPlan: string;
+  sessionUser: any;
+  onShowPaywall: () => void;
+  supabase: any;
 }
 
-function JsonTool({ tool }: JsonToolProps) {
+function JsonTool({ tool, brandName, userPlan, sessionUser, onShowPaywall, supabase }: JsonToolProps) {
   const [inputText, setInputText] = useState('');
   const [outputText, setOutputText] = useState('');
   const [inputMethod, setInputMethod] = useState<'paste' | 'upload'>('paste');
@@ -3286,7 +3769,7 @@ function JsonTool({ tool }: JsonToolProps) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `MySaaS_Formatted_Data.json`;
+    a.download = `${brandName}_Formatted_Data.json`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -3720,9 +4203,10 @@ function PlaceholderTool({ tool }: PlaceholderToolProps) {
 
 interface FooterProps {
   onBackToLanding: (() => void) | null;
+  brandName: string;
 }
 
-function Footer({ onBackToLanding }: FooterProps) {
+function Footer({ onBackToLanding, brandName }: FooterProps) {
   return (
     <footer style={{
       marginTop: 60,
@@ -3745,7 +4229,7 @@ function Footer({ onBackToLanding }: FooterProps) {
             }}>
               <Icon.Command size={13} strokeWidth={2.2} style={{ color: 'white' }}/>
             </div>
-            <span style={{ fontSize: 14, fontWeight: 600 }}>mysaas</span>
+            <span style={{ fontSize: 14, fontWeight: 600 }}>{brandName}</span>
           </div>
           <p style={{
             margin: 0, fontSize: 12.5, color: 'var(--fg-subtle)',
@@ -3769,7 +4253,7 @@ function Footer({ onBackToLanding }: FooterProps) {
         <FooterCol title="Product" links={[
           { label: 'Pricing', path: '/pricing' },
           { label: 'Changelog', path: '/changelog' },
-          { label: 'Roadmap', path: '/roadmap' },
+          { label: 'Developer API', path: '/developer' },
           { label: 'Status', path: '/dashboard' },
           { label: 'Privacy', path: '/privacy' }
         ]} />
@@ -3789,7 +4273,7 @@ function Footer({ onBackToLanding }: FooterProps) {
         maxWidth: 1280, margin: '0 auto',
         flexWrap: 'wrap',
       }}>
-        <span>© 2026 mysaas, inc.</span>
+        <span>© 2026 {brandName.toLowerCase()}, inc.</span>
         {onBackToLanding && (
           <button onClick={onBackToLanding} className="reset" style={{
             fontSize: 11.5, color: 'var(--fg-muted)',
@@ -4176,9 +4660,10 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
    ========================================================================= */
 interface AboutPageProps {
   onLaunch: () => void;
+  brandName: string;
 }
 
-function AboutPage({ onLaunch }: AboutPageProps) {
+function AboutPage({ onLaunch, brandName }: AboutPageProps) {
   const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
 
   return (
@@ -4204,7 +4689,7 @@ function AboutPage({ onLaunch }: AboutPageProps) {
       <div className="glass-card" style={{ position: 'relative', zIndex: 1, padding: '40px clamp(24px, 5vw, 48px)' }}>
         <div style={{ fontSize: 15, lineHeight: 1.75, color: 'var(--fg-muted)', display: 'flex', flexDirection: 'column', gap: 20 }}>
           <p style={{ fontSize: 16 }}>
-            Welcome to <strong style={{ color: 'var(--fg)' }}>MySaaS</strong>—a collection of lightweight, blazing-fast, serverless-grade utility tools built directly for developers, creators, and professionals.
+            Welcome to <strong style={{ color: 'var(--fg)' }}>{brandName}</strong>—a collection of lightweight, blazing-fast, serverless-grade utility tools built directly for developers, creators, and professionals.
           </p>
           
           <h2 style={{ fontSize: 20, color: 'var(--fg)', fontWeight: 600, margin: '24px 0 8px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Our Mission: Extreme Speed, Total Privacy</h2>
@@ -4332,7 +4817,955 @@ Body:
   );
 }
 
+/* =========================================================================
+   DeveloperPage Component
+   ========================================================================= */
+interface DeveloperPageProps {
+  onLaunch: () => void;
+  brandName: string;
+  userPlan: string;
+  sessionUser: any;
+  onShowPaywall: () => void;
+  onOpenAuthModal: () => void;
+}
+
+function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywall, onOpenAuthModal }: DeveloperPageProps) {
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+  
+  const storageKey = `${brandName.toLowerCase().replace(/\s+/g, '')}_prod_api_key`;
+  const [apiKey, setApiKey] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(storageKey) || '';
+    }
+    return '';
+  });
+
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
+  const [copiedCurl, setCopiedCurl] = useState(false);
+  
+  // Sandbox Interactive states
+  const [sandboxInput, setSandboxInput] = useState('Clean this messy transcription up and format it nicely into a report.');
+  const [sandboxLoading, setSandboxLoading] = useState(false);
+  const [sandboxResult, setSandboxResult] = useState<any>(null);
+
+  const cleanBrandDomain = brandName.toLowerCase().replace(/[^a-z0-9]/g, '');
+  const displayDomain = cleanBrandDomain ? `${cleanBrandDomain}.com` : 'mysaas.com';
+
+  const isProOrAdmin = userPlan === 'pro' || userPlan === 'admin';
+  const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
+
+  // Active Key selection
+  const activeKey = isProOrAdmin
+    ? (apiKey || 'ms_live_prod_active_key_not_generated_yet')
+    : (isLoggedIn ? 'ms_sandbox_free_7a2f8d1c9b3e' : 'ms_guest_unauthorized_locked');
+
+  const curlCommand = `curl -X POST https://api.${displayDomain}/v1/format \\
+  -H "Authorization: Bearer ${activeKey}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "tool": "ai-formatter",
+    "content": "${sandboxInput.replace(/"/g, '\\"')}",
+    "style": "modern"
+  }'`;
+
+  // Sync API key directly from profiles table inside Supabase online cloud database!
+  useEffect(() => {
+    async function syncKey() {
+      if (supabase && sessionUser?.id && isLoggedIn) {
+        try {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('api_key')
+            .eq('id', sessionUser.id)
+            .single();
+          if (data && data.api_key) {
+            setApiKey(data.api_key);
+            if (typeof window !== 'undefined') {
+              localStorage.setItem(storageKey, data.api_key);
+            }
+          }
+        } catch (err) {
+          console.error('Failed to sync API key from DB:', err);
+        }
+      }
+    }
+    syncKey();
+  }, [sessionUser, isLoggedIn]);
+
+  const handleGenerateKey = async () => {
+    setIsGenerating(true);
+    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+    let randomString = '';
+    for (let i = 0; i < 24; i++) {
+      randomString += chars[Math.floor(Math.random() * chars.length)];
+    }
+    const newKey = `ms_live_prod_${randomString}`;
+
+    // Write real API key into online Postgres profiles database row!
+    if (supabase && sessionUser?.id) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ api_key: newKey })
+          .eq('id', sessionUser.id);
+        if (error) {
+          console.error("Database key update error:", error);
+          alert("Failed to save API key to online database. Please check your network and try again.");
+          setIsGenerating(false);
+          return;
+        }
+      } catch (err) {
+        console.error(err);
+        alert("Failed to connect to database transaction.");
+        setIsGenerating(false);
+        return;
+      }
+    }
+
+    setApiKey(newKey);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(storageKey, newKey);
+    }
+    setIsGenerating(false);
+  };
+
+  const handleRevokeKey = async () => {
+    if (confirm("Are you sure you want to revoke your production API key? Any applications currently using this key will immediately receive a 401 Unauthorized status.")) {
+      // Clear real API key from online Postgres profiles database row!
+      if (supabase && sessionUser?.id) {
+        try {
+          const { error } = await supabase
+            .from('profiles')
+            .update({ api_key: null })
+            .eq('id', sessionUser.id);
+          if (error) {
+            console.error("Database key revoke error:", error);
+            alert("Failed to revoke API key in online database.");
+            return;
+          }
+        } catch (err) {
+          console.error(err);
+          alert("Database connection timeout.");
+          return;
+        }
+      }
+
+      setApiKey('');
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem(storageKey);
+      }
+    }
+  };
+
+  const handleCopyKey = () => {
+    navigator.clipboard.writeText(activeKey);
+    setCopiedKey(true);
+    setTimeout(() => setCopiedKey(false), 2000);
+  };
+
+  const handleCopyCurl = () => {
+    navigator.clipboard.writeText(curlCommand);
+    setCopiedCurl(true);
+    setTimeout(() => setCopiedCurl(false), 2000);
+  };
+
+  // REAL network request executing format routes against our serverless Next.js endpoint!
+  const runSandboxTest = async () => {
+    if (!isLoggedIn) {
+      alert("Please sign in or create an account to run live tests in the API sandbox.");
+      onOpenAuthModal();
+      return;
+    }
+    
+    setSandboxLoading(true);
+    setSandboxResult(null);
+
+    try {
+      const response = await fetch('/api/v1/format', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${activeKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          tool: 'ai-formatter',
+          content: sandboxInput,
+          style: 'modern'
+        })
+      });
+      const data = await response.json();
+      setSandboxResult(data);
+    } catch (err) {
+      console.error('API Sandbox test fetch failed:', err);
+      setSandboxResult({
+        status: "error",
+        message: "Failed to connect to API server. Check if your dev server is active or if key is valid."
+      });
+    } finally {
+      setSandboxLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      maxWidth: 1100, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
+    }} className="fade-in">
+      {/* Subpage ambient top-center glow */}
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative', zIndex: 1 }}>
+        <span style={{
+          ...eyebrow,
+          color: 'oklch(0.78 0.16 195)', // Cyan text
+          border: '1px solid oklch(0.78 0.16 195 / 0.3)',
+          background: 'oklch(0.18 0.010 195 / 0.1)',
+        }}>Developer Hub & Sandbox</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Developer API Dashboard</h1>
+        <p style={sectionSubtitle}>Integrate the professional-grade formatting engines of {brandName} programmatically inside your workflows and scripts.</p>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gap: 24,
+        alignItems: 'stretch',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        {/* API Keys Card */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'oklch(0.18 0.010 195 / 0.15)',
+              border: '1px solid oklch(0.78 0.16 195 / 0.3)',
+              color: 'oklch(0.78 0.16 195)',
+            }}>
+              <Icon.Terminal size={16} />
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">API Authorization Keys</span>
+          </div>
+
+          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 20 }}>
+            Authenticate your HTTP requests by passing your bearer token in the headers list.
+          </p>
+
+          {!isLoggedIn ? (
+            /* Guest UI - locked */
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+              border: '1px dashed var(--border)', borderRadius: 12, padding: '36px 20px',
+              textAlign: 'center', flex: 1, background: 'var(--bg-elev-1)',
+            }}>
+              <div style={{ color: 'var(--fg-dim)', marginBottom: 12 }}>
+                <Icon.Shield size={36} style={{ opacity: 0.5 }} />
+              </div>
+              <h3 style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--fg)', margin: '0 0 6px' }}>API Keys Locked</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-subtle)', maxWidth: 240, margin: '0 0 20px', lineHeight: 1.4 }}>
+                Sign in or register an account to unlock sandbox credentials and test endpoints.
+              </p>
+              <button onClick={onOpenAuthModal} className="reset" style={{
+                padding: '8px 18px', borderRadius: 8,
+                background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
+                color: 'white', fontWeight: 500, fontSize: 13, cursor: 'pointer',
+                boxShadow: '0 2px 8px oklch(0.50 0.20 195 / 0.2)',
+              }}>Sign In / Sign Up</button>
+            </div>
+          ) : !isProOrAdmin ? (
+            /* Free User UI - sandbox key available, prod key locked */
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-dim)' }}>SANDBOX KEY (RATE LIMITED)</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: 'oklch(0.78 0.16 75)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 75)' }}></span>
+                    FREE PLAN
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <input
+                    type="text"
+                    readOnly
+                    value="ms_sandbox_free_7a2f8d1c9b3e"
+                    style={{
+                      flex: 1, padding: '10px 12px', background: 'var(--bg-elev-1)',
+                      border: '1px solid var(--border)', borderRadius: 8,
+                      color: 'var(--fg-muted)', fontSize: 12, outline: 'none', fontFamily: 'monospace',
+                    }}
+                  />
+                  <button onClick={handleCopyKey} className="reset" style={{
+                    padding: '8px 12px', borderRadius: 8,
+                    background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                    color: 'var(--fg)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  }}>
+                    {copiedKey ? <Icon.Check size={14} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={14} />}
+                  </button>
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--fg-dim)', marginTop: 6 }}>
+                  Free sandbox keys are metered to 5 daily runs.
+                </div>
+              </div>
+
+              <div style={{
+                background: 'oklch(0.18 0.005 250 / 0.4)',
+                border: '1px solid var(--border)',
+                borderRadius: 12, padding: '18px 20px',
+                marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 12,
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'oklch(0.72 0.18 265)' }}>
+                  <Icon.Shield size={14} />
+                  <span style={{ fontSize: 12.5, fontWeight: 600 }} className="mono">PRODUCTION API ACCESS</span>
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
+                  Upgrade to **Pro** to immediately generate production keys with unlimited requests and premium bot rate-limits.
+                </p>
+                <button onClick={onShowPaywall} className="reset" style={{
+                  width: '100%', padding: '10px 14px', borderRadius: 8,
+                  background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+                  color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                  boxShadow: '0 4px 12px oklch(0.50 0.20 265 / 0.25)',
+                  marginTop: 4,
+                }}>Upgrade to Pro Key</button>
+              </div>
+            </div>
+          ) : (
+            /* Pro User UI - production keys fully operational */
+            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
+              {apiKey ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-dim)' }}>PRODUCTION KEY</span>
+                      <span style={{ fontSize: 10, fontWeight: 600, color: 'oklch(0.78 0.16 145)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }}></span>
+                        LIVE ACTIVE
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <input
+                        type="password"
+                        readOnly
+                        value={apiKey}
+                        style={{
+                          flex: 1, padding: '10px 12px', background: 'var(--bg-elev-1)',
+                          border: '1px solid var(--border)', borderRadius: 8,
+                          color: 'var(--fg)', fontSize: 12.5, outline: 'none', fontFamily: 'monospace',
+                          letterSpacing: '0.12em',
+                        }}
+                      />
+                      <button onClick={handleCopyKey} className="reset" style={{
+                        padding: '8px 12px', borderRadius: 8,
+                        background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                        color: 'var(--fg)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      }}>
+                        {copiedKey ? <Icon.Check size={14} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={14} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button onClick={handleRevokeKey} className="reset" style={{
+                      flex: 1, padding: '9px', borderRadius: 8,
+                      background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.4)',
+                      color: 'oklch(0.78 0.16 15)', fontWeight: 500, fontSize: 12.5, cursor: 'pointer',
+                      textAlign: 'center', transition: 'background 0.15s',
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.18 0.010 15 / 0.3)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.18 0.010 15 / 0.15)'}
+                    >Revoke API Key</button>
+                    <button onClick={handleCopyKey} className="reset" style={{
+                      flex: 1, padding: '9px', borderRadius: 8,
+                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                      color: 'var(--fg)', fontWeight: 500, fontSize: 12.5, cursor: 'pointer',
+                      textAlign: 'center',
+                    }}>Copy Bearer Token</button>
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  border: '1px dashed var(--border)', borderRadius: 12, padding: '40px 20px',
+                  textAlign: 'center', flex: 1, background: 'var(--bg-elev-1)',
+                }}>
+                  {isGenerating ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+                      <Icon.Loader size={32} className="spinning" style={{ color: 'var(--accent)' }} />
+                      <div style={{ fontSize: 13, color: 'var(--fg-dim)', fontWeight: 500 }} className="mono">Generating Cryptographic Key...</div>
+                    </div>
+                  ) : (
+                    <>
+                      <div style={{ color: 'var(--fg-dim)', marginBottom: 12 }}>
+                        <Icon.Database size={32} style={{ color: 'oklch(0.78 0.16 195)' }} />
+                      </div>
+                      <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 6px' }}>No Active API Keys</h3>
+                      <p style={{ fontSize: 12, color: 'var(--fg-subtle)', maxWidth: 260, margin: '0 0 20px', lineHeight: 1.4 }}>
+                        You are on a Pro account. Click the button below to generate a production API key.
+                      </p>
+                      <button onClick={handleGenerateKey} className="reset" style={{
+                        padding: '10px 20px', borderRadius: 8,
+                        background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
+                        color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                        boxShadow: '0 4px 12px oklch(0.50 0.20 195 / 0.3)',
+                      }}>Generate Live Key</button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* cURL Command Panel */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'space-between', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 32, height: 32, borderRadius: 8,
+                background: 'oklch(0.18 0.010 195 / 0.15)',
+                border: '1px solid oklch(0.78 0.16 195 / 0.3)',
+                color: 'oklch(0.78 0.16 195)',
+              }}>
+                <Icon.Code size={16} />
+              </span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Integration Example</span>
+            </div>
+            <button onClick={handleCopyCurl} className="reset" style={{
+              fontSize: 11, padding: '4px 10px', borderRadius: 6,
+              background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+              color: 'var(--fg-muted)', display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
+            }}>
+              {copiedCurl ? (
+                <>
+                  <Icon.Check size={11} style={{ color: 'oklch(0.78 0.16 145)' }} />
+                  Copied!
+                </>
+              ) : (
+                <>
+                  <Icon.Copy size={11} />
+                  Copy cURL
+                </>
+              )}
+            </button>
+          </div>
+
+          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 16 }}>
+            Run this standard POST script to execute document parsing instantly.
+          </p>
+
+          <pre style={{
+            background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+            borderRadius: 8, padding: '14px 16px', overflowX: 'auto',
+            fontSize: 11.5, color: isLight ? 'oklch(0.55 0.15 265)' : 'oklch(0.80 0.10 195)', lineHeight: 1.5,
+            flex: 1, display: 'block', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+          }} className="mono">
+            {curlCommand}
+          </pre>
+        </div>
+      </div>
+
+      {/* Interactive Sandbox & Terminal section */}
+      <div className="glass-card" style={{ marginTop: 24, padding: '32px 28px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+          <span style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 32, height: 32, borderRadius: 8,
+            background: 'oklch(0.18 0.010 195 / 0.15)',
+            border: '1px solid oklch(0.78 0.16 195 / 0.3)',
+            color: 'oklch(0.78 0.16 195)',
+          }}>
+            <Icon.Sparkles size={16} />
+          </span>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--fg)', margin: 0 }}>Interactive API Sandbox Playground</h2>
+        </div>
+
+        <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginTop: -8, marginBottom: 24 }}>
+          Send live test requests and monitor raw JSON response returns right inside the developer terminal.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
+          {/* Sandbox Request Settings */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div>
+              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>REQUEST DATA BODY</label>
+              <textarea
+                rows={4}
+                value={sandboxInput}
+                onChange={e => setSandboxInput(e.target.value)}
+                placeholder="Type anything to test the parser..."
+                style={{
+                  width: '100%', padding: '11px 14px', borderRadius: 8,
+                  background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+                  color: 'var(--fg)', fontSize: 13, outline: 'none',
+                  resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                  transition: 'border-color 0.15s',
+                }}
+                onFocus={e => e.currentTarget.style.borderColor = 'var(--accent)'}
+                onBlur={e => e.currentTarget.style.borderColor = 'var(--border)'}
+              />
+            </div>
+
+            <button
+              onClick={runSandboxTest}
+              disabled={sandboxLoading}
+              className="reset"
+              style={{
+                width: '100%', padding: '11px 14px', borderRadius: 8,
+                background: sandboxLoading 
+                  ? 'var(--bg-elev-2)' 
+                  : 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
+                border: sandboxLoading ? '1px solid var(--border)' : 'none',
+                color: sandboxLoading ? 'var(--fg-dim)' : 'white',
+                fontWeight: 600, fontSize: 13, cursor: sandboxLoading ? 'not-allowed' : 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                boxShadow: sandboxLoading ? 'none' : '0 4px 12px oklch(0.50 0.20 195 / 0.25)',
+              }}
+            >
+              {sandboxLoading ? (
+                <>
+                  <Icon.Loader size={14} className="spinning" />
+                  Streaming Response...
+                </>
+              ) : (
+                <>
+                  ⚡
+                  <span>Test API Endpoint</span>
+                </>
+              )}
+            </button>
+
+            {/* Simulated Live Analytics */}
+            <div style={{
+              background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+              borderRadius: 10, padding: '14px 16px', display: 'flex', flexWrap: 'wrap', gap: 16,
+              justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto',
+            }}>
+              <div>
+                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>API STATUS</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.16 145)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }} />
+                  OPERATIONAL
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>AVERAGE LATENCY</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>42ms</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>GLOBAL UPTIME</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>100%</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Sandbox Response Terminal */}
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>RESPONSE HEADERS & BODY</div>
+            <div style={{
+              flex: 1, background: '#0e0f12', border: '1px solid #1c1d22',
+              borderRadius: 8, padding: '14px 16px', overflowY: 'auto',
+              fontFamily: 'monospace', fontSize: 12, color: '#a5b4fc', lineHeight: 1.5,
+              minHeight: 200, display: 'flex', flexDirection: 'column', boxSizing: 'border-box',
+            }}>
+              {sandboxLoading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#6366f1', margin: 'auto' }}>
+                  <Icon.Loader size={18} className="spinning" />
+                  <span>Waiting for API data streams...</span>
+                </div>
+              ) : sandboxResult ? (
+                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                  {JSON.stringify(sandboxResult, null, 2)}
+                </pre>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--fg-dim)', margin: 'auto', textAlign: 'center' }}>
+                  <Icon.Terminal size={24} style={{ opacity: 0.5 }} />
+                  <span style={{ fontSize: 12, maxWidth: 200 }}>Terminal idle. Click "Test API Endpoint" to execute.</span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
+        <button onClick={onLaunch} className="reset" style={{
+          padding: '11px 24px', borderRadius: 9,
+          background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+          color: 'var(--fg)', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
+        >Return to App Console</button>
+      </div>
+    </div>
+  );
+}
+
+/* =========================================================================
+   AccountPage Component
+   ========================================================================= */
+interface AccountPageProps {
+  onLaunch: () => void;
+  brandName: string;
+  userPlan: string;
+  sessionUser: any;
+  isAnonUser: boolean;
+  onShowPaywall: () => void;
+  onOpenAuthModal: () => void;
+  onSignOut: () => void;
+  theme: 'dark' | 'light';
+  onToggleTheme: () => void;
+}
+
+function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, onShowPaywall, onOpenAuthModal, onSignOut, theme, onToggleTheme }: AccountPageProps) {
+  const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+  const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
+
+  // Custom layout state
+  const [editorLayout, setEditorLayout] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('uaf_layout') || 'standard';
+    }
+    return 'standard';
+  });
+
+  // Custom watermark options
+  const [whiteLabel, setWhiteLabel] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('uaf_white_label') === 'true';
+    }
+    return false;
+  });
+
+  const [customHeader, setCustomHeader] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('uaf_custom_header') || '';
+    }
+    return '';
+  });
+
+  const [customFooter, setCustomFooter] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('uaf_custom_footer') || '';
+    }
+    return '';
+  });
+
+  const handleLayoutChange = (layout: string) => {
+    setEditorLayout(layout);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('uaf_layout', layout);
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
+  const handleWhiteLabelChange = (val: boolean) => {
+    if (userPlan !== 'pro' && userPlan !== 'admin') {
+      alert("Watermark White-Labeling is a Pro feature. Please upgrade to Pro to unlock.");
+      onShowPaywall();
+      return;
+    }
+    setWhiteLabel(val);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('uaf_white_label', val.toString());
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
+  const saveCustomHeader = (text: string) => {
+    setCustomHeader(text);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('uaf_custom_header', text);
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
+  const saveCustomFooter = (text: string) => {
+    setCustomFooter(text);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('uaf_custom_footer', text);
+      window.dispatchEvent(new Event('storage'));
+    }
+  };
+
+  const handleCancelSubscription = () => {
+    if (confirm("Are you sure you want to cancel your simulated Pro subscription? You will lose access to unlimited daily processing runs, white-label exports, custom running headers, and production API keys at the end of the billing period.")) {
+      if (supabase && sessionUser?.id) {
+        supabase.from('profiles').update({ tier: 'free' }).eq('id', sessionUser.id).then(() => {
+          alert("Subscription cancelled successfully. Your account has been reverted to the Free tier.");
+          window.location.reload();
+        });
+      }
+    }
+  };
+
+  const handleCopyUUID = () => {
+    navigator.clipboard.writeText(sessionUser?.id || '');
+    alert("UUID copied to clipboard!");
+  };
+
+  if (!isLoggedIn) {
+    return (
+      <div style={{ maxWidth: 640, margin: '80px auto', padding: '0 32px', textAlign: 'center' }}>
+        <Icon.Shield size={48} style={{ color: 'var(--fg-dim)', marginBottom: 20 }} />
+        <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>Account Settings Locked</h2>
+        <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
+          You are currently visiting as a guest. Sign in or create a free account to customize workspace layout settings, manage subscriptions, and unlock Pro white-labeling kits.
+        </p>
+        <button onClick={onOpenAuthModal} className="reset" style={{
+          padding: '12px 28px', borderRadius: 9,
+          background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+          color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+          boxShadow: '0 4px 14px oklch(0.50 0.20 265 / 0.3)',
+        }}>Sign In / Sign Up</button>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      maxWidth: 1000, margin: '40px auto 120px',
+      padding: '0 32px', boxSizing: 'border-box',
+      position: 'relative',
+    }} className="fade-in">
+      <div style={{
+        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
+        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+        opacity: isLight ? 0.08 : 0.15,
+        zIndex: 0,
+      }}/>
+
+      <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative', zIndex: 1 }}>
+        <span style={eyebrow}>Workspace Settings</span>
+        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>User Account Settings</h1>
+        <p style={sectionSubtitle}>Manage your profile details, customize editor width displays, and edit professional B2B export branding headers.</p>
+      </div>
+
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+        gap: 24,
+        alignItems: 'stretch',
+        position: 'relative',
+        zIndex: 1,
+      }}>
+        {/* Left Column: Account Profile & Billing */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'oklch(0.18 0.010 265 / 0.15)',
+              border: '1px solid oklch(0.70 0.18 265 / 0.3)',
+              color: 'oklch(0.70 0.18 265)',
+            }}>
+              <Icon.Database size={16} />
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Profile & Security</span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontSize: 13.5, color: 'var(--fg-muted)', flex: 1 }}>
+            <div>
+              <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Registered Email</div>
+              <div style={{ color: 'var(--fg)', fontWeight: 500, fontSize: 14 }}>{sessionUser?.email}</div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Database User ID (UUID)</div>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <code style={{ fontSize: 11, background: 'var(--bg-elev-1)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: 6, display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sessionUser?.id}</code>
+                <button onClick={handleCopyUUID} className="reset" style={{ padding: 6, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', background: 'var(--bg-elev-2)' }}>
+                  <Icon.Copy size={12} />
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Workspace Access Tier</div>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+                <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 12, color: 'var(--fg)' }}>
+                  {userPlan === 'pro' ? 'Lifetime Pro Workspace' : userPlan === 'admin' ? 'System Administrator' : 'Free Registered Tier'}
+                </span>
+              </div>
+            </div>
+
+            <div style={{
+              borderTop: '1px solid var(--border)',
+              paddingTop: 20, marginTop: 'auto',
+              display: 'flex', flexDirection: 'column', gap: 12
+            }}>
+              {userPlan === 'pro' || userPlan === 'admin' ? (
+                <div style={{ background: 'oklch(0.18 0.010 145 / 0.1)', border: '1px solid oklch(0.70 0.16 145 / 0.3)', borderRadius: 10, padding: '14px 16px' }}>
+                  <div style={{ fontSize: 12.5, color: 'oklch(0.75 0.14 145)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                    <Icon.Check size={14} />
+                    <span>Simulated Stripe Active</span>
+                  </div>
+                  <p style={{ fontSize: 11.5, color: 'var(--fg-subtle)', margin: '0 0 12px', lineHeight: 1.4 }}>
+                    Your billing account is active. If you cancel your simulated subscription, your workspace will revert to Free limitations.
+                  </p>
+                  <button onClick={handleCancelSubscription} className="reset" style={{
+                    width: '100%', padding: '8px 12px', borderRadius: 8,
+                    background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
+                    color: 'oklch(0.78 0.16 15)', fontWeight: 500, fontSize: 12.5, cursor: 'pointer',
+                  }}>Cancel Subscription</button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: 0, lineHeight: 1.45 }}>
+                    Upgrade to the **Pro Workspace Tier** to unlock unlimited runs, strip watermarks, custom running headers, and production API access!
+                  </p>
+                  <button onClick={onShowPaywall} className="reset" style={{
+                    width: '100%', padding: '10px 14px', borderRadius: 8,
+                    background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+                    color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                    boxShadow: '0 4px 12px oklch(0.50 0.20 265 / 0.25)',
+                  }}>Upgrade to Pro ($9/mo)</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Workspace Preferences */}
+        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 28 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'oklch(0.18 0.010 195 / 0.15)',
+              border: '1px solid oklch(0.78 0.16 195 / 0.3)',
+              color: 'oklch(0.78 0.16 195)',
+            }}>
+              <Icon.Grid size={16} />
+            </span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Workspace Preferences</span>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Visual Editor Layout */}
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6 }} className="mono">EDITOR LAYOUT MODE</label>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {['standard', 'compact', 'zen'].map(mode => (
+                  <button key={mode} onClick={() => handleLayoutChange(mode)} className="reset" style={{
+                    flex: 1, padding: '7px 10px', borderRadius: 8,
+                    border: `1px solid ${editorLayout === mode ? 'var(--accent)' : 'var(--border)'}`,
+                    background: editorLayout === mode ? 'oklch(0.70 0.18 265 / 0.1)' : 'var(--bg-elev-1)',
+                    color: editorLayout === mode ? 'var(--accent)' : 'var(--fg-muted)',
+                    fontSize: 12, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize'
+                  }}>{mode}</button>
+                ))}
+              </div>
+            </div>
+
+            {/* Theme Select */}
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6 }} className="mono">INTERFACE CONTRAST THEME</label>
+              <button onClick={onToggleTheme} className="reset" style={{
+                width: '100%', padding: '8px 12px', borderRadius: 8,
+                background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+                color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 12.5, fontWeight: 500,
+              }}>
+                {theme === 'dark' ? (
+                  <>
+                    <Icon.Moon size={13} />
+                    <span>Dark Contrast Active</span>
+                  </>
+                ) : (
+                  <>
+                    <Icon.Sun size={13} />
+                    <span>Light Contrast Active</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Custom Branding Watermarks (Pro Gated) */}
+            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--fg)' }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)' }} className="mono">WHITE-LABEL EXPORT KIT (PRO)</label>
+                {userPlan !== 'pro' && userPlan !== 'admin' && (
+                  <span style={{ fontSize: 8, fontWeight: 700, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4 }}>PRO</span>
+                )}
+              </div>
+
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12.5, color: 'var(--fg-muted)' }}>
+                <input
+                  type="checkbox"
+                  checked={whiteLabel}
+                  disabled={userPlan !== 'pro' && userPlan !== 'admin'}
+                  onChange={e => handleWhiteLabelChange(e.target.checked)}
+                  style={{ width: 15, height: 15, cursor: 'pointer' }}
+                />
+                <span>Remove "{brandName}" watermark from exports</span>
+              </label>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }} className="mono">CUSTOM RUNNING HEADER TEXT</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Confidential Business Audit"
+                  value={customHeader}
+                  disabled={userPlan !== 'pro' && userPlan !== 'admin'}
+                  onChange={e => saveCustomHeader(e.target.value)}
+                  style={{
+                    width: '100%', padding: '8px 12px', borderRadius: 8,
+                    background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                    color: 'white', fontSize: 12.5, outline: 'none', boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }} className="mono">CUSTOM RUNNING FOOTER TEXT</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Internal Use Only"
+                  value={customFooter}
+                  disabled={userPlan !== 'pro' && userPlan !== 'admin'}
+                  onChange={e => saveCustomFooter(e.target.value)}
+                  style={{
+                    width: '100%', padding: '8px 12px', borderRadius: 8,
+                    background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                    color: 'white', fontSize: 12.5, outline: 'none', boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
+        <button onClick={onLaunch} className="reset" style={{
+          padding: '11px 24px', borderRadius: 9,
+          background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+          color: 'var(--fg)', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
+          transition: 'background 0.15s',
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+        onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
+        >Return to App Console</button>
+      </div>
+    </div>
+  );
+}
+
 interface ChangelogPageProps {
+
   onLaunch: () => void;
 }
 
@@ -4766,14 +6199,15 @@ function PrivacyPage({ onLaunch }: PrivacyPageProps) {
    ========================================================================= */
 interface BlogPageProps {
   onLaunch: () => void;
+  brandName: string;
 }
 
-function BlogPage({ onLaunch }: BlogPageProps) {
+function BlogPage({ onLaunch, brandName }: BlogPageProps) {
   const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
 
   const posts = [
     {
-      title: 'Why We Built MySaaS: The Case for On-Device Utilities',
+      title: `Why We Built ${brandName}: The Case for On-Device Utilities`,
       date: 'May 27, 2026',
       excerpt: 'Most file-processing websites upload your data to a server, process it, and send it back. We asked: what if the processing never left your browser?',
       hue: 265,
@@ -4838,6 +6272,425 @@ function BlogPage({ onLaunch }: BlogPageProps) {
         ))}
       </div>
     </div>
+  );
+}
+
+interface AuthModalProps {
+  open: boolean;
+  onClose: () => void;
+  supabase: any;
+}
+
+function AuthModal({ open, onClose, supabase }: AuthModalProps) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const getPasswordStrength = (pass: string) => {
+    if (!pass) return { score: 0, label: '', color: 'transparent', width: '0%' };
+    if (pass.length < 6) return { score: 1, label: 'Weak (too short)', color: 'oklch(0.60 0.20 20)', width: '33%' };
+    
+    const hasNumbers = /\d/.test(pass);
+    const hasSpecial = /[^A-Za-z0-9]/.test(pass);
+    const hasMixedCase = /[a-z]/.test(pass) && /[A-Z]/.test(pass);
+    
+    if (pass.length >= 8 && hasNumbers && (hasSpecial || hasMixedCase)) {
+      return { score: 3, label: 'Strong', color: 'oklch(0.70 0.16 140)', width: '100%' };
+    }
+    return { score: 2, label: 'Medium', color: 'oklch(0.70 0.16 75)', width: '66%' };
+  };
+
+  if (!open) return null;
+
+  async function handleAuth(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setMessage(null);
+    try {
+      if (isSignUp) {
+        const { data, error } = await supabase.auth.signUp({ email, password });
+        if (error) throw error;
+        setMessage("Account created! Please check your email for confirmation or proceed to login.");
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) throw error;
+        onClose();
+      }
+    } catch (err: any) {
+      setMessage(err.message || "An error occurred.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return createPortal(
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'var(--bg-overlay-modal)',
+      backdropFilter: 'blur(16px) saturate(140%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20,
+    }} onClick={onClose}>
+      <div style={{
+        width: '100%', maxWidth: 400,
+        background: 'var(--bg-elev-1)',
+        border: '1px solid var(--border)',
+        borderRadius: 16,
+        padding: 32,
+        boxShadow: 'var(--shadow-modal)',
+        position: 'relative',
+      }} onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="reset" style={{
+          position: 'absolute', top: 20, right: 20,
+          color: 'var(--fg-subtle)', cursor: 'pointer',
+          background: 'none', border: 'none', outline: 'none'
+        }}>
+          <Icon.X size={16} />
+        </button>
+
+        <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 8px', color: 'white', letterSpacing: '-0.02em' }}>
+          {isSignUp ? 'Create Account' : 'Welcome Back'}
+        </h2>
+        <p style={{ fontSize: 13, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
+          {isSignUp ? 'Sign up to unlock 20 daily uses and sync history across devices.' : 'Sign in to access your Pro tools, history, and white-label settings.'}
+        </p>
+
+        {message && (
+          <div style={{
+            padding: '10px 14px', borderRadius: 8,
+            background: 'oklch(0.20 0.010 35 / 0.3)',
+            border: '1px solid oklch(0.55 0.10 35 / 0.3)',
+            color: 'oklch(0.85 0.12 35)',
+            fontSize: 13, marginBottom: 20, lineHeight: 1.4
+          }}>
+            {message}
+          </div>
+        )}
+
+        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Email Address</label>
+            <input required type="email" placeholder="name@email.com" value={email} onChange={e => setEmail(e.target.value)} style={{
+              width: '100%', padding: '12px 14px', borderRadius: 8,
+              background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+              color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
+            }} />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Password</label>
+            <input required type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} style={{
+              width: '100%', padding: '12px 14px', borderRadius: 8,
+              background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+              color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
+            }} />
+            
+            {/* Password Strength Indicator (Sign Up only) */}
+            {isSignUp && password && (
+              <div style={{ marginTop: 8 }} className="fade-in">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <span style={{ fontSize: 10, color: 'var(--fg-dim)' }}>Password Strength:</span>
+                  <span style={{ fontSize: 10, fontWeight: 600, color: getPasswordStrength(password).color }}>
+                    {getPasswordStrength(password).label}
+                  </span>
+                </div>
+                <div style={{ height: 4, width: '100%', background: 'oklch(0.20 0.005 250)', borderRadius: 2, overflow: 'hidden' }}>
+                  <div style={{
+                    height: '100%',
+                    width: getPasswordStrength(password).width,
+                    background: getPasswordStrength(password).color,
+                    transition: 'width 0.25s, background-color 0.25s'
+                  }} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <button type="submit" disabled={loading} className="reset" style={{
+            width: '100%', marginTop: 12, padding: '12px', borderRadius: 8,
+            background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+            color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 14,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
+          }}>
+            {loading ? 'Processing...' : isSignUp ? 'Register Account' : 'Sign In'} <Icon.ArrowRight size={13} strokeWidth={2.5} />
+          </button>
+        </form>
+
+        <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: 'var(--fg-subtle)' }}>
+          {isSignUp ? 'Already have an account?' : "Don't have an account yet?"}{' '}
+          <button onClick={() => setIsSignUp(!isSignUp)} className="reset" style={{ color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
+            {isSignUp ? 'Sign In' : 'Create One'}
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+interface PaywallModalProps {
+  open: boolean;
+  onClose: () => void;
+  brandName: string;
+  pricingData: any;
+  sessionUser: any;
+  supabase: any;
+  pricingCohort: string;
+}
+
+function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supabase, pricingCohort }: PaywallModalProps) {
+  const [fakeDoorSeen, setFakeDoorSeen] = useState(false);
+  const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
+  const [checkoutSpinner, setCheckoutSpinner] = useState(false);
+  const [waitlistEmail, setWaitlistEmail] = useState('');
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const seen = localStorage.getItem('fake_door_seen') === 'true';
+      setFakeDoorSeen(seen);
+    }
+  }, [open]);
+
+  if (!open) return null;
+
+  async function handlePlanClick(planName: string) {
+    setCheckoutPlan(planName);
+    
+    if (supabase) {
+      try {
+        await supabase.from('fake_checkout_clicks').insert({
+          user_id: sessionUser?.id || null,
+          plan_clicked: planName,
+        });
+      } catch (err) {
+        console.error("Error logging checkout click:", err);
+      }
+    }
+
+    if (!fakeDoorSeen) {
+      setCheckoutSpinner(true);
+      setTimeout(() => {
+        setCheckoutSpinner(false);
+        setFakeDoorSeen(true);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('fake_door_seen', 'true');
+        }
+      }, 2500);
+    } else {
+      setCheckoutSpinner(false);
+    }
+  }
+
+  async function handleWaitlistSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!waitlistEmail) return;
+
+    if (supabase && sessionUser) {
+      try {
+        await supabase.from('profiles').update({ fake_door_waitlisted: true }).eq('id', sessionUser.id);
+      } catch (e) {}
+    }
+    
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('fake_door_waitlist_email', waitlistEmail);
+    }
+
+    setWaitlistSubmitted(true);
+  }
+
+  return createPortal(
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 1000,
+      background: 'var(--bg-overlay-modal)',
+      backdropFilter: 'blur(20px) saturate(140%)',
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 20,
+    }} onClick={onClose}>
+      <div style={{
+        width: '100%', maxWidth: 740,
+        background: 'var(--bg-elev-1)',
+        border: '1px solid oklch(0.45 0.10 265 / 0.3)',
+        borderRadius: 20,
+        overflow: 'hidden',
+        boxShadow: 'var(--shadow-modal)',
+        position: 'relative',
+        display: 'flex', flexDirection: 'column'
+      }} onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="reset" style={{
+          position: 'absolute', top: 20, right: 20,
+          color: 'var(--fg-subtle)', cursor: 'pointer', zIndex: 10,
+          background: 'none', border: 'none', outline: 'none'
+        }}>
+          <Icon.X size={16} />
+        </button>
+
+        {checkoutSpinner ? (
+          <div style={{ padding: '80px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400 }} className="fade-in">
+            <Icon.Loader size={48} style={{ color: 'var(--accent)', marginBottom: 24, animation: 'spin 1s linear infinite' }} />
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 8, textAlign: 'center' }}>Connecting to Stripe Secure Servers...</h3>
+            <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', textAlign: 'center', maxWidth: 320 }}>Creating secure customer session. Please do not close this window.</p>
+          </div>
+        ) : checkoutPlan && fakeDoorSeen ? (
+          <div style={{ padding: 48, minHeight: 400, display: 'flex', flexDirection: 'column', justifyContent: 'center' }} className="fade-in">
+            {!waitlistSubmitted ? (
+              <form onSubmit={handleWaitlistSubmit} style={{ textAlign: 'center', maxWidth: 460, margin: '0 auto' }}>
+                <div style={{
+                  width: 56, height: 56, borderRadius: '50%',
+                  background: 'oklch(0.22 0.010 265 / 0.15)',
+                  border: '1px solid oklch(0.75 0.14 265 / 0.2)',
+                  color: 'var(--accent)',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  marginBottom: 20,
+                  boxShadow: '0 0 20px oklch(0.78 0.16 265 / 0.15)',
+                }}>
+                  <Icon.Wand size={28} />
+                </div>
+                <h3 style={{ fontSize: 24, fontWeight: 600, color: 'white', margin: '0 0 10px', letterSpacing: '-0.02em' }}>Unlock The Pro Vault</h3>
+                <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
+                  We are currently in a closed beta group. Enter your email below to join the waitlist and get **3 months of Pro completely free** the moment payments go live!
+                </p>
+
+                <div style={{ display: 'flex', gap: 10, width: '100%', marginBottom: 12 }}>
+                  <input required type="email" placeholder="you@example.com" value={waitlistEmail} onChange={e => setWaitlistEmail(e.target.value)} style={{
+                    flex: 1, padding: '12px 14px', borderRadius: 8,
+                    background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                    color: 'white', fontSize: 14, outline: 'none'
+                  }} />
+                  <button type="submit" className="reset" style={{
+                    padding: '0 20px', borderRadius: 8,
+                    background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+                    color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 14, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', gap: 6
+                  }}>Join Waitlist <Icon.ArrowRight size={13} strokeWidth={2.5} /></button>
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--fg-dim)' }}>Zero spam. Only your early access pass.</p>
+              </form>
+            ) : (
+              <div style={{ textAlign: 'center', maxWidth: 420, margin: '0 auto' }} className="fade-in">
+                <div style={{
+                  width: 56, height: 56, borderRadius: '50%',
+                  background: 'oklch(0.22 0.010 145 / 0.2)',
+                  border: '1px solid oklch(0.75 0.14 145 / 0.4)',
+                  color: 'oklch(0.78 0.16 145)',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  marginBottom: 20,
+                  boxShadow: '0 0 20px oklch(0.78 0.16 145 / 0.25)',
+                }}>
+                  <Icon.Check size={28} strokeWidth={2.5} />
+                </div>
+                <h3 style={{ fontSize: 22, fontWeight: 600, color: 'white', margin: '0 0 10px', letterSpacing: '-0.02em' }}>You are on the Priority List!</h3>
+                <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
+                  Thank you! We've saved <span className="mono" style={{ color: 'white' }}>{waitlistEmail}</span>. You will receive your 3-month free voucher as soon as payments open.
+                </p>
+                <button onClick={onClose} className="reset" style={{
+                  padding: '10px 20px', borderRadius: 8,
+                  background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+                  color: 'white', fontSize: 13.5, fontWeight: 500, cursor: 'pointer',
+                }}>Close Window</button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'row', minHeight: 480 }} className="fade-in">
+            {/* Left Info bar */}
+            <div style={{
+              flex: '1.2', background: 'oklch(0.16 0.012 265 / 0.4)',
+              borderRight: '1px solid var(--border)', padding: 40,
+              display: 'flex', flexDirection: 'column', gap: 24
+            }}>
+              <div>
+                <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Upgrade Today</span>
+                <h3 style={{ fontSize: 24, fontWeight: 600, color: 'white', margin: '6px 0 0', letterSpacing: '-0.02em' }}>Unlock all tools</h3>
+              </div>
+              
+              <ul style={{ ...listStyle, padding: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <Feature on={true} em={true}>Unlimited runs on all 20+ tools</Feature>
+                <Feature on={true} em={true}>High-compute PDF scanned OCR</Feature>
+                <Feature on={true} em={true}>Visual PDF Diff Checker</Feature>
+                <Feature on={true} em={true}>White-Label watermarks settings</Feature>
+                <Feature on={true} em={true}>Sync history across 30 days</Feature>
+              </ul>
+
+              <div style={{ marginTop: 'auto', fontSize: 12, color: 'var(--fg-dim)', lineHeight: 1.4 }}>
+                * Localized for economic equity in your region ({pricingCohort.toUpperCase()}) utilizing Purchasing Power Parity.
+              </div>
+            </div>
+
+            {/* Right Plan grid */}
+            <div style={{ flex: '1.5', padding: 40, display: 'flex', flexDirection: 'column', gap: 20, justifyContent: 'center' }}>
+              <h4 style={{ fontSize: 14, fontWeight: 600, color: 'white', margin: 0 }}>Select your plan:</h4>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {/* 1. Monthly */}
+                <button onClick={() => handlePlanClick('monthly_sub')} className="reset plan-card" style={{
+                  textAlign: 'left', padding: '16px 20px', borderRadius: 12,
+                  background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  transition: 'border-color 0.15s, background 0.15s'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
+                >
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'white' }}>Monthly Subscription</div>
+                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>Full unlimited cockpit access</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{pricingData.currency}{pricingData.monthly}</div>
+                    <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>/ month</div>
+                  </div>
+                </button>
+
+                {/* 2. Weekly Pass */}
+                <button onClick={() => handlePlanClick('weekly_pass')} className="reset plan-card" style={{
+                  textAlign: 'left', padding: '16px 20px', borderRadius: 12,
+                  background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  transition: 'border-color 0.15s, background 0.15s'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
+                >
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'white' }}>7-Day Pass</div>
+                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>Perfect for short assignments</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{pricingData.currency}{pricingData.weekly}</div>
+                    <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>one-off</div>
+                  </div>
+                </button>
+
+                {/* 3. 24h Pass */}
+                <button onClick={() => handlePlanClick('daily_pass')} className="reset plan-card" style={{
+                  textAlign: 'left', padding: '16px 20px', borderRadius: 12,
+                  background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  transition: 'border-color 0.15s, background 0.15s'
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
+                >
+                  <div>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: 'white' }}>24-Hour Pass</div>
+                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>Full access lock-in for a day</div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{pricingData.currency}{pricingData.daily}</div>
+                    <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>24 hours</div>
+                  </div>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body
   );
 }
 
@@ -5000,7 +6853,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   // Determine starting view based on presets
   let initialView = 'landing';
   if (initialSlug) {
-    if (initialSlug === 'pricing' || initialSlug === 'about' || initialSlug === 'docs' || initialSlug === 'changelog' || initialSlug === 'roadmap' || initialSlug === 'contact' || initialSlug === 'privacy' || initialSlug === 'blog') {
+    if (initialSlug === 'pricing' || initialSlug === 'about' || initialSlug === 'docs' || initialSlug === 'developer' || initialSlug === 'account' || initialSlug === 'changelog' || initialSlug === 'roadmap' || initialSlug === 'contact' || initialSlug === 'privacy' || initialSlug === 'blog') {
       initialView = initialSlug;
     } else if (initialSlug === 'dashboard' || initialSlug === 'home') {
       initialView = 'home';
@@ -5023,6 +6876,235 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   const [launcher, setLauncher] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [enterpriseOpen, setEnterpriseOpen] = useState(false);
+
+  // Dynamic SaaS Branding
+  const [brandName, setBrandName] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('brandName') || 'MySaaS';
+    }
+    return 'MySaaS';
+  });
+
+  // Supabase Auth and Limits State
+  const [sessionUser, setSessionUser] = useState<any>(null);
+  const [isAnonUser, setIsAnonUser] = useState(false);
+  const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'admin'>('free');
+  const [authOpen, setAuthOpen] = useState(false);
+  
+  // PPP Pricing & Location
+  const [countryCode, setCountryCode] = useState('US');
+  const [pricingCohort, setPricingCohort] = useState<'high' | 'mid' | 'low' | 'india'>('high');
+
+  // Paywall states
+  const [showPaywall, setShowPaywall] = useState(false);
+
+  const handleShowPaywall = useCallback(() => {
+    if (!sessionUser || isAnonUser) {
+      alert("Please sign in or create an account to upgrade to a Pro workspace!");
+      setAuthOpen(true);
+    } else {
+      setShowPaywall(true);
+    }
+  }, [sessionUser, isAnonUser]);
+
+  // Geo-fetch for Purchasing Power Parity (PPP)
+  useEffect(() => {
+    async function fetchCountry() {
+      try {
+        const res = await fetch('https://ipapi.co/json/');
+        const data = await res.json();
+        if (data && data.country_code) {
+          const cc = data.country_code.toUpperCase();
+          setCountryCode(cc);
+          
+          if (cc === 'IN') {
+            setPricingCohort('india');
+          } else {
+            const midIncome = ['BR', 'MX', 'TR', 'ZA', 'RU', 'CN', 'MY', 'TH', 'CO', 'PE', 'AR', 'CL', 'UA', 'PL', 'RO', 'HU'];
+            const highIncome = ['US', 'CA', 'GB', 'AU', 'NZ', 'DE', 'FR', 'JP', 'SG', 'HK', 'CH', 'IE', 'SE', 'NO', 'DK', 'FI', 'NL', 'BE', 'AT', 'KR', 'TW', 'IL'];
+            
+            if (highIncome.includes(cc)) {
+              setPricingCohort('high');
+            } else if (midIncome.includes(cc)) {
+              setPricingCohort('mid');
+            } else {
+              setPricingCohort('low');
+            }
+          }
+        }
+      } catch (e) {
+        console.error("PPP Geo-lookup failed, defaulting to US High-Income pricing:", e);
+      }
+    }
+    fetchCountry();
+  }, []);
+
+  const pricingData = useMemo(() => {
+    if (pricingCohort === 'india') {
+      return {
+        currency: '₹',
+        monthly: '299',
+        weekly: '149',
+        daily: '49',
+        suffix: '/ month, cancel anytime',
+        weeklySuffix: 'for a 7-day pass',
+        dailySuffix: 'for a 24-hour pass',
+      };
+    } else if (pricingCohort === 'mid') {
+      return {
+        currency: '$',
+        monthly: '3.99',
+        weekly: '1.99',
+        daily: '0.49',
+        suffix: '/ month, cancel anytime',
+        weeklySuffix: 'for a 7-day pass',
+        dailySuffix: 'for a 24-hour pass',
+      };
+    } else if (pricingCohort === 'low') {
+      return {
+        currency: '$',
+        monthly: '1.99',
+        weekly: '0.99',
+        daily: '0.25',
+        suffix: '/ month, cancel anytime',
+        weeklySuffix: 'for a 7-day pass',
+        dailySuffix: 'for a 24-hour pass',
+      };
+    } else { // high (US/global default)
+      return {
+        currency: '$',
+        monthly: '9',
+        weekly: '2.99',
+        daily: '0.99',
+        suffix: '/ month, cancel anytime',
+        weeklySuffix: 'for a 7-day pass',
+        dailySuffix: 'for a 24-hour pass',
+      };
+    }
+  }, [pricingCohort]);
+
+  async function loadUserProfile(userId: string) {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('tier')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        const emailVal = sessionUser?.email || `anonymous_${userId.slice(0, 8)}@mysaas.internal`;
+        const { error: insertError } = await supabase
+          .from('profiles')
+          .insert({ id: userId, email: emailVal, tier: 'free' });
+        
+        if (!insertError) {
+          setUserPlan('free');
+        }
+      } else if (data) {
+        setUserPlan(data.tier || 'free');
+      }
+    } catch (err) {
+      console.error("Error loading user profile:", err);
+    }
+  }
+
+  // Silent anonymous sign-in on mount
+  useEffect(() => {
+    async function initAuth() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setSessionUser(session.user);
+        setIsAnonUser(session.user.is_anonymous || false);
+        loadUserProfile(session.user.id);
+      } else {
+        try {
+          const { data, error } = await supabase.auth.signInAnonymously();
+          if (data?.user) {
+            setSessionUser(data.user);
+            setIsAnonUser(true);
+            loadUserProfile(data.user.id);
+          }
+        } catch (e) {
+          console.error("Anonymous authentication failed:", e);
+        }
+      }
+    }
+    
+    initAuth();
+    
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session) {
+        setSessionUser(session.user);
+        setIsAnonUser(session.user.is_anonymous || false);
+        loadUserProfile(session.user.id);
+      } else {
+        setSessionUser(null);
+        setIsAnonUser(false);
+        setUserPlan('free');
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  async function handleSignOut() {
+    try {
+      await supabase.auth.signOut();
+      await supabase.auth.signInAnonymously();
+    } catch (e) {
+      console.error("Sign out failed:", e);
+    }
+  }
+
+  const checkAndLogUsage = useCallback(async (toolId: string, isTier2: boolean) => {
+    if (userPlan === 'pro') return true;
+
+    // Track daily usage count inside Supabase `usage_logs`
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    const isoStart = today.toISOString();
+
+    let count = 0;
+    if (sessionUser) {
+      const { count: dbCount, error } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', sessionUser.id)
+        .gte('created_at', isoStart);
+      if (!error && dbCount !== null) {
+        count = dbCount;
+      }
+    } else {
+      const localUsage = localStorage.getItem(`usage_count_${today.toDateString()}`);
+      count = localUsage ? parseInt(localUsage, 10) : 0;
+    }
+
+    const isGuest = !sessionUser || isAnonUser;
+    const limitTier1 = isGuest ? 5 : 20;
+    const limitTier2 = isGuest ? (isAnonUser ? 1 : 0) : 5;
+
+    const currentLimit = isTier2 ? limitTier2 : limitTier1;
+
+    if (count >= currentLimit) {
+      setShowPaywall(true);
+      return false;
+    }
+
+    if (sessionUser) {
+      await supabase.from('usage_logs').insert({
+        user_id: sessionUser.id,
+        tool_id: toolId,
+        tier: isTier2 ? 2 : 1,
+      });
+    } else {
+      const newCount = count + 1;
+      localStorage.setItem(`usage_count_${today.toDateString()}`, newCount.toString());
+    }
+
+    return true;
+  }, [sessionUser, isAnonUser, userPlan]);
 
   // Initialize theme from localStorage on client side mount
   useEffect(() => {
@@ -5051,13 +7133,11 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     setTheme(t => t === 'dark' ? 'light' : 'dark');
   }, []);
 
-
-
   const isLanding = view === 'landing';
   const isDashboard = view === 'home';
 
   const activeTool = useMemo(() => {
-    if (isLanding || isDashboard || view === 'pricing' || view === 'about' || view === 'docs' || view === 'changelog' || view === 'roadmap' || view === 'contact' || view === 'privacy' || view === 'blog' || view.startsWith('category_')) return null;
+    if (isLanding || isDashboard || view === 'pricing' || view === 'about' || view === 'docs' || view === 'developer' || view === 'account' || view === 'changelog' || view === 'roadmap' || view === 'contact' || view === 'privacy' || view === 'blog' || view.startsWith('category_')) return null;
     return ALL_TOOLS.find(t => t.id === view);
   }, [view, isLanding, isDashboard]);
 
@@ -5072,8 +7152,8 @@ export function App({ initialSlug }: { initialSlug?: string }) {
       path = '/dashboard';
     } else if (id === 'landing') {
       path = '/';
-    } else if (['pricing', 'about', 'docs', 'changelog', 'roadmap', 'contact', 'privacy', 'blog'].includes(id)) {
-      path = `/${id}`;
+    } else if (['pricing', 'about', 'docs', 'developer', 'account', 'changelog', 'roadmap', 'contact', 'privacy', 'blog'].includes(id)) {
+      path = id === 'roadmap' ? '/developer' : `/${id}`;
     } else if (id.includes('-to-')) {
       path = `/tools/format/${id}`;
     } else if (id.startsWith('category_')) {
@@ -5111,11 +7191,28 @@ export function App({ initialSlug }: { initialSlug?: string }) {
       <>
         <style dangerouslySetInnerHTML={{ __html: GLOBAL_CSS }} />
         <div className="app-root">
-          <Landing onLaunch={launchApp} onEnterprise={() => setEnterpriseOpen(true)} onBrowseTools={() => setLauncher(true)} theme={theme} onToggleTheme={toggleTheme} />
-          <Footer onBackToLanding={null} />
+          <Landing
+            onLaunch={launchApp}
+            onEnterprise={() => setEnterpriseOpen(true)}
+            onBrowseTools={() => setLauncher(true)}
+            theme={theme}
+            onToggleTheme={toggleTheme}
+            brandName={brandName}
+            setBrandName={setBrandName}
+            pricingData={pricingData}
+            onShowPaywall={handleShowPaywall}
+            sessionUser={sessionUser}
+            isAnonUser={isAnonUser}
+            userPlan={userPlan}
+            onOpenAuthModal={() => setAuthOpen(true)}
+            onSignOut={handleSignOut}
+          />
+          <Footer onBackToLanding={null} brandName={brandName} />
         </div>
         <Launcher open={launcher} onClose={() => setLauncher(false)} onPick={openTool} />
         <EnterpriseModal open={enterpriseOpen} onClose={() => setEnterpriseOpen(false)} />
+        <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} supabase={supabase} />
+        <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} brandName={brandName} pricingData={pricingData} sessionUser={sessionUser} supabase={supabase} pricingCohort={pricingCohort} />
       </>
     );
   }
@@ -5132,6 +7229,14 @@ export function App({ initialSlug }: { initialSlug?: string }) {
           scrolled={scrolled || !isDashboard}
           theme={theme}
           onToggleTheme={toggleTheme}
+          brandName={brandName}
+          setBrandName={setBrandName}
+          sessionUser={sessionUser}
+          isAnonUser={isAnonUser}
+          userPlan={userPlan}
+          onOpenAuthModal={() => setAuthOpen(true)}
+          onSignOut={handleSignOut}
+          onShowPaywall={handleShowPaywall}
         />
 
         <main>
@@ -5143,31 +7248,82 @@ export function App({ initialSlug }: { initialSlug?: string }) {
             />
           )}
           {view === 'pricing' && <PricingPage onLaunch={launchApp} onEnterprise={() => setEnterpriseOpen(true)} />}
-          {view === 'about' && <AboutPage onLaunch={launchApp} />}
+          {view === 'about' && <AboutPage onLaunch={launchApp} brandName={brandName} />}
           {view === 'docs' && <DocsPage onLaunch={launchApp} />}
+          {view === 'developer' && (
+            <DeveloperPage
+              onLaunch={launchApp}
+              brandName={brandName}
+              userPlan={userPlan}
+              sessionUser={sessionUser}
+              onShowPaywall={handleShowPaywall}
+              onOpenAuthModal={() => setAuthOpen(true)}
+            />
+          )}
+          {view === 'account' && (
+            <AccountPage
+              onLaunch={launchApp}
+              brandName={brandName}
+              userPlan={userPlan}
+              sessionUser={sessionUser}
+              isAnonUser={isAnonUser}
+              onShowPaywall={handleShowPaywall}
+              onOpenAuthModal={() => setAuthOpen(true)}
+              onSignOut={handleSignOut}
+              theme={theme}
+              onToggleTheme={toggleTheme}
+            />
+          )}
           {view === 'changelog' && <ChangelogPage onLaunch={launchApp} />}
-          {view === 'roadmap' && <RoadmapPage onLaunch={launchApp} />}
+          {view === 'roadmap' && (
+            <DeveloperPage
+              onLaunch={launchApp}
+              brandName={brandName}
+              userPlan={userPlan}
+              sessionUser={sessionUser}
+              onShowPaywall={() => setShowPaywall(true)}
+              onOpenAuthModal={() => setAuthOpen(true)}
+            />
+          )}
           {view === 'contact' && <ContactPage onLaunch={launchApp} />}
           {view === 'privacy' && <PrivacyPage onLaunch={launchApp} />}
-          {view === 'blog' && <BlogPage onLaunch={launchApp} />}
+          {view === 'blog' && <BlogPage onLaunch={launchApp} brandName={brandName} />}
           {view.startsWith('category_') && (
             <CategoryHub categoryId={view.replace('category_', '')} onOpenTool={openTool} />
           )}
           {!isDashboard && activeTool && (
             activeTool.id === 'uaf'
-              ? <FormatterTool tool={activeTool} initialSlug={initialSlug} />
+              ? <FormatterTool
+                  tool={activeTool}
+                  initialSlug={initialSlug}
+                  brandName={brandName}
+                  userPlan={userPlan}
+                  sessionUser={sessionUser}
+                  onShowPaywall={handleShowPaywall}
+                  supabase={supabase}
+                  checkAndLogUsage={checkAndLogUsage}
+                />
               : activeTool.id === 'json'
-                ? <JsonTool tool={activeTool} />
+                ? <JsonTool
+                    tool={activeTool}
+                    brandName={brandName}
+                    userPlan={userPlan}
+                    sessionUser={sessionUser}
+                    onShowPaywall={handleShowPaywall}
+                    supabase={supabase}
+                  />
                 : <ComingSoonStub tool={activeTool} />
           )}
         </main>
 
-        <Footer onBackToLanding={backToLanding} />
+        <Footer onBackToLanding={backToLanding} brandName={brandName} />
 
         <CommandPalette open={palette} onClose={() => setPalette(false)} onPick={openTool} />
         <Launcher open={launcher} onClose={() => setLauncher(false)} onPick={openTool} />
       </div>
       <EnterpriseModal open={enterpriseOpen} onClose={() => setEnterpriseOpen(false)} />
+      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} supabase={supabase} />
+      <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} brandName={brandName} pricingData={pricingData} sessionUser={sessionUser} supabase={supabase} pricingCohort={pricingCohort} />
     </>
   );
 }
