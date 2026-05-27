@@ -1228,6 +1228,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
   const lines = useMemo(() => text.split(/\n/).length, [text]);
 
   const [downloading, setDownloading] = useState(false);
+  const [pdfToast, setPdfToast] = useState<string | null>(null);
   const [detectedAi, setDetectedAi] = useState<string | null>(null);
   const [copying, setCopying] = useState(false);
 
@@ -1420,6 +1421,12 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
       `;
 
       if (format.value === 'pdf') {
+        // Show our beautiful toast hint immediately
+        setPdfToast("Opening print menu... Select 'Save as PDF' to download!");
+
+        // Wait 1.8 seconds so the user has time to read it!
+        await new Promise((resolve) => setTimeout(resolve, 1800));
+
         // --- CLIENT-SIDE STEALTH IFRAME PRINT ---
         const iframe = document.createElement('iframe');
         iframe.style.position = 'fixed';
@@ -1440,6 +1447,9 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
 
         // Give it a tiny moment to parse/load stylesheets
         await new Promise((resolve) => setTimeout(resolve, 350));
+
+        // Hide the toast just before the print window pops up
+        setPdfToast(null);
 
         iframe.contentWindow?.focus();
         iframe.contentWindow?.print();
@@ -1480,6 +1490,7 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
       alert("Error generating document locally:\n" + error.message);
     } finally {
       setDownloading(false);
+      setPdfToast(null);
     }
   }
 
@@ -1959,6 +1970,38 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
               <span>theme={theme.value} · format={format.value}</span>
             </div>
           )}
+      {pdfToast && (
+        <div style={{
+          position: 'fixed',
+          bottom: 24,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 99999,
+          background: 'oklch(0.2 0.02 240 / 0.85)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid oklch(1 0 0 / 0.15)',
+          color: '#fff',
+          padding: '12px 24px',
+          borderRadius: 9999,
+          boxShadow: '0 10px 30px oklch(0 0 0 / 0.4)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          fontSize: 14,
+          fontWeight: 500,
+          pointerEvents: 'none',
+        }}>
+          <span style={{
+            display: 'inline-flex',
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: 'oklch(0.7 0.15 140)',
+            boxShadow: '0 0 8px oklch(0.7 0.15 140)',
+          }} />
+          <span>{pdfToast}</span>
+        </div>
+      )}
         </div>
       )}
     </div>
