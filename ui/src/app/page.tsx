@@ -2419,10 +2419,29 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', flex: 1 }}>
               {historyLogs.map((log: any) => (
-                <div key={log.id} style={{
-                  padding: 12, borderRadius: 8, background: 'var(--bg-elev-2)',
-                  border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 4
-                }}>
+                <div 
+                  key={log.id} 
+                  onClick={() => {
+                    if (log.content_preview) {
+                      setText(log.content_preview);
+                      setHistoryOpen(false);
+                    }
+                  }}
+                  style={{
+                    padding: 12, borderRadius: 8, background: 'var(--bg-elev-2)',
+                    border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 4,
+                    cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s'
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = 'var(--bg-hover)';
+                    e.currentTarget.style.borderColor = 'var(--accent)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = 'var(--bg-elev-2)';
+                    e.currentTarget.style.borderColor = 'var(--border)';
+                  }}
+                  title="Click to restore this document snippet into the editor"
+                >
                   <div style={{ fontSize: 13, fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.file_name}</div>
                   <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>{new Date(log.created_at).toLocaleDateString()} · {log.tool_id.toUpperCase()}</div>
                 </div>
