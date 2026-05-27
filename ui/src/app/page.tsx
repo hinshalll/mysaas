@@ -1421,11 +1421,11 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
       `;
 
       if (format.value === 'pdf') {
-        // Show our beautiful toast hint immediately
-        setPdfToast("Opening print menu... Select 'Save as PDF' to download!");
+        // Show our beautiful boomer-friendly custom overlay hint immediately
+        setPdfToast("To download as a file: In the print window, change the 'Destination' dropdown to 'Save as PDF', then click the Save button.");
 
-        // Wait 1.8 seconds so the user has time to read it!
-        await new Promise((resolve) => setTimeout(resolve, 1800));
+        // Wait 2.5 seconds so the user has time to read it!
+        await new Promise((resolve) => setTimeout(resolve, 2500));
 
         // --- CLIENT-SIDE STEALTH IFRAME PRINT ---
         const iframe = document.createElement('iframe');
@@ -1973,33 +1973,59 @@ function FormatterTool({ tool, initialSlug }: FormatterToolProps) {
       {pdfToast && (
         <div style={{
           position: 'fixed',
-          bottom: 24,
-          left: '50%',
-          transform: 'translateX(-50%)',
+          top: 0, left: 0, right: 0, bottom: 0,
           zIndex: 99999,
-          background: 'oklch(0.2 0.02 240 / 0.85)',
-          backdropFilter: 'blur(12px)',
-          border: '1px solid oklch(1 0 0 / 0.15)',
-          color: '#fff',
-          padding: '12px 24px',
-          borderRadius: 9999,
-          boxShadow: '0 10px 30px oklch(0 0 0 / 0.4)',
+          background: 'oklch(0.12 0.015 250 / 0.65)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
           display: 'flex',
+          flexDirection: 'column',
           alignItems: 'center',
-          gap: 10,
-          fontSize: 14,
-          fontWeight: 500,
-          pointerEvents: 'none',
+          justifyContent: 'center',
+          gap: 16,
+          color: '#fff',
+          animation: 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
         }}>
-          <span style={{
-            display: 'inline-flex',
-            width: 8,
-            height: 8,
+          <style>{`
+            @keyframes spin { to { transform: rotate(360deg); } }
+            @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+          `}</style>
+          
+          <div style={{
+            width: 48, height: 48,
             borderRadius: '50%',
-            background: 'oklch(0.7 0.15 140)',
-            boxShadow: '0 0 8px oklch(0.7 0.15 140)',
+            border: '3px solid oklch(0.7 0.15 140 / 0.2)',
+            borderTopColor: 'oklch(0.7 0.15 140)',
+            animation: 'spin 1s linear infinite',
+            boxShadow: '0 0 16px oklch(0.7 0.15 140 / 0.3)',
           }} />
-          <span>{pdfToast}</span>
+          
+          <div style={{
+            maxWidth: 440,
+            textAlign: 'center',
+            padding: '0 24px',
+          }}>
+            <h3 style={{
+              fontSize: 18,
+              fontWeight: 600,
+              marginBottom: 8,
+              color: '#fff',
+              letterSpacing: '-0.01em',
+              fontFamily: 'Inter, system-ui, sans-serif',
+            }}>
+              Preparing Your PDF...
+            </h3>
+            <p style={{
+              fontSize: 14.5,
+              lineHeight: 1.5,
+              color: 'oklch(0.9 0.01 250 / 0.95)',
+              fontWeight: 400,
+              margin: 0,
+              fontFamily: 'Inter, system-ui, sans-serif',
+            }}>
+              {pdfToast}
+            </p>
+          </div>
         </div>
       )}
         </div>
