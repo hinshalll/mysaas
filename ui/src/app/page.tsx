@@ -40,7 +40,7 @@ import {
   GitBranch, Zap, Check, Globe,
   List, ListOrdered, Quote, Code, Link as LucideLink,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
-  Sun, Moon,
+  Sun, Moon, Eye, EyeOff
 } from 'lucide-react';
 
 // Map our legacy icon names to lucide-react components.
@@ -57,7 +57,7 @@ const Icon: Record<string, React.ComponentType<any>> = {
   List, ListOrdered, Quote, Code,
   LinkIcon: LucideLink, Eraser2: Eraser,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
-  Sun, Moon,
+  Sun, Moon, Eye, EyeOff
 };
 
 
@@ -470,12 +470,14 @@ interface TopBarProps {
   onOpenAuthModal: () => void;
   onSignOut: () => void;
   onShowPaywall: () => void;
+  onOpenTool: (id: string) => void;
 }
 
 function TopBar({
   onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, theme, onToggleTheme,
-  brandName, setBrandName, sessionUser, isAnonUser, userPlan, onOpenAuthModal, onSignOut, onShowPaywall
+  brandName, setBrandName, sessionUser, isAnonUser, userPlan, onOpenAuthModal, onSignOut, onShowPaywall, onOpenTool
 }: TopBarProps) {
+  const [isEditingBrand, setIsEditingBrand] = useState(false);
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -493,40 +495,96 @@ function TopBar({
         display: 'flex', alignItems: 'center', gap: 10,
         color: 'inherit',
       }}>
-        <div style={{
-          width: 28, height: 28, borderRadius: 7,
-          background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
-        }}>
-          <Icon.Command size={14} strokeWidth={2.2} style={{ color: 'white' }} />
-        </div>
-        <input
-          type="text"
-          value={brandName}
-          onChange={(e) => {
-            const newVal = e.target.value;
-            setBrandName(newVal);
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('brandName', newVal);
-            }
-          }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--fg)',
-            fontFamily: 'inherit',
-            fontSize: 15.5,
-            fontWeight: 600,
-            letterSpacing: '-0.018em',
-            width: `${Math.max(brandName.length, 1)}ch`,
-            outline: 'none',
-            cursor: 'text',
-            padding: 0,
-            margin: 0,
-          }}
-          title="Click to dynamically rename SaaS"
-        />
+        {isEditingBrand ? (
+          <>
+            <div style={{
+              width: 28, height: 28, borderRadius: 7,
+              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
+            }}>
+              <Icon.Command size={14} strokeWidth={2.2} style={{ color: 'white' }} />
+            </div>
+            <input
+              type="text"
+              autoFocus
+              value={brandName}
+              onClick={e => e.stopPropagation()}
+              onBlur={() => setIsEditingBrand(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setIsEditingBrand(false);
+                }
+              }}
+              onChange={(e) => {
+                const newVal = e.target.value;
+                setBrandName(newVal);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('brandName', newVal);
+                }
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--fg)',
+                fontFamily: 'inherit',
+                fontSize: 15.5,
+                fontWeight: 600,
+                letterSpacing: '-0.018em',
+                width: `${Math.max(brandName.length, 1)}ch`,
+                outline: 'none',
+                cursor: 'text',
+                padding: 0,
+                margin: 0,
+              }}
+              title="Enter new brand name and click away"
+            />
+          </>
+        ) : (
+          <Link 
+            href="/" 
+            onClick={(e) => { 
+              e.preventDefault(); 
+              onHome(); 
+            }} 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              textDecoration: 'none', 
+              color: 'inherit',
+              gap: 10
+            }}
+            title="Return to Home Screen"
+          >
+            <div style={{
+              width: 28, height: 28, borderRadius: 7,
+              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
+              cursor: 'pointer',
+            }}>
+              <Icon.Command size={14} strokeWidth={2.2} style={{ color: 'white' }} />
+            </div>
+            <span
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setIsEditingBrand(true);
+              }}
+              style={{
+                color: 'var(--fg)',
+                fontSize: 15.5,
+                fontWeight: 600,
+                letterSpacing: '-0.018em',
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+              title="Double-click to rename SaaS"
+            >
+              {brandName}
+            </span>
+          </Link>
+        )}
       </div>
 
       {/* Tools launcher pill — center on desktop, hidden on mobile (use ⌘K instead) */}
@@ -573,27 +631,32 @@ function TopBar({
       {/* Auth State */}
       {sessionUser && !isAnonUser ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button 
-            onClick={() => openTool('account')} 
-            className="reset top-link" 
-            style={{ 
-              ...topLink, 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: 6,
-              background: 'var(--bg-elev-1)',
-              border: '1px solid var(--border)',
-              padding: '5px 12px',
-              borderRadius: 20,
-              fontSize: 12,
-              fontWeight: 500,
-              color: 'var(--fg)',
-            }}
-          >
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
-            <span>Account ({sessionUser.email.split('@')[0]})</span>
-            {userPlan === 'pro' && <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}>PRO</span>}
-          </button>
+          {(() => {
+            const userDisplayName = sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0];
+            return (
+              <button 
+                onClick={() => onOpenTool('account')} 
+                className="reset top-link" 
+                style={{ 
+                  ...topLink, 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: 6,
+                  background: 'var(--bg-elev-1)',
+                  border: '1px solid var(--border)',
+                  padding: '5px 12px',
+                  borderRadius: 20,
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: 'var(--fg)',
+                }}
+              >
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+                <span>Account ({userDisplayName})</span>
+                {userPlan === 'pro' && <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}>PRO</span>}
+              </button>
+            );
+          })()}
           <button onClick={onSignOut} className="reset top-link" style={topLink}>Sign Out</button>
         </div>
       ) : (
@@ -2694,6 +2757,7 @@ interface LandingNavProps {
 }
 
 function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBrandName, sessionUser, isAnonUser, userPlan, onOpenAuthModal, onSignOut }: LandingNavProps) {
+  const [isEditingBrand, setIsEditingBrand] = useState(false);
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -2711,40 +2775,96 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
         display: 'flex', alignItems: 'center', gap: 10,
         textDecoration: 'none', color: 'inherit'
       }}>
-        <div style={{
-          width: 30, height: 30, borderRadius: 8,
-          background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
-        }}>
-          <Icon.Command size={16} strokeWidth={2.2} style={{ color: 'white' }} />
-        </div>
-        <input
-          type="text"
-          value={brandName}
-          onChange={(e) => {
-            const newVal = e.target.value;
-            setBrandName(newVal);
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('brandName', newVal);
-            }
-          }}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            color: 'var(--fg)',
-            fontFamily: 'inherit',
-            fontSize: 16,
-            fontWeight: 600,
-            letterSpacing: '-0.02em',
-            width: `${Math.max(brandName.length, 1)}ch`,
-            outline: 'none',
-            cursor: 'text',
-            padding: 0,
-            margin: 0,
-          }}
-          title="Click to dynamically rename SaaS"
-        />
+        {isEditingBrand ? (
+          <>
+            <div style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
+            }}>
+              <Icon.Command size={16} strokeWidth={2.2} style={{ color: 'white' }} />
+            </div>
+            <input
+              type="text"
+              autoFocus
+              value={brandName}
+              onClick={e => e.stopPropagation()}
+              onBlur={() => setIsEditingBrand(false)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  setIsEditingBrand(false);
+                }
+              }}
+              onChange={(e) => {
+                const newVal = e.target.value;
+                setBrandName(newVal);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('brandName', newVal);
+                }
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: 'var(--fg)',
+                fontFamily: 'inherit',
+                fontSize: 16,
+                fontWeight: 600,
+                letterSpacing: '-0.02em',
+                width: `${Math.max(brandName.length, 1)}ch`,
+                outline: 'none',
+                cursor: 'text',
+                padding: 0,
+                margin: 0,
+              }}
+              title="Enter new brand name and click away"
+            />
+          </>
+        ) : (
+          <Link 
+            href="/" 
+            onClick={(e) => { 
+              e.preventDefault(); 
+              onLaunch(); 
+            }} 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              textDecoration: 'none', 
+              color: 'inherit',
+              gap: 10
+            }}
+            title="Return to Home Screen"
+          >
+            <div style={{
+              width: 30, height: 30, borderRadius: 8,
+              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
+              cursor: 'pointer',
+            }}>
+              <Icon.Command size={16} strokeWidth={2.2} style={{ color: 'white' }} />
+            </div>
+            <span
+              onDoubleClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                setIsEditingBrand(true);
+              }}
+              style={{
+                color: 'var(--fg)',
+                fontSize: 16,
+                fontWeight: 600,
+                letterSpacing: '-0.02em',
+                cursor: 'pointer',
+                userSelect: 'none',
+              }}
+              title="Double-click to rename SaaS"
+            >
+              {brandName}
+            </span>
+          </Link>
+        )}
       </div>
 
       <nav style={{ display: 'flex', gap: 2, marginLeft: 24 }} className="landing-nav-links">
@@ -2768,22 +2888,27 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
       {/* Auth State (Same as TopBar) */}
       {sessionUser && !isAnonUser ? (
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 8 }}>
-          <Link href="/account" className="reset top-link" style={{ 
-            fontSize: 12.5, 
-            color: 'var(--fg)', 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: 6,
-            background: 'var(--bg-elev-1)',
-            border: '1px solid var(--border)',
-            padding: '5px 12px',
-            borderRadius: 20,
-            textDecoration: 'none',
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
-            <span>Account ({sessionUser.email.split('@')[0]})</span>
-            {userPlan === 'pro' && <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}>PRO</span>}
-          </Link>
+          {(() => {
+            const userDisplayName = sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0];
+            return (
+              <Link href="/account" className="reset top-link" style={{ 
+                fontSize: 12.5, 
+                color: 'var(--fg)', 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: 6,
+                background: 'var(--bg-elev-1)',
+                border: '1px solid var(--border)',
+                padding: '5px 12px',
+                borderRadius: 20,
+                textDecoration: 'none',
+              }}>
+                <span style={{ width: 6, height: 6, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+                <span>Account ({userDisplayName})</span>
+                {userPlan === 'pro' && <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}>PRO</span>}
+              </Link>
+            );
+          })()}
           <button onClick={onSignOut} className="reset top-link" style={{ fontSize: 13, color: 'var(--fg-muted)', cursor: 'pointer', background: 'none', border: 'none' }}>Sign Out</button>
         </div>
       ) : (
@@ -4843,6 +4968,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [copiedCurl, setCopiedCurl] = useState(false);
+  const [showProdKey, setShowProdKey] = useState(false);
   
   // Sandbox Interactive states
   const [sandboxInput, setSandboxInput] = useState('Clean this messy transcription up and format it nicely into a report.');
@@ -5153,16 +5279,23 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <input
-                        type="password"
+                        type={showProdKey ? "text" : "password"}
                         readOnly
                         value={apiKey}
                         style={{
                           flex: 1, padding: '10px 12px', background: 'var(--bg-elev-1)',
                           border: '1px solid var(--border)', borderRadius: 8,
                           color: 'var(--fg)', fontSize: 12.5, outline: 'none', fontFamily: 'monospace',
-                          letterSpacing: '0.12em',
+                          letterSpacing: showProdKey ? 'normal' : '0.12em',
                         }}
                       />
+                      <button onClick={() => setShowProdKey(!showProdKey)} className="reset" style={{
+                        padding: '8px 12px', borderRadius: 8,
+                        background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                        color: 'var(--fg)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      }} title={showProdKey ? "Hide API Key" : "Show API Key"}>
+                        {showProdKey ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
+                      </button>
                       <button onClick={handleCopyKey} className="reset" style={{
                         padding: '8px 12px', borderRadius: 8,
                         background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
@@ -5432,34 +5565,216 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
   const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
   const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
 
-  // Custom layout state
+  // Profile Information States (B2B standards)
+  const [profileName, setProfileName] = useState(() => {
+    return sessionUser?.user_metadata?.name || '';
+  });
+  const [profileUsername, setProfileUsername] = useState(() => {
+    return sessionUser?.user_metadata?.username || sessionUser?.email?.split('@')[0] || '';
+  });
+  const [profileCompany, setProfileCompany] = useState(() => {
+    return sessionUser?.user_metadata?.company || '';
+  });
+  const [profileRole, setProfileRole] = useState(() => {
+    return sessionUser?.user_metadata?.role || 'Developer';
+  });
+  
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileSuccess, setProfileSuccess] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingProfile(true);
+    setProfileSuccess(false);
+    setProfileError(null);
+    try {
+      // 1. Sync to Supabase Auth user metadata
+      const { error: authError } = await supabase.auth.updateUser({
+        data: { 
+          name: profileName, 
+          username: profileUsername,
+          company: profileCompany,
+          role: profileRole
+        }
+      });
+      if (authError) throw authError;
+
+      // 2. Sync to public profiles table row in the database
+      if (sessionUser?.id) {
+        const { error: dbError } = await supabase
+          .from('profiles')
+          .update({
+            name: profileName,
+            username: profileUsername,
+            company: profileCompany,
+            role: profileRole
+          })
+          .eq('id', sessionUser.id);
+        if (dbError) throw dbError;
+      }
+      
+      setProfileSuccess(true);
+      setTimeout(() => setProfileSuccess(false), 3000);
+    } catch (err: any) {
+      setProfileError(err.message || "Failed to save profile changes.");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
+  // Password & Security States (Collapsible change password)
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+  const handleUpdatePassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setPasswordMessage("Passwords do not match.");
+      setPasswordSuccess(false);
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordMessage("Password must be at least 6 characters.");
+      setPasswordSuccess(false);
+      return;
+    }
+    setIsUpdatingPassword(true);
+    setPasswordMessage(null);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+      if (error) throw error;
+      setPasswordSuccess(true);
+      setPasswordMessage("Password updated successfully!");
+      setNewPassword('');
+      setConfirmPassword('');
+      setTimeout(() => {
+        setPasswordMessage(null);
+        setShowPasswordFields(false);
+        setPasswordSuccess(false);
+      }, 3000);
+    } catch (err: any) {
+      setPasswordSuccess(false);
+      setPasswordMessage("Failed to update password: " + err.message);
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
+  // Localization settings
+  const [profileLanguage, setProfileLanguage] = useState(() => {
+    return sessionUser?.user_metadata?.language || 'en_US';
+  });
+  const [profileTimezone, setProfileTimezone] = useState(() => {
+    return sessionUser?.user_metadata?.timezone || 'UTC';
+  });
+  const [isSavingLoc, setIsSavingLoc] = useState(false);
+  const [locSuccess, setLocSuccess] = useState(false);
+
+  const handleSaveLoc = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingLoc(true);
+    setLocSuccess(false);
+    try {
+      const { error } = await supabase.auth.updateUser({
+        data: { 
+          language: profileLanguage, 
+          timezone: profileTimezone 
+        }
+      });
+      if (error) throw error;
+      setLocSuccess(true);
+      setTimeout(() => setLocSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setIsSavingLoc(false);
+    }
+  };
+
+
+
+  // Account deletion states (Step 4 collapsible)
+  const [showDeactivateFields, setShowDeactivateFields] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'SAYONARA') {
+      alert("Please type 'SAYONARA' to confirm account deactivation.");
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      if (supabase && sessionUser?.id) {
+        await supabase.from('profiles').delete().eq('id', sessionUser.id);
+      }
+      await supabase.auth.signOut();
+      alert("SAYONARA! Your account has been deactivated. The associated history and Pro options have been removed. We have queued your account data for a 20-day restoration window. Logging back in within 20 days will restore your account, otherwise it gets permanently purged.");
+      window.location.href = '/';
+    } catch (err: any) {
+      alert("Failed to deactivate account: " + err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Load profile values on mount/session check to ensure instant auto-syncing from Supabase profiles table
+  useEffect(() => {
+    if (!supabase || !sessionUser || isAnonUser) return;
+    async function fetchDbProfile() {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('name, username, company, role')
+          .eq('id', sessionUser.id)
+          .single();
+        if (!error && data) {
+          if (data.name !== null && data.name !== undefined) setProfileName(data.name);
+          if (data.username !== null && data.username !== undefined) setProfileUsername(data.username);
+          if (data.company !== null && data.company !== undefined) setProfileCompany(data.company);
+          if (data.role !== null && data.role !== undefined) setProfileRole(data.role);
+        }
+      } catch (err) {
+        console.warn("DB profile load bypassed:", err);
+      }
+    }
+    fetchDbProfile();
+  }, [sessionUser, isAnonUser]);
+
+  // Fetch actual daily usage count for visual progress bar
+  const [dailyUsageCount, setDailyUsageCount] = useState(0);
+  useEffect(() => {
+    if (!supabase || !sessionUser) return;
+    const fetchUsage = async () => {
+      const today = new Date();
+      today.setHours(0,0,0,0);
+      const { count, error } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', sessionUser.id)
+        .gte('created_at', today.toISOString());
+      if (!error && count !== null) {
+        setDailyUsageCount(count);
+      }
+    };
+    fetchUsage();
+  }, [sessionUser]);
+
+  // Workspace Layout Preference
   const [editorLayout, setEditorLayout] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('uaf_layout') || 'standard';
     }
     return 'standard';
-  });
-
-  // Custom watermark options
-  const [whiteLabel, setWhiteLabel] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('uaf_white_label') === 'true';
-    }
-    return false;
-  });
-
-  const [customHeader, setCustomHeader] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('uaf_custom_header') || '';
-    }
-    return '';
-  });
-
-  const [customFooter, setCustomFooter] = useState(() => {
-    if (typeof window !== 'undefined') {
-      return localStorage.getItem('uaf_custom_footer') || '';
-    }
-    return '';
   });
 
   const handleLayoutChange = (layout: string) => {
@@ -5470,37 +5785,8 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
     }
   };
 
-  const handleWhiteLabelChange = (val: boolean) => {
-    if (userPlan !== 'pro' && userPlan !== 'admin') {
-      alert("Watermark White-Labeling is a Pro feature. Please upgrade to Pro to unlock.");
-      onShowPaywall();
-      return;
-    }
-    setWhiteLabel(val);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('uaf_white_label', val.toString());
-      window.dispatchEvent(new Event('storage'));
-    }
-  };
-
-  const saveCustomHeader = (text: string) => {
-    setCustomHeader(text);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('uaf_custom_header', text);
-      window.dispatchEvent(new Event('storage'));
-    }
-  };
-
-  const saveCustomFooter = (text: string) => {
-    setCustomFooter(text);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('uaf_custom_footer', text);
-      window.dispatchEvent(new Event('storage'));
-    }
-  };
-
   const handleCancelSubscription = () => {
-    if (confirm("Are you sure you want to cancel your simulated Pro subscription? You will lose access to unlimited daily processing runs, white-label exports, custom running headers, and production API keys at the end of the billing period.")) {
+    if (confirm("Are you sure you want to cancel your simulated Pro subscription? You will lose access to unlimited daily processing runs and production API keys at the end of the billing period.")) {
       if (supabase && sessionUser?.id) {
         supabase.from('profiles').update({ tier: 'free' }).eq('id', sessionUser.id).then(() => {
           alert("Subscription cancelled successfully. Your account has been reverted to the Free tier.");
@@ -5521,7 +5807,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
         <Icon.Shield size={48} style={{ color: 'var(--fg-dim)', marginBottom: 20 }} />
         <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>Account Settings Locked</h2>
         <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
-          You are currently visiting as a guest. Sign in or create a free account to customize workspace layout settings, manage subscriptions, and unlock Pro white-labeling kits.
+          You are currently visiting as a guest. Sign in or create a free account to customize workspace layout settings, manage subscriptions, and configure profile parameters.
         </p>
         <button onClick={onOpenAuthModal} className="reset" style={{
           padding: '12px 28px', borderRadius: 9,
@@ -5535,8 +5821,8 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
 
   return (
     <div style={{
-      maxWidth: 1000, margin: '40px auto 120px',
-      padding: '0 32px', boxSizing: 'border-box',
+      maxWidth: 850, margin: '40px auto 120px',
+      padding: '0 24px', boxSizing: 'border-box',
       position: 'relative',
     }} className="fade-in">
       <div style={{
@@ -5547,23 +5833,17 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
         zIndex: 0,
       }}/>
 
-      <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative', zIndex: 1 }}>
-        <span style={eyebrow}>Workspace Settings</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>User Account Settings</h1>
-        <p style={sectionSubtitle}>Manage your profile details, customize editor width displays, and edit professional B2B export branding headers.</p>
+      <div style={{ textAlign: 'center', marginBottom: 40, position: 'relative', zIndex: 1 }}>
+        <span style={eyebrow}>Workspace settings</span>
+        <h1 style={{ ...sectionTitle, margin: '8px 0 0', color: 'var(--fg)' }}>B2B Account Dashboard</h1>
+        <p style={sectionSubtitle}>Group and customize your profile metadata, company credentials, security profiles, and daily workspace limit gauges.</p>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: 24,
-        alignItems: 'stretch',
-        position: 'relative',
-        zIndex: 1,
-      }}>
-        {/* Left Column: Account Profile & Billing */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 28, position: 'relative', zIndex: 1 }}>
+        
+        {/* Section 1: Profile Information */}
+        <form onSubmit={handleSaveProfile} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               width: 32, height: 32, borderRadius: 8,
@@ -5571,77 +5851,186 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
               border: '1px solid oklch(0.70 0.18 265 / 0.3)',
               color: 'oklch(0.70 0.18 265)',
             }}>
-              <Icon.Database size={16} />
+              <Icon.Braces size={16} />
             </span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Profile & Security</span>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Profile Details</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Update company roles and display names.</p>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontSize: 13.5, color: 'var(--fg-muted)', flex: 1 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
             <div>
-              <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Registered Email</div>
-              <div style={{ color: 'var(--fg)', fontWeight: 500, fontSize: 14 }}>{sessionUser?.email}</div>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Registered Email</label>
+              <input type="text" readOnly value={sessionUser?.email || ''} style={{
+                width: '100%', padding: '10px 12px', borderRadius: 8,
+                background: 'oklch(0.10 0.002 250)', border: '1px solid var(--border)',
+                color: 'var(--fg-muted)', fontSize: 13, outline: 'none', cursor: 'not-allowed', boxSizing: 'border-box'
+              }} />
             </div>
 
             <div>
-              <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Database User ID (UUID)</div>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <code style={{ fontSize: 11, background: 'var(--bg-elev-1)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: 6, display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{sessionUser?.id}</code>
-                <button onClick={handleCopyUUID} className="reset" style={{ padding: 6, borderRadius: 6, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', background: 'var(--bg-elev-2)' }}>
-                  <Icon.Copy size={12} />
-                </button>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Full Display Name</label>
+              <input type="text" placeholder="Your full name" value={profileName} onChange={e => setProfileName(e.target.value)} style={{
+                width: '100%', padding: '10px 12px', borderRadius: 8,
+                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+              }} />
+            </div>
+
+            <div>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Username</label>
+              <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
+                <span style={{ position: 'absolute', left: 12, fontSize: 13, color: 'var(--fg-dim)' }}>@</span>
+                <input type="text" placeholder="username" value={profileUsername} onChange={e => setProfileUsername(e.target.value)} style={{
+                  width: '100%', padding: '10px 12px 10px 26px', borderRadius: 8,
+                  background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                  color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                }} />
               </div>
             </div>
 
             <div>
-              <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Workspace Access Tier</div>
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
-                <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 12, color: 'var(--fg)' }}>
-                  {userPlan === 'pro' ? 'Lifetime Pro Workspace' : userPlan === 'admin' ? 'System Administrator' : 'Free Registered Tier'}
-                </span>
-              </div>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Company / Organization</label>
+              <input type="text" placeholder="e.g. Acme Corp" value={profileCompany} onChange={e => setProfileCompany(e.target.value)} style={{
+                width: '100%', padding: '10px 12px', borderRadius: 8,
+                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+              }} />
             </div>
 
-            <div style={{
-              borderTop: '1px solid var(--border)',
-              paddingTop: 20, marginTop: 'auto',
-              display: 'flex', flexDirection: 'column', gap: 12
+            <div style={{ gridColumn: 'span 2' }}>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Job Role</label>
+              <select value={profileRole} onChange={e => setProfileRole(e.target.value)} style={{
+                width: '100%', padding: '10px 12px', borderRadius: 8,
+                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
+              }}>
+                <option value="Developer">Developer / Engineer</option>
+                <option value="Designer">UI & Creative Designer</option>
+                <option value="Product">Product Manager</option>
+                <option value="Executive">Executive / Director</option>
+                <option value="Marketer">Marketing Manager</option>
+                <option value="Other">Other Profession</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: profileError ? 'oklch(0.60 0.20 20)' : 'oklch(0.78 0.16 145)' }}>
+              {profileSuccess && "✓ Profile details updated successfully!"}
+              {profileError && profileError}
+            </span>
+            <button type="submit" disabled={isSavingProfile} className="reset" style={{
+              padding: '10px 20px', borderRadius: 8,
+              background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+              color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px oklch(0.96 0.005 250 / 0.15)'
             }}>
-              {userPlan === 'pro' || userPlan === 'admin' ? (
-                <div style={{ background: 'oklch(0.18 0.010 145 / 0.1)', border: '1px solid oklch(0.70 0.16 145 / 0.3)', borderRadius: 10, padding: '14px 16px' }}>
-                  <div style={{ fontSize: 12.5, color: 'oklch(0.75 0.14 145)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-                    <Icon.Check size={14} />
-                    <span>Simulated Stripe Active</span>
-                  </div>
-                  <p style={{ fontSize: 11.5, color: 'var(--fg-subtle)', margin: '0 0 12px', lineHeight: 1.4 }}>
-                    Your billing account is active. If you cancel your simulated subscription, your workspace will revert to Free limitations.
-                  </p>
-                  <button onClick={handleCancelSubscription} className="reset" style={{
-                    width: '100%', padding: '8px 12px', borderRadius: 8,
-                    background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
-                    color: 'oklch(0.78 0.16 15)', fontWeight: 500, fontSize: 12.5, cursor: 'pointer',
-                  }}>Cancel Subscription</button>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: 0, lineHeight: 1.45 }}>
-                    Upgrade to the **Pro Workspace Tier** to unlock unlimited runs, strip watermarks, custom running headers, and production API access!
-                  </p>
-                  <button onClick={onShowPaywall} className="reset" style={{
-                    width: '100%', padding: '10px 14px', borderRadius: 8,
-                    background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
-                    color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-                    boxShadow: '0 4px 12px oklch(0.50 0.20 265 / 0.25)',
-                  }}>Upgrade to Pro ($9/mo)</button>
-                </div>
-              )}
+              {isSavingProfile ? 'Saving...' : 'Save Profile Details'}
+            </button>
+          </div>
+        </form>
+
+        {/* Section 2: Security & Password */}
+        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'oklch(0.18 0.010 35 / 0.15)',
+              border: '1px solid oklch(0.70 0.16 35 / 0.3)',
+              color: 'oklch(0.85 0.12 35)',
+            }}>
+              <Icon.Shield size={16} />
+            </span>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Security & Credentials</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Keep your login passwords secure and rotate when necessary.</p>
             </div>
           </div>
+
+          {!showPasswordFields ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 13, fontWeight: 550, color: 'white' }}>Account Password</span>
+                <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Last updated automatically or during signup.</span>
+              </div>
+              <button type="button" onClick={() => setShowPasswordFields(true)} className="reset" style={{
+                padding: '8px 16px', borderRadius: 8, background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
+              }}>
+                Change Password
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">New Password</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input type={showNewPassword ? "text" : "password"} required placeholder="Minimum 6 characters" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{
+                      width: '100%', padding: '10px 36px 10px 12px', borderRadius: 8,
+                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                      color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                    }} />
+                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="reset" style={{
+                      position: 'absolute', right: 10, background: 'none', border: 'none',
+                      color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      padding: 4, margin: 0, outline: 'none'
+                    }} title={showNewPassword ? "Hide Password" : "Show Password"}>
+                      {showNewPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Confirm New Password</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <input type={showConfirmPassword ? "text" : "password"} required placeholder="Confirm match" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{
+                      width: '100%', padding: '10px 36px 10px 12px', borderRadius: 8,
+                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                      color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                    }} />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="reset" style={{
+                      position: 'absolute', right: 10, background: 'none', border: 'none',
+                      color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      padding: 4, margin: 0, outline: 'none'
+                    }} title={showConfirmPassword ? "Hide Password" : "Show Password"}>
+                      {showConfirmPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+                <button type="button" onClick={() => { setShowPasswordFields(false); setPasswordMessage(null); }} className="reset" style={{
+                  fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none'
+                }}>
+                  Cancel
+                </button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  {passwordMessage && (
+                    <span style={{ fontSize: 12, color: passwordSuccess ? 'oklch(0.78 0.16 145)' : 'oklch(0.60 0.20 20)' }} className="mono">
+                      {passwordMessage}
+                    </span>
+                  )}
+                  <button type="submit" disabled={isUpdatingPassword} className="reset" style={{
+                    padding: '10px 20px', borderRadius: 8,
+                    background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+                    color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 13, cursor: 'pointer'
+                  }}>
+                    {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </div>
+            </form>
+          )}
         </div>
 
-        {/* Right Column: Workspace Preferences */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+        {/* Section 3: Workspace Preferences */}
+        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               width: 32, height: 32, borderRadius: 8,
@@ -5651,17 +6040,19 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
             }}>
               <Icon.Grid size={16} />
             </span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Workspace Preferences</span>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Workspace Preferences</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Configure editor layout metrics and dark/light UI modes.</p>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Visual Editor Layout */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
             <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6 }} className="mono">EDITOR LAYOUT MODE</label>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }} className="mono">Default Editor Width</label>
               <div style={{ display: 'flex', gap: 6 }}>
                 {['standard', 'compact', 'zen'].map(mode => (
                   <button key={mode} onClick={() => handleLayoutChange(mode)} className="reset" style={{
-                    flex: 1, padding: '7px 10px', borderRadius: 8,
+                    flex: 1, padding: '8px 10px', borderRadius: 8,
                     border: `1px solid ${editorLayout === mode ? 'var(--accent)' : 'var(--border)'}`,
                     background: editorLayout === mode ? 'oklch(0.70 0.18 265 / 0.1)' : 'var(--bg-elev-1)',
                     color: editorLayout === mode ? 'var(--accent)' : 'var(--fg-muted)',
@@ -5671,82 +6062,303 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
               </div>
             </div>
 
-            {/* Theme Select */}
             <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6 }} className="mono">INTERFACE CONTRAST THEME</label>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }} className="mono">Interface Theme</label>
               <button onClick={onToggleTheme} className="reset" style={{
-                width: '100%', padding: '8px 12px', borderRadius: 8,
+                width: '100%', padding: '9px 12px', borderRadius: 8,
                 background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-                color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 12.5, fontWeight: 500,
+                color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 12.5, fontWeight: 600,
               }}>
                 {theme === 'dark' ? (
                   <>
                     <Icon.Moon size={13} />
-                    <span>Dark Contrast Active</span>
+                    <span>Dark Mode Contrast</span>
                   </>
                 ) : (
                   <>
                     <Icon.Sun size={13} />
-                    <span>Light Contrast Active</span>
+                    <span>Light Mode Contrast</span>
                   </>
                 )}
               </button>
             </div>
+          </div>
+        </div>
 
-            {/* Custom Branding Watermarks (Pro Gated) */}
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--fg)' }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)' }} className="mono">WHITE-LABEL EXPORT KIT (PRO)</label>
-                {userPlan !== 'pro' && userPlan !== 'admin' && (
-                  <span style={{ fontSize: 8, fontWeight: 700, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4 }}>PRO</span>
-                )}
-              </div>
+        {/* Section 4: Workspace Localization settings */}
+        <form onSubmit={handleSaveLoc} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'oklch(0.18 0.010 120 / 0.15)',
+              border: '1px solid oklch(0.70 0.16 120 / 0.3)',
+              color: 'oklch(0.70 0.16 120)',
+            }}>
+              <Icon.Globe size={16} />
+            </span>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Localization Preferences</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Configure regional timezones and display languages.</p>
+            </div>
+          </div>
 
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12.5, color: 'var(--fg-muted)' }}>
-                <input
-                  type="checkbox"
-                  checked={whiteLabel}
-                  disabled={userPlan !== 'pro' && userPlan !== 'admin'}
-                  onChange={e => handleWhiteLabelChange(e.target.checked)}
-                  style={{ width: 15, height: 15, cursor: 'pointer' }}
-                />
-                <span>Remove "{brandName}" watermark from exports</span>
-              </label>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+            <div>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Display Language</label>
+              <select value={profileLanguage} onChange={e => setProfileLanguage(e.target.value)} style={{
+                width: '100%', padding: '10px 12px', borderRadius: 8,
+                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
+              }}>
+                <option value="en_US">English (United States)</option>
+                <option value="en_GB">English (United Kingdom)</option>
+                <option value="es_ES">Español (España)</option>
+                <option value="fr_FR">Français (France)</option>
+                <option value="de_DE">Deutsch (Deutschland)</option>
+              </select>
+            </div>
 
+            <div>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">System Timezone</label>
+              <select value={profileTimezone} onChange={e => setProfileTimezone(e.target.value)} style={{
+                width: '100%', padding: '10px 12px', borderRadius: 8,
+                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
+              }}>
+                <option value="UTC">Coordinated Universal Time (UTC)</option>
+                <option value="America/New_York">Eastern Standard Time (New York, -5)</option>
+                <option value="Europe/London">Greenwich Mean Time (London, +0)</option>
+                <option value="Europe/Berlin">Central European Time (Berlin, +1)</option>
+                <option value="Asia/Kolkata">Indian Standard Time (New Delhi, +5:30)</option>
+                <option value="Asia/Tokyo">Japan Standard Time (Tokyo, +9)</option>
+              </select>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+            <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)' }}>
+              {locSuccess && "✓ Localization saved successfully!"}
+            </span>
+            <button type="submit" disabled={isSavingLoc} className="reset" style={{
+              padding: '8px 16px', borderRadius: 8,
+              background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+              color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
+            }}>
+              {isSavingLoc ? 'Saving...' : 'Save Localization'}
+            </button>
+          </div>
+        </form>
+
+
+
+        {/* Section 6: Daily limits visual meter */}
+        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'oklch(0.18 0.010 75 / 0.15)',
+              border: '1px solid oklch(0.70 0.16 75 / 0.3)',
+              color: 'oklch(0.70 0.16 75)',
+            }}>
+              <Icon.Sparkles size={16} />
+            </span>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Daily Workspace Limit Meter</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Real-time count of active data runs and metered bounds.</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: 13, color: 'white', fontWeight: 550 }}>Daily Metered Runs</span>
+              <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--accent)' }} className="mono">
+                {userPlan === 'pro' ? 'Unlimited / Unlimited' : `${dailyUsageCount} / 20 used today`}
+              </span>
+            </div>
+
+            <div style={{ height: 10, width: '100%', background: 'oklch(0.18 0.005 250)', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--border)' }}>
+              <div style={{
+                height: '100%',
+                width: userPlan === 'pro' ? '100%' : `${Math.min((dailyUsageCount / 20) * 100, 100)}%`,
+                background: userPlan === 'pro'
+                  ? 'linear-gradient(90deg, oklch(0.70 0.18 265) 0%, oklch(0.70 0.16 195) 50%, oklch(0.70 0.16 145) 100%)'
+                  : 'linear-gradient(90deg, oklch(0.70 0.16 145) 0%, oklch(0.70 0.16 75) 60%, oklch(0.65 0.20 20) 100%)',
+                boxShadow: '0 0 10px var(--accent)30',
+                transition: 'width 0.5s ease-out'
+              }} />
+            </div>
+            {userPlan !== 'pro' && (
+              <p style={{ fontSize: 11.5, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.4 }}>
+                Free registered accounts have a metered bound of 20 runs. Upgrade to Pro to strip watermarks automatically and unlock unlimited daily loops!
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Section 7: Subscription & Billing details */}
+        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'oklch(0.18 0.010 145 / 0.15)',
+              border: '1px solid oklch(0.70 0.16 145 / 0.3)',
+              color: 'oklch(0.70 0.16 145)',
+            }}>
+              <Icon.Database size={16} />
+            </span>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Billing & Developer API</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>View sandbox tokens and Stripe credentials.</p>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
               <div>
-                <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }} className="mono">CUSTOM RUNNING HEADER TEXT</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Confidential Business Audit"
-                  value={customHeader}
-                  disabled={userPlan !== 'pro' && userPlan !== 'admin'}
-                  onChange={e => saveCustomHeader(e.target.value)}
-                  style={{
-                    width: '100%', padding: '8px 12px', borderRadius: 8,
-                    background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
-                    color: 'white', fontSize: 12.5, outline: 'none', boxSizing: 'border-box'
-                  }}
-                />
+                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">Account Access Tier</div>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+                  <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 12.5, color: 'white' }}>
+                    {userPlan === 'pro' ? 'Lifetime Pro Workspace' : userPlan === 'admin' ? 'System Administrator' : 'Free Registered Tier'}
+                  </span>
+                </div>
               </div>
 
+              {userPlan === 'pro' || userPlan === 'admin' ? (
+                <button onClick={handleCancelSubscription} className="reset" style={{
+                  padding: '7px 12px', borderRadius: 8,
+                  background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
+                  color: 'oklch(0.78 0.16 15)', fontWeight: 600, fontSize: 12, cursor: 'pointer',
+                }}>Cancel Subscription</button>
+              ) : (
+                <button onClick={onShowPaywall} className="reset" style={{
+                  padding: '8px 16px', borderRadius: 8,
+                  background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+                  color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                  boxShadow: '0 4px 12px oklch(0.50 0.20 265 / 0.25)',
+                }}>Upgrade to Pro</button>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between' }}>
               <div>
-                <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-subtle)', marginBottom: 4 }} className="mono">CUSTOM RUNNING FOOTER TEXT</label>
-                <input
-                  type="text"
-                  placeholder="e.g. Internal Use Only"
-                  value={customFooter}
-                  disabled={userPlan !== 'pro' && userPlan !== 'admin'}
-                  onChange={e => saveCustomFooter(e.target.value)}
-                  style={{
-                    width: '100%', padding: '8px 12px', borderRadius: 8,
-                    background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
-                    color: 'white', fontSize: 12.5, outline: 'none', boxSizing: 'border-box'
-                  }}
-                />
+                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">Developer Sandbox Key</div>
+                <code style={{ fontSize: 11, background: 'var(--bg-elev-1)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: 6, display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {sessionUser?.id ? `ms_live_${sessionUser.id}` : 'Login to unlock token'}
+                </code>
               </div>
+              <button type="button" onClick={handleCopyUUID} className="reset" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', background: 'var(--bg-elev-2)' }}>
+                <Icon.Copy size={13} style={{ color: 'white' }} />
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Section 8: Danger Zone (Step 4 Collapsible deactivation) */}
+        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20, border: '1px solid oklch(0.60 0.20 20 / 0.25)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid oklch(0.60 0.20 20 / 0.2)', paddingBottom: 14 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'oklch(0.18 0.010 20 / 0.15)',
+              border: '1px solid oklch(0.60 0.20 20 / 0.3)',
+              color: 'oklch(0.65 0.22 20)',
+            }}>
+              <Icon.Shield size={16} />
+            </span>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'oklch(0.65 0.22 20)', margin: 0 }}>Danger Zone</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Deactivate your workspace account permanently.</p>
+            </div>
+          </div>
+
+          {!showDeactivateFields ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontSize: 13, fontWeight: 550, color: 'oklch(0.65 0.22 20)' }}>Deactivate Workspace Account</span>
+                <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Initiate permanent deletion protocol. Grace window applies.</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowDeactivateFields(true)}
+                className="reset"
+                style={{
+                  padding: '8px 16px', borderRadius: 8,
+                  background: 'oklch(0.18 0.010 20 / 0.15)', border: '1px solid oklch(0.60 0.20 20 / 0.3)',
+                  color: 'oklch(0.65 0.22 20)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
+                }}
+              >
+                Deactivate Account...
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
+              <div style={{
+                background: 'oklch(0.18 0.010 20 / 0.1)', border: '1px solid oklch(0.60 0.20 20 / 0.3)',
+                padding: '14px 18px', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 10
+              }}>
+                <div style={{ fontSize: 13, color: 'oklch(0.65 0.22 20)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Icon.Shield size={14} />
+                  <span>Immediate Deactivation Warning</span>
+                </div>
+                <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
+                  Deactivating your account will freeze your Pro API keys and restrict workspace access immediately. As per global privacy compliance, all associated data is queued for absolute purging.
+                </p>
+                <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
+                  <strong>20-Day Restoration Grace Window</strong>: Your account metadata and database records will remain in a soft-deleted state in our backend for exactly 20 days. If you return and log back in within 20 days, all configurations will be automatically restored. If you do not return, it will be permanently deleted.
+                </p>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }} className="mono">
+                  To confirm deactivation, please type "SAYONARA" below:
+                </label>
+                <input
+                  type="text"
+                  placeholder="Type SAYONARA to confirm"
+                  value={deleteConfirmation}
+                  onChange={e => setDeleteConfirmation(e.target.value)}
+                  style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 8,
+                    background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                    color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+                <button
+                  type="button"
+                  onClick={() => { setShowDeactivateFields(false); setDeleteConfirmation(''); }}
+                  className="reset"
+                  style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  disabled={deleteConfirmation !== 'SAYONARA' || isDeleting}
+                  onClick={handleDeleteAccount}
+                  className="reset"
+                  style={{
+                    padding: '10px 20px', borderRadius: 8,
+                    background: deleteConfirmation === 'SAYONARA' ? 'oklch(0.65 0.22 20)' : 'oklch(0.18 0.010 20 / 0.1)',
+                    border: deleteConfirmation === 'SAYONARA' ? 'none' : '1px solid var(--border)',
+                    color: deleteConfirmation === 'SAYONARA' ? 'white' : 'var(--fg-dim)',
+                    fontWeight: 600, fontSize: 13,
+                    cursor: deleteConfirmation === 'SAYONARA' && !isDeleting ? 'pointer' : 'not-allowed'
+                  }}
+                >
+                  {isDeleting ? 'Deactivating...' : 'Confirm Workspace Deactivation'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
@@ -6285,8 +6897,15 @@ function AuthModal({ open, onClose, supabase }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
+  const [isForgotPassword, setIsForgotPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+
+  // Advanced B2B onboarding credentials
+  const [signupName, setSignupName] = useState('');
+  const [signupUsername, setSignupUsername] = useState('');
+  const [usernameEdited, setUsernameEdited] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const getPasswordStrength = (pass: string) => {
     if (!pass) return { score: 0, label: '', color: 'transparent', width: '0%' };
@@ -6302,6 +6921,14 @@ function AuthModal({ open, onClose, supabase }: AuthModalProps) {
     return { score: 2, label: 'Medium', color: 'oklch(0.70 0.16 75)', width: '66%' };
   };
 
+  const handleEmailChange = (val: string) => {
+    setEmail(val);
+    if (!usernameEdited && val.includes('@')) {
+      const prefix = val.split('@')[0].toLowerCase().replace(/[^a-z0-9]/g, '');
+      setSignupUsername(prefix);
+    }
+  };
+
   if (!open) return null;
 
   async function handleAuth(e: React.FormEvent) {
@@ -6309,9 +6936,30 @@ function AuthModal({ open, onClose, supabase }: AuthModalProps) {
     setLoading(true);
     setMessage(null);
     try {
-      if (isSignUp) {
-        const { data, error } = await supabase.auth.signUp({ email, password });
+      if (isForgotPassword) {
+        const { error } = await supabase.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin + '/account',
+        });
         if (error) throw error;
+        setMessage("Password reset link sent! Please check your email inbox.");
+      } else if (isSignUp) {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              name: signupName,
+              username: signupUsername || email.split('@')[0],
+              avatar_url: 'creative',
+              role: 'Developer',
+              company: ''
+            }
+          }
+        });
+        if (error) throw error;
+        
+
+
         setMessage("Account created! Please check your email for confirmation or proceed to login.");
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -6351,10 +6999,15 @@ function AuthModal({ open, onClose, supabase }: AuthModalProps) {
         </button>
 
         <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 8px', color: 'white', letterSpacing: '-0.02em' }}>
-          {isSignUp ? 'Create Account' : 'Welcome Back'}
+          {isForgotPassword ? 'Reset Password' : isSignUp ? 'Create Account' : 'Welcome Back'}
         </h2>
         <p style={{ fontSize: 13, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
-          {isSignUp ? 'Sign up to unlock 20 daily uses and sync history across devices.' : 'Sign in to access your Pro tools, history, and white-label settings.'}
+          {isForgotPassword
+            ? 'Enter your email address below to receive a secure password reset link.'
+            : isSignUp
+              ? 'Register display parameters and username to unlock your developer workspace.'
+              : 'Sign in to access your Pro tools, history, and workspace settings.'
+          }
         </p>
 
         {message && (
@@ -6372,41 +7025,86 @@ function AuthModal({ open, onClose, supabase }: AuthModalProps) {
         <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div>
             <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Email Address</label>
-            <input required type="email" placeholder="name@email.com" value={email} onChange={e => setEmail(e.target.value)} style={{
+            <input required type="email" placeholder="name@email.com" value={email} onChange={e => handleEmailChange(e.target.value)} style={{
               width: '100%', padding: '12px 14px', borderRadius: 8,
               background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
               color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
             }} />
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Password</label>
-            <input required type="password" placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} style={{
-              width: '100%', padding: '12px 14px', borderRadius: 8,
-              background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
-              color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
-            }} />
-            
-            {/* Password Strength Indicator (Sign Up only) */}
-            {isSignUp && password && (
-              <div style={{ marginTop: 8 }} className="fade-in">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <span style={{ fontSize: 10, color: 'var(--fg-dim)' }}>Password Strength:</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: getPasswordStrength(password).color }}>
-                    {getPasswordStrength(password).label}
-                  </span>
-                </div>
-                <div style={{ height: 4, width: '100%', background: 'oklch(0.20 0.005 250)', borderRadius: 2, overflow: 'hidden' }}>
-                  <div style={{
-                    height: '100%',
-                    width: getPasswordStrength(password).width,
-                    background: getPasswordStrength(password).color,
-                    transition: 'width 0.25s, background-color 0.25s'
+          {isSignUp && (
+            <>
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Full Name</label>
+                <input required type="text" placeholder="Satoshi Nakamoto" value={signupName} onChange={e => setSignupName(e.target.value)} style={{
+                  width: '100%', padding: '12px 14px', borderRadius: 8,
+                  background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                  color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
+                }} />
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Username</label>
+                <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
+                  <span style={{ position: 'absolute', left: 12, fontSize: 13, color: 'var(--fg-dim)' }}>@</span>
+                  <input required type="text" placeholder="username" value={signupUsername} onChange={e => { setSignupUsername(e.target.value); setUsernameEdited(true); }} style={{
+                    width: '100%', padding: '12px 14px 12px 26px', borderRadius: 8,
+                    background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                    color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
                   }} />
                 </div>
               </div>
-            )}
-          </div>
+            </>
+          )}
+
+          {!isForgotPassword && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }} className="mono">Password</label>
+                {!isSignUp && (
+                  <button type="button" onClick={() => { setIsForgotPassword(true); setMessage(null); }} className="reset" style={{
+                    fontSize: 11.5, color: 'var(--accent)', cursor: 'pointer', background: 'none', border: 'none', padding: 0, fontWeight: 500
+                  }}>
+                    Forgot Password?
+                  </button>
+                )}
+              </div>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input required type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} style={{
+                  width: '100%', padding: '12px 38px 12px 14px', borderRadius: 8,
+                  background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
+                  color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
+                }} />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="reset" style={{
+                  position: 'absolute', right: 12, background: 'none', border: 'none',
+                  color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                  padding: 4, margin: 0, outline: 'none'
+                }} title={showPassword ? "Hide Password" : "Show Password"}>
+                  {showPassword ? <Icon.EyeOff size={15} /> : <Icon.Eye size={15} />}
+                </button>
+              </div>
+              
+              {/* Password Strength Indicator (Sign Up only) */}
+              {isSignUp && password && (
+                <div style={{ marginTop: 8 }} className="fade-in">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <span style={{ fontSize: 10, color: 'var(--fg-dim)' }}>Password Strength:</span>
+                    <span style={{ fontSize: 10, fontWeight: 600, color: getPasswordStrength(password).color }}>
+                      {getPasswordStrength(password).label}
+                    </span>
+                  </div>
+                  <div style={{ height: 4, width: '100%', background: 'oklch(0.20 0.005 250)', borderRadius: 2, overflow: 'hidden' }}>
+                    <div style={{
+                      height: '100%',
+                      width: getPasswordStrength(password).width,
+                      background: getPasswordStrength(password).color,
+                      transition: 'width 0.25s, background-color 0.25s'
+                    }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           <button type="submit" disabled={loading} className="reset" style={{
             width: '100%', marginTop: 12, padding: '12px', borderRadius: 8,
@@ -6415,15 +7113,23 @@ function AuthModal({ open, onClose, supabase }: AuthModalProps) {
             cursor: loading ? 'not-allowed' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
           }}>
-            {loading ? 'Processing...' : isSignUp ? 'Register Account' : 'Sign In'} <Icon.ArrowRight size={13} strokeWidth={2.5} />
+            {loading ? 'Processing...' : isForgotPassword ? 'Send Reset Link' : isSignUp ? 'Register Account' : 'Sign In'} <Icon.ArrowRight size={13} strokeWidth={2.5} />
           </button>
         </form>
 
         <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: 'var(--fg-subtle)' }}>
-          {isSignUp ? 'Already have an account?' : "Don't have an account yet?"}{' '}
-          <button onClick={() => setIsSignUp(!isSignUp)} className="reset" style={{ color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
-            {isSignUp ? 'Sign In' : 'Create One'}
-          </button>
+          {isForgotPassword ? (
+            <button onClick={() => { setIsForgotPassword(false); setMessage(null); }} className="reset" style={{ color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
+              Back to Sign In
+            </button>
+          ) : (
+            <>
+              {isSignUp ? 'Already have an account?' : "Don't have an account yet?"}{' '}
+              <button onClick={() => { setIsSignUp(!isSignUp); setMessage(null); isForgotPassword && setIsForgotPassword(false); }} className="reset" style={{ color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
+                {isSignUp ? 'Sign In' : 'Create One'}
+              </button>
+            </>
+          )}
         </div>
       </div>
     </div>,
@@ -6907,33 +7613,49 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     }
   }, [sessionUser, isAnonUser]);
 
-  // Geo-fetch for Purchasing Power Parity (PPP)
+  // Geo-fetch for Purchasing Power Parity (PPP) with failover chain
   useEffect(() => {
     async function fetchCountry() {
+      let cc = 'US';
       try {
         const res = await fetch('https://ipapi.co/json/');
-        const data = await res.json();
-        if (data && data.country_code) {
-          const cc = data.country_code.toUpperCase();
-          setCountryCode(cc);
-          
-          if (cc === 'IN') {
-            setPricingCohort('india');
-          } else {
-            const midIncome = ['BR', 'MX', 'TR', 'ZA', 'RU', 'CN', 'MY', 'TH', 'CO', 'PE', 'AR', 'CL', 'UA', 'PL', 'RO', 'HU'];
-            const highIncome = ['US', 'CA', 'GB', 'AU', 'NZ', 'DE', 'FR', 'JP', 'SG', 'HK', 'CH', 'IE', 'SE', 'NO', 'DK', 'FI', 'NL', 'BE', 'AT', 'KR', 'TW', 'IL'];
-            
-            if (highIncome.includes(cc)) {
-              setPricingCohort('high');
-            } else if (midIncome.includes(cc)) {
-              setPricingCohort('mid');
-            } else {
-              setPricingCohort('low');
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.country_code) {
+            cc = data.country_code.toUpperCase();
+          }
+        } else {
+          throw new Error("Primary geo-fetch failed");
+        }
+      } catch (err) {
+        // Silently try fallback unblocked geo-api
+        try {
+          const resFallback = await fetch('https://freeipapi.com/api/json');
+          if (resFallback.ok) {
+            const dataFallback = await resFallback.json();
+            if (dataFallback && dataFallback.countryCode) {
+              cc = dataFallback.countryCode.toUpperCase();
             }
           }
+        } catch (fallbackErr) {
+          // Both failed silently without console.error logs
         }
-      } catch (e) {
-        console.error("PPP Geo-lookup failed, defaulting to US High-Income pricing:", e);
+      }
+
+      setCountryCode(cc);
+      if (cc === 'IN') {
+        setPricingCohort('india');
+      } else {
+        const midIncome = ['BR', 'MX', 'TR', 'ZA', 'RU', 'CN', 'MY', 'TH', 'CO', 'PE', 'AR', 'CL', 'UA', 'PL', 'RO', 'HU'];
+        const highIncome = ['US', 'CA', 'GB', 'AU', 'NZ', 'DE', 'FR', 'JP', 'SG', 'HK', 'CH', 'IE', 'SE', 'NO', 'DK', 'FI', 'NL', 'BE', 'AT', 'KR', 'TW', 'IL'];
+        
+        if (highIncome.includes(cc)) {
+          setPricingCohort('high');
+        } else if (midIncome.includes(cc)) {
+          setPricingCohort('mid');
+        } else {
+          setPricingCohort('low');
+        }
       }
     }
     fetchCountry();
@@ -7237,6 +7959,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
           onOpenAuthModal={() => setAuthOpen(true)}
           onSignOut={handleSignOut}
           onShowPaywall={handleShowPaywall}
+          onOpenTool={openTool}
         />
 
         <main>
