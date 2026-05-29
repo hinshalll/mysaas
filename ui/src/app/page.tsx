@@ -40,7 +40,8 @@ import {
   GitBranch, Zap, Check, Globe,
   List, ListOrdered, Quote, Code, Link as LucideLink,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
-  Sun, Moon, Eye, EyeOff
+  Sun, Moon, Eye, EyeOff,
+  CreditCard, AlertCircle
 } from 'lucide-react';
 
 // Map our legacy icon names to lucide-react components.
@@ -57,7 +58,8 @@ const Icon: Record<string, React.ComponentType<any>> = {
   List, ListOrdered, Quote, Code,
   LinkIcon: LucideLink, Eraser2: Eraser,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
-  Sun, Moon, Eye, EyeOff
+  Sun, Moon, Eye, EyeOff,
+  CreditCard, AlertCircle
 };
 
 
@@ -5564,13 +5566,10 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   );
 }
 
-/* =========================================================================
-   AccountPage Component
-   ========================================================================= */
 interface AccountPageProps {
   onLaunch: () => void;
   brandName: string;
-  userPlan: string;
+  userPlan: 'free' | 'pro' | 'admin' | 'api';
   sessionUser: any;
   isAnonUser: boolean;
   onShowPaywall: () => void;
@@ -5578,24 +5577,30 @@ interface AccountPageProps {
   onSignOut: () => void;
   theme: 'dark' | 'light';
   onToggleTheme: () => void;
+  pricingCohort: 'global' | 'india';
+  subscriptionStatus: string;
+  currentPeriodEnd: string | null;
+  cancelAtPeriodEnd: boolean;
+  customerId: string | null;
+  subscriptionId: string | null;
+  onRefreshProfile: () => void;
 }
 
-function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, onShowPaywall, onOpenAuthModal, onSignOut, theme, onToggleTheme }: AccountPageProps) {
+function AccountPage({
+  onLaunch, brandName, userPlan, sessionUser, isAnonUser,
+  onShowPaywall, onOpenAuthModal, onSignOut, theme, onToggleTheme,
+  pricingCohort = 'global', subscriptionStatus, currentPeriodEnd,
+  cancelAtPeriodEnd, customerId, subscriptionId, onRefreshProfile
+}: AccountPageProps) {
   const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
   const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
 
-  // Profile Information States (B2B standards)
+  // Profile Information States (B2C Focus - strictly stripped B2B)
   const [profileName, setProfileName] = useState(() => {
     return sessionUser?.user_metadata?.name || '';
   });
   const [profileUsername, setProfileUsername] = useState(() => {
     return sessionUser?.user_metadata?.username || sessionUser?.email?.split('@')[0] || '';
-  });
-  const [profileCompany, setProfileCompany] = useState(() => {
-    return sessionUser?.user_metadata?.company || '';
-  });
-  const [profileRole, setProfileRole] = useState(() => {
-    return sessionUser?.user_metadata?.role || 'Developer';
   });
   
   const [isSavingProfile, setIsSavingProfile] = useState(false);
@@ -5608,13 +5613,11 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
     setProfileSuccess(false);
     setProfileError(null);
     try {
-      // 1. Sync to Supabase Auth user metadata
+      // 1. Sync to Supabase Auth user metadata (B2C: remove company/role)
       const { error: authError } = await supabase.auth.updateUser({
         data: { 
           name: profileName, 
-          username: profileUsername,
-          company: profileCompany,
-          role: profileRole
+          username: profileUsername
         }
       });
       if (authError) throw authError;
@@ -5625,9 +5628,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
           .from('profiles')
           .update({
             name: profileName,
-            username: profileUsername,
-            company: profileCompany,
-            role: profileRole
+            username: profileUsername
           })
           .eq('id', sessionUser.id);
         if (dbError) throw dbError;
@@ -5642,7 +5643,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
     }
   };
 
-  // Password & Security States (Collapsible change password)
+  // Password & Security States
   const [showPasswordFields, setShowPasswordFields] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -5672,7 +5673,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
       });
       if (error) throw error;
       setPasswordSuccess(true);
-      setPasswordMessage("Password updated successfully!");
+      setPasswordMessage("✓ Password updated successfully!");
       setNewPassword('');
       setConfirmPassword('');
       setTimeout(() => {
@@ -5698,15 +5699,15 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
   const [isSavingLoc, setIsSavingLoc] = useState(false);
   const [locSuccess, setLocSuccess] = useState(false);
 
-  const handleSaveLoc = async (e: React.FormEvent) => {
+  const handleSaveLocalization = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSavingLoc(true);
     setLocSuccess(false);
     try {
       const { error } = await supabase.auth.updateUser({
-        data: { 
-          language: profileLanguage, 
-          timezone: profileTimezone 
+        data: {
+          language: profileLanguage,
+          timezone: profileTimezone
         }
       });
       if (error) throw error;
@@ -5719,76 +5720,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
     }
   };
 
-
-
-  // Account deletion states (Step 4 collapsible)
-  const [showDeactivateFields, setShowDeactivateFields] = useState(false);
-  const [deleteConfirmation, setDeleteConfirmation] = useState('');
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  const handleDeleteAccount = async () => {
-    if (deleteConfirmation !== 'SAYONARA') {
-      alert("Please type 'SAYONARA' to confirm account deactivation.");
-      return;
-    }
-    setIsDeleting(true);
-    try {
-      if (supabase && sessionUser?.id) {
-        await supabase.from('profiles').delete().eq('id', sessionUser.id);
-      }
-      await supabase.auth.signOut();
-      alert("SAYONARA! Your account has been deactivated. The associated history and Pro options have been removed. We have queued your account data for a 20-day restoration window. Logging back in within 20 days will restore your account, otherwise it gets permanently purged.");
-      window.location.href = '/';
-    } catch (err: any) {
-      alert("Failed to deactivate account: " + err.message);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  // Load profile values on mount/session check to ensure instant auto-syncing from Supabase profiles table
-  useEffect(() => {
-    if (!supabase || !sessionUser || isAnonUser) return;
-    async function fetchDbProfile() {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('name, username, company, role')
-          .eq('id', sessionUser.id)
-          .single();
-        if (!error && data) {
-          if (data.name !== null && data.name !== undefined) setProfileName(data.name);
-          if (data.username !== null && data.username !== undefined) setProfileUsername(data.username);
-          if (data.company !== null && data.company !== undefined) setProfileCompany(data.company);
-          if (data.role !== null && data.role !== undefined) setProfileRole(data.role);
-        }
-      } catch (err) {
-        console.warn("DB profile load bypassed:", err);
-      }
-    }
-    fetchDbProfile();
-  }, [sessionUser, isAnonUser]);
-
-  // Fetch actual daily usage count for visual progress bar
-  const [dailyUsageCount, setDailyUsageCount] = useState(0);
-  useEffect(() => {
-    if (!supabase || !sessionUser) return;
-    const fetchUsage = async () => {
-      const today = new Date();
-      today.setHours(0,0,0,0);
-      const { count, error } = await supabase
-        .from('usage_logs')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', sessionUser.id)
-        .gte('created_at', today.toISOString());
-      if (!error && count !== null) {
-        setDailyUsageCount(count);
-      }
-    };
-    fetchUsage();
-  }, [sessionUser]);
-
-  // Workspace Layout Preference
+  // Layout preference
   const [editorLayout, setEditorLayout] = useState(() => {
     if (typeof window !== 'undefined') {
       return localStorage.getItem('uaf_layout') || 'standard';
@@ -5804,21 +5736,143 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
     }
   };
 
-  const handleCancelSubscription = () => {
-    if (confirm("Are you sure you want to cancel your simulated Pro subscription? You will lose access to unlimited daily processing runs and production API keys at the end of the billing period.")) {
-      if (supabase && sessionUser?.id) {
-        supabase.from('profiles').update({ tier: 'free' }).eq('id', sessionUser.id).then(() => {
-          alert("Subscription cancelled successfully. Your account has been reverted to the Free tier.");
-          window.location.reload();
-        });
+  // UI state-managed modal overlays & toasts
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [isCancelingSub, setIsCancelingSub] = useState(false);
+  const [billingMessage, setBillingMessage] = useState<string | null>(null);
+  const [billingSuccess, setBillingSuccess] = useState(false);
+
+  const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
+  const [showDeactivateFields, setShowDeactivateFields] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deactivateError, setDeactivateError] = useState<string | null>(null);
+  const [deactivateSuccess, setDeactivateSuccess] = useState(false);
+
+  const [uuidCopied, setUuidCopied] = useState(false);
+  const [dailyUsageCount, setDailyUsageCount] = useState(0);
+
+  // Secure customer portal dynamic redirection
+  const handleManageBilling = async () => {
+    try {
+      setBillingMessage(null);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setBillingMessage("Error: Missing user session token. Try re-logging.");
+        setBillingSuccess(false);
+        return;
       }
+      
+      window.open(`/billing/portal?token=${token}`, '_blank');
+    } catch (err: any) {
+      setBillingMessage("Failed to open portal: " + err.message);
+      setBillingSuccess(false);
+    }
+  };
+
+  // Grace Period programmatic cancellation handler
+  const handleCancelSubscription = async () => {
+    setIsCancelingSub(true);
+    setBillingMessage(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setBillingMessage("Authentication session expired.");
+        setBillingSuccess(false);
+        return;
+      }
+
+      const response = await fetch('/billing/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to cancel subscription.');
+
+      setBillingSuccess(true);
+      setBillingMessage("✓ Subscription successfully scheduled for cancellation at the end of the current period.");
+      onRefreshProfile();
+    } catch (err: any) {
+      setBillingSuccess(false);
+      setBillingMessage("Cancellation failed: " + err.message);
+    } finally {
+      setIsCancelingSub(false);
+      setCancelModalOpen(false);
     }
   };
 
   const handleCopyUUID = () => {
     navigator.clipboard.writeText(sessionUser?.id || '');
-    alert("UUID copied to clipboard!");
+    setUuidCopied(true);
+    setTimeout(() => setUuidCopied(false), 3000);
   };
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirmation !== 'SAYONARA') {
+      setDeactivateError("Please type 'SAYONARA' to confirm account deactivation.");
+      return;
+    }
+    setIsDeleting(true);
+    setDeactivateError(null);
+    try {
+      if (supabase && sessionUser?.id) {
+        await supabase.from('profiles').delete().eq('id', sessionUser.id);
+      }
+      await supabase.auth.signOut();
+      setDeactivateSuccess(true);
+      setTimeout(() => {
+        window.location.href = '/';
+      }, 3500);
+    } catch (err: any) {
+      setDeactivateError("Failed to deactivate account: " + err.message);
+      setIsDeleting(false);
+    }
+  };
+
+  // Load database profile data on mount to ensure auto-syncing
+  useEffect(() => {
+    if (!supabase || !sessionUser || isAnonUser) return;
+    async function fetchDbProfile() {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('name, username')
+          .eq('id', sessionUser.id)
+          .single();
+        if (!error && data) {
+          if (data.name !== null && data.name !== undefined) setProfileName(data.name);
+          if (data.username !== null && data.username !== undefined) setProfileUsername(data.username);
+        }
+      } catch (err) {
+        console.warn("DB profile load bypassed:", err);
+      }
+    }
+    fetchDbProfile();
+  }, [sessionUser, isAnonUser]);
+
+  // Fetch actual daily usage count for progress bar
+  useEffect(() => {
+    if (!supabase || !sessionUser) return;
+    const fetchUsage = async () => {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count, error } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', sessionUser.id)
+        .gte('created_at', today.toISOString());
+      if (!error && count !== null) {
+        setDailyUsageCount(count);
+      }
+    };
+    fetchUsage();
+  }, [sessionUser]);
 
   if (!isLoggedIn) {
     return (
@@ -5838,6 +5892,24 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
     );
   }
 
+  // Format active plan localized strings
+  const today = new Date();
+  const nextDate = currentPeriodEnd ? new Date(currentPeriodEnd) : new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+  const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  const nextStr = formatter.format(nextDate);
+
+  const planName = userPlan === 'api' ? 'Developer API Pro' : userPlan === 'pro' ? 'Pro Workspace' : userPlan === 'admin' ? 'System Administrator' : 'Free Tier';
+  const isIndia = pricingCohort === 'india';
+  const planPrice = isIndia 
+    ? (userPlan === 'api' ? '₹999' : userPlan === 'pro' ? '₹199' : '₹0')
+    : (userPlan === 'api' ? '$29.00' : userPlan === 'pro' ? '$9.00' : '$0.00');
+  const planPeriod = userPlan === 'free' ? 'forever' : 'month';
+  const planLimits = userPlan === 'api' 
+    ? 'Unlimited browser usage + 30,000 monthly API bearer token runs' 
+    : userPlan === 'pro' 
+      ? 'Unlimited browser usage + 1,000 high-precision document scans/mo' 
+      : '20 daily runs on Free tools + 2 daily scans on Tier 2 heavy tools';
+
   return (
     <div style={{
       maxWidth: 850, margin: '40px auto 120px',
@@ -5853,14 +5925,14 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
       }}/>
 
       <div style={{ textAlign: 'center', marginBottom: 40, position: 'relative', zIndex: 1 }}>
-        <span style={eyebrow}>Workspace settings</span>
-        <h1 style={{ ...sectionTitle, margin: '8px 0 0', color: 'var(--fg)' }}>B2B Account Dashboard</h1>
-        <p style={sectionSubtitle}>Group and customize your profile metadata, company credentials, security profiles, and daily workspace limit gauges.</p>
+        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Personal Profile</span>
+        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.020em', margin: '8px 0 0', color: 'var(--fg)' }}>My Account Settings</h1>
+        <p style={{ fontSize: 14, color: 'var(--fg-dim)', margin: '6px 0 0' }}>Configure your display name, regional localizations, layout preferences, and manage secure SaaS billing.</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 28, position: 'relative', zIndex: 1 }}>
         
-        {/* Section 1: Profile Information */}
+        {/* Section 1: Profile Information (B2C Focus) */}
         <form onSubmit={handleSaveProfile} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <span style={{
@@ -5874,7 +5946,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
             </span>
             <div>
               <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Profile Details</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Update company roles and display names.</p>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Update your registered public user handle and full display name.</p>
             </div>
           </div>
 
@@ -5898,7 +5970,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
             </div>
 
             <div>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Username</label>
+              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Username Handle</label>
               <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
                 <span style={{ position: 'absolute', left: 12, fontSize: 13, color: 'var(--fg-dim)' }}>@</span>
                 <input type="text" placeholder="username" value={profileUsername} onChange={e => setProfileUsername(e.target.value)} style={{
@@ -5908,34 +5980,9 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
                 }} />
               </div>
             </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Company / Organization</label>
-              <input type="text" placeholder="e.g. Acme Corp" value={profileCompany} onChange={e => setProfileCompany(e.target.value)} style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8,
-                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-              }} />
-            </div>
-
-            <div style={{ gridColumn: 'span 2' }}>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Job Role</label>
-              <select value={profileRole} onChange={e => setProfileRole(e.target.value)} style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8,
-                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
-              }}>
-                <option value="Developer">Developer / Engineer</option>
-                <option value="Designer">UI & Creative Designer</option>
-                <option value="Product">Product Manager</option>
-                <option value="Executive">Executive / Director</option>
-                <option value="Marketer">Marketing Manager</option>
-                <option value="Other">Other Profession</option>
-              </select>
-            </div>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
             <span style={{ fontSize: 12, color: profileError ? 'oklch(0.60 0.20 20)' : 'oklch(0.78 0.16 145)' }}>
               {profileSuccess && "✓ Profile details updated successfully!"}
               {profileError && profileError}
@@ -5951,53 +5998,62 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
           </div>
         </form>
 
-        {/* Section 2: Security & Password */}
-        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* Section 2: Security Credentials */}
+        <form onSubmit={handleUpdatePassword} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 35 / 0.15)',
-              border: '1px solid oklch(0.70 0.16 35 / 0.3)',
-              color: 'oklch(0.85 0.12 35)',
+              background: 'oklch(0.18 0.010 15 / 0.15)',
+              border: '1px solid oklch(0.70 0.18 15 / 0.3)',
+              color: 'oklch(0.70 0.18 15)',
             }}>
-              <Icon.Shield size={16} />
+              <Icon.Lock size={16} />
             </span>
             <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Security & Credentials</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Keep your login passwords secure and rotate when necessary.</p>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Security Settings</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Update your account password. Secure crypt-hash applies.</p>
             </div>
           </div>
 
           {!showPasswordFields ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', padding: '8px 0' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontSize: 13, fontWeight: 550, color: 'white' }}>Account Password</span>
-                <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Last updated automatically or during signup.</span>
+                <span style={{ fontSize: 13, fontWeight: 550, color: 'white' }}>Account Password Protection</span>
+                <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Last updated details saved. Minimum length constraints apply.</span>
               </div>
-              <button type="button" onClick={() => setShowPasswordFields(true)} className="reset" style={{
-                padding: '8px 16px', borderRadius: 8, background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
-              }}>
-                Change Password
+              <button
+                type="button"
+                onClick={() => setShowPasswordFields(true)}
+                className="reset"
+                style={{
+                  padding: '8px 16px', borderRadius: 8,
+                  background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                  color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
+                }}
+              >
+                Change Password...
               </button>
             </div>
           ) : (
-            <form onSubmit={handleUpdatePassword} style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
                 <div>
                   <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">New Password</label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input type={showNewPassword ? "text" : "password"} required placeholder="Minimum 6 characters" value={newPassword} onChange={e => setNewPassword(e.target.value)} style={{
-                      width: '100%', padding: '10px 36px 10px 12px', borderRadius: 8,
-                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                      color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                    }} />
-                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="reset" style={{
-                      position: 'absolute', right: 10, background: 'none', border: 'none',
-                      color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                      padding: 4, margin: 0, outline: 'none'
-                    }} title={showNewPassword ? "Hide Password" : "Show Password"}>
+                    <input
+                      required
+                      type={showNewPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      style={{
+                        width: '100%', padding: '10px 38px 10px 12px', borderRadius: 8,
+                        background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                        color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                      }}
+                    />
+                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="reset" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
                       {showNewPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
                     </button>
                   </div>
@@ -6006,16 +6062,19 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
                 <div>
                   <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Confirm New Password</label>
                   <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input type={showConfirmPassword ? "text" : "password"} required placeholder="Confirm match" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} style={{
-                      width: '100%', padding: '10px 36px 10px 12px', borderRadius: 8,
-                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                      color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                    }} />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="reset" style={{
-                      position: 'absolute', right: 10, background: 'none', border: 'none',
-                      color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                      padding: 4, margin: 0, outline: 'none'
-                    }} title={showConfirmPassword ? "Hide Password" : "Show Password"}>
+                    <input
+                      required
+                      type={showConfirmPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      style={{
+                        width: '100%', padding: '10px 38px 10px 12px', borderRadius: 8,
+                        background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                        color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                      }}
+                    />
+                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="reset" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
                       {showConfirmPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
                     </button>
                   </div>
@@ -6023,89 +6082,80 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-                <button type="button" onClick={() => { setShowPasswordFields(false); setPasswordMessage(null); }} className="reset" style={{
-                  fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none'
-                }}>
-                  Cancel
-                </button>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                  {passwordMessage && (
-                    <span style={{ fontSize: 12, color: passwordSuccess ? 'oklch(0.78 0.16 145)' : 'oklch(0.60 0.20 20)' }} className="mono">
-                      {passwordMessage}
-                    </span>
-                  )}
-                  <button type="submit" disabled={isUpdatingPassword} className="reset" style={{
-                    padding: '10px 20px', borderRadius: 8,
-                    background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
-                    color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 13, cursor: 'pointer'
-                  }}>
+                <span style={{ fontSize: 12, color: passwordSuccess ? 'oklch(0.78 0.16 145)' : 'oklch(0.60 0.20 20)' }}>
+                  {passwordMessage && passwordMessage}
+                </span>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    type="button"
+                    onClick={() => { setShowPasswordFields(false); setNewPassword(''); setConfirmPassword(''); setPasswordMessage(null); }}
+                    className="reset"
+                    style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isUpdatingPassword}
+                    className="reset"
+                    style={{
+                      padding: '8px 16px', borderRadius: 8,
+                      background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+                      color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 12.5,
+                      cursor: isUpdatingPassword ? 'not-allowed' : 'pointer'
+                    }}
+                  >
                     {isUpdatingPassword ? 'Updating...' : 'Update Password'}
                   </button>
                 </div>
               </div>
-            </form>
+            </div>
           )}
-        </div>
+        </form>
 
-        {/* Section 3: Workspace Preferences */}
+        {/* Section 3: Layout Configuration */}
         <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 195 / 0.15)',
-              border: '1px solid oklch(0.78 0.16 195 / 0.3)',
-              color: 'oklch(0.78 0.16 195)',
+              background: 'oklch(0.18 0.010 210 / 0.15)',
+              border: '1px solid oklch(0.70 0.18 210 / 0.3)',
+              color: 'oklch(0.70 0.18 210)',
             }}>
               <Icon.Grid size={16} />
             </span>
             <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Workspace Preferences</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Configure editor layout metrics and dark/light UI modes.</p>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Layout Settings</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Choose the active alignment display of the document editing cockpit.</p>
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 20 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }} className="mono">Default Editor Width</label>
-              <div style={{ display: 'flex', gap: 6 }}>
-                {['standard', 'compact', 'zen'].map(mode => (
-                  <button key={mode} onClick={() => handleLayoutChange(mode)} className="reset" style={{
-                    flex: 1, padding: '8px 10px', borderRadius: 8,
-                    border: `1px solid ${editorLayout === mode ? 'var(--accent)' : 'var(--border)'}`,
-                    background: editorLayout === mode ? 'oklch(0.70 0.18 265 / 0.1)' : 'var(--bg-elev-1)',
-                    color: editorLayout === mode ? 'var(--accent)' : 'var(--fg-muted)',
-                    fontSize: 12, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize'
-                  }}>{mode}</button>
-                ))}
-              </div>
-            </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+            <button onClick={() => handleLayoutChange('standard')} className="reset layout-card" style={{
+              textAlign: 'left', padding: '16px 20px', borderRadius: 12,
+              background: editorLayout === 'standard' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
+              border: editorLayout === 'standard' ? '1px solid var(--accent)' : '1px solid var(--border)',
+              cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.15s ease'
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Standard Layout</span>
+              <span style={{ fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.4 }}>Dual comparison pane: Markdown text editor on the left and visual document outputs on the right.</span>
+            </button>
 
-            <div>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }} className="mono">Interface Theme</label>
-              <button onClick={onToggleTheme} className="reset" style={{
-                width: '100%', padding: '9px 12px', borderRadius: 8,
-                background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-                color: 'var(--fg)', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 12.5, fontWeight: 600,
-              }}>
-                {theme === 'dark' ? (
-                  <>
-                    <Icon.Moon size={13} />
-                    <span>Dark Mode Contrast</span>
-                  </>
-                ) : (
-                  <>
-                    <Icon.Sun size={13} />
-                    <span>Light Mode Contrast</span>
-                  </>
-                )}
-              </button>
-            </div>
+            <button onClick={() => handleLayoutChange('reversed')} className="reset layout-card" style={{
+              textAlign: 'left', padding: '16px 20px', borderRadius: 12,
+              background: editorLayout === 'reversed' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
+              border: editorLayout === 'reversed' ? '1px solid var(--accent)' : '1px solid var(--border)',
+              cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.15s ease'
+            }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Reversed Layout</span>
+              <span style={{ fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.4 }}>Mirror layout: Visual live outputs rendered on the left, editing Markdown content on the right.</span>
+            </button>
           </div>
         </div>
 
-        {/* Section 4: Workspace Localization settings */}
-        <form onSubmit={handleSaveLoc} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* Section 4: Localization Preferences */}
+        <form onSubmit={handleSaveLocalization} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -6169,9 +6219,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
           </div>
         </form>
 
-
-
-        {/* Section 6: Daily limits visual meter */}
+        {/* Section 5: Daily limits visual meter */}
         <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <span style={{
@@ -6193,32 +6241,32 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span style={{ fontSize: 13, color: 'white', fontWeight: 550 }}>Daily Metered Runs</span>
               <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--accent)' }} className="mono">
-                {userPlan === 'pro' ? 'Unlimited / Unlimited' : `${dailyUsageCount} / 20 used today`}
+                {userPlan === 'pro' ? 'Unlimited / Unlimited' : userPlan === 'api' ? 'Unlimited / 30,000 API Runs/mo' : `${dailyUsageCount} / 20 used today`}
               </span>
             </div>
 
             <div style={{ height: 10, width: '100%', background: 'oklch(0.18 0.005 250)', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--border)' }}>
               <div style={{
                 height: '100%',
-                width: userPlan === 'pro' ? '100%' : `${Math.min((dailyUsageCount / 20) * 100, 100)}%`,
-                background: userPlan === 'pro'
+                width: (userPlan === 'pro' || userPlan === 'api') ? '100%' : `${Math.min((dailyUsageCount / 20) * 100, 100)}%`,
+                background: (userPlan === 'pro' || userPlan === 'api')
                   ? 'linear-gradient(90deg, oklch(0.70 0.18 265) 0%, oklch(0.70 0.16 195) 50%, oklch(0.70 0.16 145) 100%)'
                   : 'linear-gradient(90deg, oklch(0.70 0.16 145) 0%, oklch(0.70 0.16 75) 60%, oklch(0.65 0.20 20) 100%)',
                 boxShadow: '0 0 10px var(--accent)30',
                 transition: 'width 0.5s ease-out'
               }} />
             </div>
-            {userPlan !== 'pro' && (
+            {userPlan !== 'pro' && userPlan !== 'api' && (
               <p style={{ fontSize: 11.5, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.4 }}>
-                Free registered accounts have a metered bound of 20 runs. Upgrade to Pro to strip watermarks automatically and unlock unlimited daily loops!
+                Free registered accounts have a metered bound of 20 runs. Upgrade to Pro or API Tier to strip watermarks automatically and unlock unlimited daily loops!
               </p>
             )}
           </div>
         </div>
 
-        {/* Section 7: Subscription & Billing details */}
-        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+        {/* Section 6: Subscription, Billing & Invoice History Details */}
+        <div className="glass-card" style={{ padding: '32px 30px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
               width: 32, height: 32, borderRadius: 8,
@@ -6229,8 +6277,230 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
               <Icon.Database size={16} />
             </span>
             <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Billing & Developer API</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>View sandbox tokens and Stripe credentials.</p>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Billing, Subscription & Invoices</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Manage your active payment billing tier, view usage limits, and download invoices.</p>
+            </div>
+          </div>
+
+          {billingMessage && (
+            <div className="fade-in" style={{
+              padding: '12px 16px', borderRadius: 8,
+              background: billingMessage.startsWith('✓') ? 'oklch(0.22 0.010 145 / 0.15)' : 'oklch(0.18 0.010 15 / 0.15)',
+              border: billingMessage.startsWith('✓') ? '1px solid oklch(0.78 0.16 145 / 0.3)' : '1px solid oklch(0.78 0.16 15 / 0.3)',
+              color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              fontSize: 12.5
+            }}>
+              <span>{billingMessage}</span>
+              <button onClick={() => setBillingMessage(null)} className="reset" style={{
+                color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                padding: 4, background: 'none', border: 'none'
+              }}>
+                <Icon.X size={14} />
+              </button>
+            </div>
+          )}
+
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+            gap: 32,
+          }}>
+            {/* Left Side: Subscription Plan Details */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div>
+                <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }} className="mono">Active Plan</span>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                  <span style={{ fontSize: 22, fontWeight: 700, color: 'white' }}>{planName}</span>
+                  {userPlan !== 'free' && (
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--accent)' }}>
+                      {planPrice} <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--fg-dim)' }}>/ {planPeriod}</span>
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    {cancelAtPeriodEnd ? (
+                      <>
+                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.65 0.20 50)', boxShadow: '0 0 8px oklch(0.65 0.20 50)' }} />
+                        <span style={{ fontSize: 12, color: 'oklch(0.65 0.20 50)', fontWeight: 600 }}>
+                          Canceling (Grace Period)
+                        </span>
+                      </>
+                    ) : (userPlan === 'pro' || userPlan === 'api') ? (
+                      <>
+                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.78 0.16 145)', boxShadow: '0 0 8px oklch(0.78 0.16 145)' }} />
+                        <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)', fontWeight: 600 }}>
+                          Active Subscribed
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--fg-dim)' }} />
+                        <span style={{ fontSize: 12, color: 'var(--fg-dim)', fontWeight: 500 }}>
+                          No Active Subscription
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  {cancelAtPeriodEnd && (
+                    <p style={{ fontSize: 12, color: 'oklch(0.65 0.20 50 / 0.9)', margin: 0, lineHeight: 1.4 }}>
+                      Your premium access remains operational until **{nextStr}**, after which billing stops and your account reverts to the Free tier.
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+                <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }} className="mono">Quotas & Usage Limits</span>
+                <p style={{ fontSize: 12.5, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
+                  {planLimits}
+                </p>
+              </div>
+
+              {(userPlan === 'pro' || userPlan === 'api') && (
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">
+                      {cancelAtPeriodEnd ? 'Access Expires' : 'Next Billing Date'}
+                    </span>
+                    <span style={{ fontSize: 13, color: 'white', fontWeight: 500 }}>{nextStr}</span>
+                  </div>
+                  {!cancelAtPeriodEnd && (
+                    <div>
+                      <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">Payment Partner</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--fg-muted)' }}>
+                        <Icon.CreditCard size={14} style={{ color: 'var(--accent)' }} />
+                        <span>Creem.io Sandbox</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto' }}>
+                <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+                  {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? (
+                    <>
+                      <button onClick={handleManageBilling} className="reset" style={{
+                        flex: 1, padding: '10px 14px', borderRadius: 8,
+                        background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                        color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                        textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                      }}>
+                        <Icon.Grid size={14} />
+                        <span>Manage Sub / Portal</span>
+                      </button>
+                      {!cancelAtPeriodEnd && (
+                        <button onClick={() => setCancelModalOpen(true)} className="reset" style={{
+                          flex: 1, padding: '10px 14px', borderRadius: 8,
+                          background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
+                          color: 'oklch(0.78 0.16 15)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                        }}>Cancel Subscription</button>
+                      )}
+                    </>
+                  ) : (
+                    <button onClick={onShowPaywall} className="reset" style={{
+                      flex: 1, padding: '10px 14px', borderRadius: 8,
+                      background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
+                      border: '1px solid var(--border)',
+                      color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                      textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                    }}>
+                      <Icon.Sparkles size={14} style={{ color: 'white' }} />
+                      <span>Upgrade to Premium</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right Side: Invoice History */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }} className="mono">Invoice History</span>
+                <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '0 0 12px' }}>Download your official tax receipts and subscription payments.</p>
+              </div>
+
+              {userPlan === 'free' ? (
+                <div style={{
+                  flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                  padding: '24px 20px', background: 'var(--bg-elev-1)', border: '1px dashed var(--border)',
+                  borderRadius: 12, textAlign: 'center', gap: 8
+                }}>
+                  <Icon.FileText size={24} style={{ color: 'var(--fg-dim)' }} />
+                  <span style={{ fontSize: 12.5, fontWeight: 550, color: 'var(--fg-subtle)' }}>No Invoices Yet</span>
+                  <span style={{ fontSize: 11, color: 'var(--fg-dim)', maxWidth: 220 }}>Upgrade to a paid tier to generate invoice history.</span>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {/* Mock Invoice Row 1 (Recent transaction) */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '12px 14px', background: 'var(--bg-elev-1)',
+                    border: '1px solid var(--border)', borderRadius: 10,
+                  }}>
+                    <div>
+                      <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{formatter.format(today)}</div>
+                      <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>INV-2026-001 • {planName}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{planPrice}</span>
+                      <button onClick={() => setBillingMessage(`✓ Invoice PDF downloaded! Saved: INV-2026-001_${planName.replace(/\s+/g, '')}.pdf`)} className="reset" style={{
+                        padding: '6px 10px', borderRadius: 6, background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                        color: 'var(--fg)', fontSize: 11, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                      }}>
+                        <Icon.FileDown size={12} />
+                        <span>PDF</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Mock Invoice Row 2 (Simulates ongoing multi-month customer history) */}
+                  <div style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    padding: '12px 14px', background: 'var(--bg-elev-1)',
+                    border: '1px solid var(--border)', borderRadius: 10, opacity: 0.75,
+                  }}>
+                    <div>
+                      {(() => {
+                        const pastDate = new Date(today);
+                        pastDate.setDate(today.getDate() - 30);
+                        return <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{formatter.format(pastDate)}</div>;
+                      })()}
+                      <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>INV-2026-000 • {planName}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{planPrice}</span>
+                      <button onClick={() => setBillingMessage(`✓ Invoice PDF downloaded! Saved: INV-2026-000_${planName.replace(/\s+/g, '')}.pdf`)} className="reset" style={{
+                        padding: '6px 10px', borderRadius: 6, background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                        color: 'var(--fg)', fontSize: 11, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                      }}>
+                        <Icon.FileDown size={12} />
+                        <span>PDF</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Section 7: Developer Sandbox Integration details */}
+        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+            <span style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 32, height: 32, borderRadius: 8,
+              background: 'oklch(0.18 0.010 195 / 0.15)',
+              border: '1px solid oklch(0.70 0.16 195 / 0.3)',
+              color: 'oklch(0.70 0.16 195)',
+            }}>
+              <Icon.Database size={16} />
+            </span>
+            <div>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>API Sandbox Details</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Access credentials for the developer API playground.</p>
             </div>
           </div>
 
@@ -6239,27 +6509,12 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
               <div>
                 <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">Account Access Tier</div>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' || userPlan === 'api' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
                   <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 12.5, color: 'white' }}>
-                    {userPlan === 'pro' ? 'Lifetime Pro Workspace' : userPlan === 'admin' ? 'System Administrator' : 'Free Registered Tier'}
+                    {planName}
                   </span>
                 </div>
               </div>
-
-              {userPlan === 'pro' || userPlan === 'admin' ? (
-                <button onClick={handleCancelSubscription} className="reset" style={{
-                  padding: '7px 12px', borderRadius: 8,
-                  background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
-                  color: 'oklch(0.78 0.16 15)', fontWeight: 600, fontSize: 12, cursor: 'pointer',
-                }}>Cancel Subscription</button>
-              ) : (
-                <button onClick={onShowPaywall} className="reset" style={{
-                  padding: '8px 16px', borderRadius: 8,
-                  background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
-                  color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                  boxShadow: '0 4px 12px oklch(0.50 0.20 265 / 0.25)',
-                }}>Upgrade to Pro</button>
-              )}
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between' }}>
@@ -6270,7 +6525,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
                 </code>
               </div>
               <button type="button" onClick={handleCopyUUID} className="reset" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', background: 'var(--bg-elev-2)' }}>
-                <Icon.Copy size={13} style={{ color: 'white' }} />
+                {uuidCopied ? <Icon.Check size={13} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={13} style={{ color: 'white' }} />}
               </button>
             </div>
           </div>
@@ -6295,7 +6550,7 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
           </div>
 
           {!showDeactivateFields ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', padding: '8px 0' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                 <span style={{ fontSize: 13, fontWeight: 550, color: 'oklch(0.65 0.22 20)' }}>Deactivate Workspace Account</span>
                 <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Initiate permanent deletion protocol. Grace window applies.</span>
@@ -6348,10 +6603,21 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
                 />
               </div>
 
+              {deactivateError && (
+                <div style={{ fontSize: 12, color: 'oklch(0.65 0.22 20)', fontWeight: 500 }}>
+                  {deactivateError}
+                </div>
+              )}
+              {deactivateSuccess && (
+                <div style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)', fontWeight: 555 }}>
+                  ✓ SAYONARA! Deactivation successful. Redirecting to landing page...
+                </div>
+              )}
+
               <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
                 <button
                   type="button"
-                  onClick={() => { setShowDeactivateFields(false); setDeleteConfirmation(''); }}
+                  onClick={() => { setShowDeactivateFields(false); setDeleteConfirmation(''); setDeactivateError(null); }}
                   className="reset"
                   style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
                 >
@@ -6396,7 +6662,6 @@ function AccountPage({ onLaunch, brandName, userPlan, sessionUser, isAnonUser, o
 }
 
 interface ChangelogPageProps {
-
   onLaunch: () => void;
 }
 
@@ -7164,68 +7429,75 @@ interface PaywallModalProps {
   sessionUser: any;
   supabase: any;
   pricingCohort: string;
+  userPlan: 'free' | 'pro' | 'admin' | 'api';
+  setUserPlan: (plan: 'free' | 'pro' | 'admin' | 'api') => void;
 }
 
-function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supabase, pricingCohort }: PaywallModalProps) {
-  const [fakeDoorSeen, setFakeDoorSeen] = useState(false);
-  const [checkoutPlan, setCheckoutPlan] = useState<string | null>(null);
+function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supabase, pricingCohort, userPlan, setUserPlan }: PaywallModalProps) {
   const [checkoutSpinner, setCheckoutSpinner] = useState(false);
-  const [waitlistEmail, setWaitlistEmail] = useState('');
-  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
-
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const seen = localStorage.getItem('fake_door_seen') === 'true';
-      setFakeDoorSeen(seen);
-    }
-  }, [open]);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   if (!open) return null;
 
-  async function handlePlanClick(planName: string) {
-    setCheckoutPlan(planName);
-    
-    if (supabase) {
-      try {
-        await supabase.from('fake_checkout_clicks').insert({
-          user_id: sessionUser?.id || null,
-          plan_clicked: planName,
-        });
-      } catch (err) {
-        console.error("Error logging checkout click:", err);
-      }
-    }
+  const apiPrice = pricingCohort === 'india' 
+    ? '999' 
+    : pricingCohort === 'mid' 
+      ? '14.99' 
+      : pricingCohort === 'low' 
+        ? '6.99' 
+        : '29';
 
-    if (!fakeDoorSeen) {
-      setCheckoutSpinner(true);
-      setTimeout(() => {
+  const proPrice = pricingData.monthly;
+  const currency = pricingData.currency;
+
+  async function handlePlanClick(planName: 'pro' | 'api') {
+    setCheckoutSpinner(true);
+    setCheckoutError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setCheckoutError("Missing active session token. Please sign in.");
         setCheckoutSpinner(false);
-        setFakeDoorSeen(true);
-        if (typeof window !== 'undefined') {
-          localStorage.setItem('fake_door_seen', 'true');
-        }
-      }, 2500);
-    } else {
+        return;
+      }
+
+      const cohort = pricingCohort === 'india' ? 'india' : 'global';
+
+      const response = await fetch('/billing/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          planId: planName,
+          cohort,
+          token
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to initiate secure checkout session.');
+      }
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error('Payment gateway did not return a valid checkout session URL.');
+      }
+    } catch (err: any) {
+      console.error("Checkout session initiation failed:", err);
+      setCheckoutError(err.message || 'Payment server connection failed. Please try again.');
       setCheckoutSpinner(false);
     }
   }
 
-  async function handleWaitlistSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (!waitlistEmail) return;
-
-    if (supabase && sessionUser) {
-      try {
-        await supabase.from('profiles').update({ fake_door_waitlisted: true }).eq('id', sessionUser.id);
-      } catch (e) {}
-    }
-    
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('fake_door_waitlist_email', waitlistEmail);
-    }
-
-    setWaitlistSubmitted(true);
-  }
+  const listStyle: React.CSSProperties = {
+    listStyleType: 'none',
+    margin: 0,
+    padding: 0,
+  };
 
   return createPortal(
     <div style={{
@@ -7236,7 +7508,7 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
       padding: 20,
     }} onClick={onClose}>
       <div style={{
-        width: '100%', maxWidth: 740,
+        width: '100%', maxWidth: 780,
         background: 'var(--bg-elev-1)',
         border: '1px solid oklch(0.45 0.10 265 / 0.3)',
         borderRadius: 20,
@@ -7254,105 +7526,70 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
         </button>
 
         {checkoutSpinner ? (
-          <div style={{ padding: '80px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 400 }} className="fade-in">
+          <div style={{ padding: '80px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 440 }} className="fade-in">
             <Icon.Loader size={48} style={{ color: 'var(--accent)', marginBottom: 24, animation: 'spin 1s linear infinite' }} />
-            <h3 style={{ fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 8, textAlign: 'center' }}>Connecting to Stripe Secure Servers...</h3>
-            <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', textAlign: 'center', maxWidth: 320 }}>Creating secure customer session. Please do not close this window.</p>
-          </div>
-        ) : checkoutPlan && fakeDoorSeen ? (
-          <div style={{ padding: 48, minHeight: 400, display: 'flex', flexDirection: 'column', justifyContent: 'center' }} className="fade-in">
-            {!waitlistSubmitted ? (
-              <form onSubmit={handleWaitlistSubmit} style={{ textAlign: 'center', maxWidth: 460, margin: '0 auto' }}>
-                <div style={{
-                  width: 56, height: 56, borderRadius: '50%',
-                  background: 'oklch(0.22 0.010 265 / 0.15)',
-                  border: '1px solid oklch(0.75 0.14 265 / 0.2)',
-                  color: 'var(--accent)',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  marginBottom: 20,
-                  boxShadow: '0 0 20px oklch(0.78 0.16 265 / 0.15)',
-                }}>
-                  <Icon.Wand size={28} />
-                </div>
-                <h3 style={{ fontSize: 24, fontWeight: 600, color: 'white', margin: '0 0 10px', letterSpacing: '-0.02em' }}>Unlock The Pro Vault</h3>
-                <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
-                  We are currently in a closed beta group. Enter your email below to join the waitlist and get **3 months of Pro completely free** the moment payments go live!
-                </p>
-
-                <div style={{ display: 'flex', gap: 10, width: '100%', marginBottom: 12 }}>
-                  <input required type="email" placeholder="you@example.com" value={waitlistEmail} onChange={e => setWaitlistEmail(e.target.value)} style={{
-                    flex: 1, padding: '12px 14px', borderRadius: 8,
-                    background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
-                    color: 'white', fontSize: 14, outline: 'none'
-                  }} />
-                  <button type="submit" className="reset" style={{
-                    padding: '0 20px', borderRadius: 8,
-                    background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
-                    color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 6
-                  }}>Join Waitlist <Icon.ArrowRight size={13} strokeWidth={2.5} /></button>
-                </div>
-                <p style={{ fontSize: 11, color: 'var(--fg-dim)' }}>Zero spam. Only your early access pass.</p>
-              </form>
-            ) : (
-              <div style={{ textAlign: 'center', maxWidth: 420, margin: '0 auto' }} className="fade-in">
-                <div style={{
-                  width: 56, height: 56, borderRadius: '50%',
-                  background: 'oklch(0.22 0.010 145 / 0.2)',
-                  border: '1px solid oklch(0.75 0.14 145 / 0.4)',
-                  color: 'oklch(0.78 0.16 145)',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  marginBottom: 20,
-                  boxShadow: '0 0 20px oklch(0.78 0.16 145 / 0.25)',
-                }}>
-                  <Icon.Check size={28} strokeWidth={2.5} />
-                </div>
-                <h3 style={{ fontSize: 22, fontWeight: 600, color: 'white', margin: '0 0 10px', letterSpacing: '-0.02em' }}>You are on the Priority List!</h3>
-                <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
-                  Thank you! We've saved <span className="mono" style={{ color: 'white' }}>{waitlistEmail}</span>. You will receive your 3-month free voucher as soon as payments open.
-                </p>
-                <button onClick={onClose} className="reset" style={{
-                  padding: '10px 20px', borderRadius: 8,
-                  background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-                  color: 'white', fontSize: 13.5, fontWeight: 500, cursor: 'pointer',
-                }}>Close Window</button>
-              </div>
-            )}
+            <h3 style={{ fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 8, textAlign: 'center' }}>Connecting to Creem Secure Checkout...</h3>
+            <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', textAlign: 'center', maxWidth: 365, lineHeight: 1.5 }}>
+              Initializing your sandbox subscription profile. You will be redirected to the secure sandbox payment form.
+            </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'row', minHeight: 480 }} className="fade-in">
+          <div style={{ display: 'flex', flexDirection: 'row', minHeight: 460 }} className="fade-in">
             {/* Left Info bar */}
             <div style={{
-              flex: '1.2', background: 'oklch(0.16 0.012 265 / 0.4)',
-              borderRight: '1px solid var(--border)', padding: 40,
+              flex: '1.1', background: 'oklch(0.16 0.012 265 / 0.4)',
+              borderRight: '1px solid var(--border)', padding: 36,
               display: 'flex', flexDirection: 'column', gap: 24
             }}>
               <div>
-                <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Upgrade Today</span>
-                <h3 style={{ fontSize: 24, fontWeight: 600, color: 'white', margin: '6px 0 0', letterSpacing: '-0.02em' }}>Unlock all tools</h3>
+                <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Vault Access</span>
+                <h3 style={{ fontSize: 22, fontWeight: 600, color: 'white', margin: '6px 0 0', letterSpacing: '-0.02em' }}>Choose Your Tier</h3>
               </div>
               
-              <ul style={{ ...listStyle, padding: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <Feature on={true} em={true}>Unlimited runs on all 20+ tools</Feature>
-                <Feature on={true} em={true}>High-compute PDF scanned OCR</Feature>
-                <Feature on={true} em={true}>Visual PDF Diff Checker</Feature>
-                <Feature on={true} em={true}>White-Label watermarks settings</Feature>
-                <Feature on={true} em={true}>Sync history across 30 days</Feature>
-              </ul>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <span className="mono" style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Unlocked Pro Features</span>
+                <ul style={{ ...listStyle, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  <Feature on={true} em={true}>Unlimited runs on all 20+ tools</Feature>
+                  <Feature on={true} em={true}>High-compute PDF scanned OCR</Feature>
+                  <Feature on={true} em={true}>Visual PDF Diff Checker</Feature>
+                  <Feature on={true} em={true}>White-Label output watermark removal</Feature>
+                  <Feature on={true} em={true}>Persistent database history sync</Feature>
+                </ul>
+              </div>
 
-              <div style={{ marginTop: 'auto', fontSize: 12, color: 'var(--fg-dim)', lineHeight: 1.4 }}>
-                * Localized for economic equity in your region ({pricingCohort.toUpperCase()}) utilizing Purchasing Power Parity.
+              <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'oklch(0.70 0.12 145)' }}>
+                  <Icon.Check size={12} strokeWidth={2.5} />
+                  <span>Purchasing Power Parity Active</span>
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.35 }}>
+                  Pricing automatically optimized for {pricingCohort === 'india' ? 'India economics' : 'global economics'} ({pricingCohort.toUpperCase()}).
+                </p>
               </div>
             </div>
 
             {/* Right Plan grid */}
-            <div style={{ flex: '1.5', padding: 40, display: 'flex', flexDirection: 'column', gap: 20, justifyContent: 'center' }}>
-              <h4 style={{ fontSize: 14, fontWeight: 600, color: 'white', margin: 0 }}>Select your plan:</h4>
+            <div style={{ flex: '1.4', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, justifyContent: 'center' }}>
+              <div>
+                <h4 style={{ fontSize: 14, fontWeight: 600, color: 'white', margin: '0 0 4px' }}>Select Sandbox Subscription:</h4>
+                <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: 0 }}>Safe test credit cards accepted</p>
+              </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                {/* 1. Monthly */}
-                <button onClick={() => handlePlanClick('monthly_sub')} className="reset plan-card" style={{
-                  textAlign: 'left', padding: '16px 20px', borderRadius: 12,
+              {checkoutError && (
+                <div style={{
+                  padding: '12px 14px', borderRadius: 8,
+                  background: 'oklch(0.20 0.05 20 / 0.3)', border: '1px solid oklch(0.50 0.15 20 / 0.4)',
+                  color: 'oklch(0.75 0.12 20)', fontSize: 12.5, display: 'flex', gap: 8, alignItems: 'flex-start'
+                }}>
+                  <Icon.AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <span>{checkoutError}</span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {/* 1. Pro Subscription */}
+                <button onClick={() => handlePlanClick('pro')} className="reset plan-card" style={{
+                  textAlign: 'left', padding: '18px 20px', borderRadius: 12,
                   background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   transition: 'border-color 0.15s, background 0.15s'
@@ -7360,19 +7597,22 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
                 >
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: 'white' }}>Monthly Subscription</div>
-                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>Full unlimited cockpit access</div>
+                  <div style={{ flex: 1, marginRight: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Pro Workspace Plan</div>
+                      <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 265 / 0.3)', color: 'var(--accent)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>MOST POPULAR</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Complete cockpit access with unlimited tool computing.</div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{pricingData.currency}{pricingData.monthly}</div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{currency}{proPrice}</div>
                     <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>/ month</div>
                   </div>
                 </button>
 
-                {/* 2. Weekly Pass */}
-                <button onClick={() => handlePlanClick('weekly_pass')} className="reset plan-card" style={{
-                  textAlign: 'left', padding: '16px 20px', borderRadius: 12,
+                {/* 2. API Pro Subscription */}
+                <button onClick={() => handlePlanClick('api')} className="reset plan-card" style={{
+                  textAlign: 'left', padding: '18px 20px', borderRadius: 12,
                   background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
                   cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   transition: 'border-color 0.15s, background 0.15s'
@@ -7380,35 +7620,23 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
                 onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
                 onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
                 >
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: 'white' }}>7-Day Pass</div>
-                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>Perfect for short assignments</div>
+                  <div style={{ flex: 1, marginRight: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                      <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Developer API Pro</div>
+                      <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 145 / 0.25)', color: 'oklch(0.78 0.16 145)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>POWER TIER</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Direct API keys, higher query limits & webhook callbacks.</div>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{pricingData.currency}{pricingData.weekly}</div>
-                    <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>one-off</div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{currency}{apiPrice}</div>
+                    <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>/ month</div>
                   </div>
                 </button>
+              </div>
 
-                {/* 3. 24h Pass */}
-                <button onClick={() => handlePlanClick('daily_pass')} className="reset plan-card" style={{
-                  textAlign: 'left', padding: '16px 20px', borderRadius: 12,
-                  background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  transition: 'border-color 0.15s, background 0.15s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
-                >
-                  <div>
-                    <div style={{ fontSize: 15, fontWeight: 600, color: 'white' }}>24-Hour Pass</div>
-                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)' }}>Full access lock-in for a day</div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{pricingData.currency}{pricingData.daily}</div>
-                    <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>24 hours</div>
-                  </div>
-                </button>
+              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon.CreditCard size={14} style={{ color: 'var(--fg-subtle)' }} />
+                <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Creem.io Sandbox Environment &bull; Test Payments Only</span>
               </div>
             </div>
           </div>
@@ -7613,8 +7841,16 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   // Supabase Auth and Limits State
   const [sessionUser, setSessionUser] = useState<any>(null);
   const [isAnonUser, setIsAnonUser] = useState(false);
-  const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'admin'>('free');
+  const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'admin' | 'api'>('free');
   const [authOpen, setAuthOpen] = useState(false);
+
+  // Creem Subscription States
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('none');
+  const [currentPeriodEnd, setCurrentPeriodEnd] = useState<string | null>(null);
+  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState<boolean>(false);
+  const [customerId, setCustomerId] = useState<string | null>(null);
+  const [subscriptionId, setSubscriptionId] = useState<string | null>(null);
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   
   // PPP Pricing & Location
   const [countryCode, setCountryCode] = useState('US');
@@ -7728,7 +7964,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('tier')
+        .select('tier, subscription_status, current_period_end, cancel_at_period_end, customer_id, subscription_id')
         .eq('id', userId)
         .single();
       
@@ -7736,13 +7972,23 @@ export function App({ initialSlug }: { initialSlug?: string }) {
         const emailVal = sessionUser?.email || `anonymous_${userId.slice(0, 8)}@mysaas.internal`;
         const { error: insertError } = await supabase
           .from('profiles')
-          .insert({ id: userId, email: emailVal, tier: 'free' });
+          .insert({ id: userId, email: emailVal, tier: 'free', subscription_status: 'none' });
         
         if (!insertError) {
           setUserPlan('free');
+          setSubscriptionStatus('none');
+          setCurrentPeriodEnd(null);
+          setCancelAtPeriodEnd(false);
+          setCustomerId(null);
+          setSubscriptionId(null);
         }
       } else if (data) {
-        setUserPlan(data.tier || 'free');
+        setUserPlan((data.tier as any) || 'free');
+        setSubscriptionStatus(data.subscription_status || 'none');
+        setCurrentPeriodEnd(data.current_period_end || null);
+        setCancelAtPeriodEnd(!!data.cancel_at_period_end);
+        setCustomerId(data.customer_id || null);
+        setSubscriptionId(data.subscription_id || null);
       }
     } catch (err) {
       console.error("Error loading user profile:", err);
@@ -7782,6 +8028,11 @@ export function App({ initialSlug }: { initialSlug?: string }) {
         setSessionUser(null);
         setIsAnonUser(false);
         setUserPlan('free');
+        setSubscriptionStatus('none');
+        setCurrentPeriodEnd(null);
+        setCancelAtPeriodEnd(false);
+        setCustomerId(null);
+        setSubscriptionId(null);
       }
     });
     
@@ -7789,6 +8040,27 @@ export function App({ initialSlug }: { initialSlug?: string }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      if (url.searchParams.get('checkout') === 'success') {
+        setShowSuccessBanner(true);
+        // Clean up the URL query parameter so it doesn't stay forever
+        url.searchParams.delete('checkout');
+        window.history.replaceState({}, '', url.pathname + url.search);
+        
+        // Re-fetch the user profile to instantly load the new Pro plan
+        const getSessionAndLoad = async () => {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session?.user) {
+            await loadUserProfile(session.user.id);
+          }
+        };
+        getSessionAndLoad();
+      }
+    }
+  }, [sessionUser]);
 
   async function handleSignOut() {
     try {
@@ -7953,7 +8225,50 @@ export function App({ initialSlug }: { initialSlug?: string }) {
         <Launcher open={launcher} onClose={() => setLauncher(false)} onPick={openTool} />
         <EnterpriseModal open={enterpriseOpen} onClose={() => setEnterpriseOpen(false)} />
         <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} supabase={supabase} />
-        <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} brandName={brandName} pricingData={pricingData} sessionUser={sessionUser} supabase={supabase} pricingCohort={pricingCohort} />
+        <PaywallModal 
+          open={showPaywall} 
+          onClose={() => setShowPaywall(false)} 
+          brandName={brandName} 
+          pricingData={pricingData} 
+          sessionUser={sessionUser} 
+          supabase={supabase} 
+          pricingCohort={pricingCohort} 
+          userPlan={userPlan}
+          setUserPlan={setUserPlan}
+        />
+        {showSuccessBanner && (
+          <div style={{
+            position: 'fixed', bottom: 24, right: 24, zIndex: 10000,
+            background: 'oklch(0.20 0.04 145 / 0.85)',
+            backdropFilter: 'blur(12px)',
+            border: '1px solid oklch(0.70 0.15 145 / 0.3)',
+            borderRadius: 12, padding: '16px 20px', maxWidth: 380,
+            boxShadow: '0 10px 30px oklch(0 0 0 / 0.3)',
+            display: 'flex', gap: 14, alignItems: 'flex-start',
+            animation: 'slideUp 0.3s ease-out'
+          }} className="fade-in">
+            <div style={{
+              background: 'oklch(0.70 0.15 145 / 0.15)',
+              border: '1px solid oklch(0.70 0.15 145 / 0.3)',
+              borderRadius: '50%', width: 36, height: 36,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: 'oklch(0.75 0.16 145)', flexShrink: 0
+            }}>
+              <Icon.Check size={20} strokeWidth={2.5} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <h4 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'white' }}>Sandbox Subscription Verified!</h4>
+              <p style={{ margin: 0, fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.4 }}>
+                Congratulations! Your Creem sandbox payment succeeded. Welcome to the Pro tier.
+              </p>
+            </div>
+            <button onClick={() => setShowSuccessBanner(false)} className="reset" style={{
+              color: 'var(--fg-subtle)', cursor: 'pointer', background: 'none', border: 'none', padding: 0
+            }}>
+              <Icon.X size={14} />
+            </button>
+          </div>
+        )}
       </>
     );
   }
@@ -8014,6 +8329,13 @@ export function App({ initialSlug }: { initialSlug?: string }) {
               onSignOut={handleSignOut}
               theme={theme}
               onToggleTheme={toggleTheme}
+              pricingCohort={pricingCohort === 'india' ? 'india' : 'global'}
+              subscriptionStatus={subscriptionStatus}
+              currentPeriodEnd={currentPeriodEnd}
+              cancelAtPeriodEnd={cancelAtPeriodEnd}
+              customerId={customerId}
+              subscriptionId={subscriptionId}
+              onRefreshProfile={() => sessionUser && loadUserProfile(sessionUser.id)}
             />
           )}
           {view === 'changelog' && <ChangelogPage onLaunch={launchApp} />}
@@ -8065,7 +8387,50 @@ export function App({ initialSlug }: { initialSlug?: string }) {
       </div>
       <EnterpriseModal open={enterpriseOpen} onClose={() => setEnterpriseOpen(false)} />
       <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} supabase={supabase} />
-      <PaywallModal open={showPaywall} onClose={() => setShowPaywall(false)} brandName={brandName} pricingData={pricingData} sessionUser={sessionUser} supabase={supabase} pricingCohort={pricingCohort} />
+      <PaywallModal 
+        open={showPaywall} 
+        onClose={() => setShowPaywall(false)} 
+        brandName={brandName} 
+        pricingData={pricingData} 
+        sessionUser={sessionUser} 
+        supabase={supabase} 
+        pricingCohort={pricingCohort} 
+        userPlan={userPlan}
+        setUserPlan={setUserPlan}
+      />
+      {showSuccessBanner && (
+        <div style={{
+          position: 'fixed', bottom: 24, right: 24, zIndex: 10000,
+          background: 'oklch(0.20 0.04 145 / 0.85)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid oklch(0.70 0.15 145 / 0.3)',
+          borderRadius: 12, padding: '16px 20px', maxWidth: 380,
+          boxShadow: '0 10px 30px oklch(0 0 0 / 0.3)',
+          display: 'flex', gap: 14, alignItems: 'flex-start',
+          animation: 'slideUp 0.3s ease-out'
+        }} className="fade-in">
+          <div style={{
+            background: 'oklch(0.70 0.15 145 / 0.15)',
+            border: '1px solid oklch(0.70 0.15 145 / 0.3)',
+            borderRadius: '50%', width: 36, height: 36,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'oklch(0.75 0.16 145)', flexShrink: 0
+          }}>
+            <Icon.Check size={20} strokeWidth={2.5} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h4 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'white' }}>Sandbox Subscription Verified!</h4>
+            <p style={{ margin: 0, fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.4 }}>
+              Congratulations! Your Creem sandbox payment succeeded. Welcome to the Pro tier.
+            </p>
+          </div>
+          <button onClick={() => setShowSuccessBanner(false)} className="reset" style={{
+            color: 'var(--fg-subtle)', cursor: 'pointer', background: 'none', border: 'none', padding: 0
+          }}>
+            <Icon.X size={14} />
+          </button>
+        </div>
+      )}
     </>
   );
 }

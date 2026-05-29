@@ -44,6 +44,30 @@ export async function POST(req: Request) {
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+    // 3.5. Handle Sandbox Simulator Bypass (Strategy B)
+    if (token === 'ms_sandbox_free_7a2f8d1c9b3e') {
+      const isJson = tool === 'json' || tool === 'json-formatter';
+      const mockResult = isJson 
+        ? "{\n  \"status\": \"success\",\n  \"data\": {\n    \"name\": \"John Doe\",\n    \"role\": \"Lead B2B Developer\",\n    \"company\": \"Acme Corp\",\n    \"hobbies\": [\n      \"coding\",\n      \"debugging\"\n    ]\n  }\n}"
+        : `# Formatted Document Report\n\n${content.trim()}\n\n---\n*Formatted programmatically in Sandbox mode via MySaaS API.*`;
+
+      return NextResponse.json({
+        status: 'success',
+        mode: 'sandbox_simulator',
+        notice: 'Upgrade to Pro to process real documents programmatically with live production keys.',
+        data: {
+          formatted: mockResult,
+          metadata: {
+            chars_processed: content.length,
+            words_count: content.split(/\s+/).filter(Boolean).length,
+            tier: 'free_sandbox',
+            api_requests_today: 1,
+            timestamp: new Date().toISOString()
+          }
+        }
+      });
+    }
+
     // 4. Query profile by active API key
     const { data: profile, error: profileError } = await supabase
       .from('profiles')
@@ -101,11 +125,15 @@ export async function POST(req: Request) {
     }
 
     // 6. Log Usage in Database
+    const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    const ipHash = clientIp.split(',')[0].trim();
+
     const { error: logError } = await supabase
       .from('usage_logs')
       .insert({
         user_id: profile.id,
         tool_id: tool,
+        ip_hash: ipHash,
         tier: isProOrAdmin ? 3 : 1
       });
 
@@ -115,6 +143,57 @@ export async function POST(req: Request) {
 
     // 7. Process / Format Text content programmatically on server
     const rawText = content.trim();
+
+    if (tool === 'json' || tool === 'json-formatter') {
+      try {
+        const parsed = JSON.parse(rawText);
+        const formatted = JSON.stringify(parsed, null, 2);
+        return NextResponse.json({
+          status: 'success',
+          data: {
+            formatted: formatted,
+            metadata: {
+              chars_processed: rawText.length,
+              isValid: true,
+              repaired: false,
+              tier: profile.tier,
+              api_requests_today: currentCount + 1,
+              timestamp: new Date().toISOString()
+            }
+          }
+        });
+      } catch (e: any) {
+        // Try a simple auto-repair for common issues (like single quotes or trailing commas)
+        try {
+          let repairedContent = rawText
+            .replace(/'/g, '"') // Replace single quotes with double quotes
+            .replace(/,\s*([}\]])/g, '$1'); // Remove trailing commas
+          const parsed = JSON.parse(repairedContent);
+          const formatted = JSON.stringify(parsed, null, 2);
+          return NextResponse.json({
+            status: 'repaired',
+            data: {
+              formatted: formatted,
+              metadata: {
+                chars_processed: rawText.length,
+                isValid: true,
+                repaired: true,
+                tier: profile.tier,
+                api_requests_today: currentCount + 1,
+                timestamp: new Date().toISOString()
+              }
+            }
+          });
+        } catch {
+          return NextResponse.json({
+            status: 'error',
+            message: `Invalid JSON payload. Parse error: ${e.message}`
+          }, { status: 400 });
+        }
+      }
+    }
+
+    // Default: AI / Document formatting tool
     let formattedText = rawText;
 
     if (style === 'academic') {
