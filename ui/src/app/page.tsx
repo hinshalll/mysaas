@@ -7515,9 +7515,10 @@ interface PaywallModalProps {
   userPlan: 'free' | 'pro' | 'admin' | 'api';
   setUserPlan: (plan: 'free' | 'pro' | 'admin' | 'api') => void;
   subscriptionId: string | null;
+  cancelAtPeriodEnd: boolean;
 }
 
-function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supabase, pricingCohort, userPlan, setUserPlan, subscriptionId }: PaywallModalProps) {
+function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supabase, pricingCohort, userPlan, setUserPlan, subscriptionId, cancelAtPeriodEnd }: PaywallModalProps) {
   const [checkoutSpinner, setCheckoutSpinner] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -7555,6 +7556,11 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
       const isChangingPlan = (userPlan === 'pro' || userPlan === 'api') && !!subscriptionId;
 
       if (isChangingPlan) {
+        if (cancelAtPeriodEnd) {
+          setCheckoutError("Your active plan is scheduled for cancellation at the end of this billing cycle. To change plans, please manage your billing in the portal or wait until the current billing period ends to subscribe to a new tier.");
+          setCheckoutSpinner(false);
+          return;
+        }
         // Programmatically swap plans with native Stripe proration via our API
         const response = await fetch('/billing/upgrade', {
           method: 'POST',
@@ -8340,6 +8346,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
           userPlan={userPlan}
           setUserPlan={setUserPlan}
           subscriptionId={subscriptionId}
+          cancelAtPeriodEnd={cancelAtPeriodEnd}
         />
         {showSuccessBanner && (
           <div style={{
@@ -8503,6 +8510,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
         userPlan={userPlan}
         setUserPlan={setUserPlan}
         subscriptionId={subscriptionId}
+        cancelAtPeriodEnd={cancelAtPeriodEnd}
       />
       {showSuccessBanner && (
         <div style={{

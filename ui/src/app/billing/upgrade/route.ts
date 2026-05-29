@@ -79,7 +79,13 @@ export async function POST(req: Request) {
     if (!creemResponse.ok) {
       const errorText = await creemResponse.text();
       console.error('Creem subscription upgrade failed:', errorText);
-      return NextResponse.json({ error: 'Failed to update subscription in payment gateway.' }, { status: 502 });
+      let errorMessage = 'Failed to update subscription in payment gateway.';
+      try {
+        const parsed = JSON.parse(errorText);
+        if (parsed.message) errorMessage = parsed.message;
+        else if (parsed.error) errorMessage = parsed.error;
+      } catch {}
+      return NextResponse.json({ error: errorMessage }, { status: 502 });
     }
 
     const updatedSubscription = await creemResponse.json();
