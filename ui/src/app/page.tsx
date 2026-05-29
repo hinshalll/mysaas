@@ -4847,7 +4847,7 @@ function AboutPage({ onLaunch, brandName }: AboutPageProps) {
 
           <h2 style={{ fontSize: 20, color: 'var(--fg)', fontWeight: 600, margin: '24px 0 8px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Monetization Model: Metered Freemium & PPP</h2>
           <p>
-            To make this tool accessible worldwide, we leverage **Purchasing Power Parity (PPP)** pricing:
+            Flat-rate pricing is simple and transparent:
           </p>
           <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
@@ -4857,7 +4857,7 @@ function AboutPage({ onLaunch, brandName }: AboutPageProps) {
               <strong style={{ color: 'var(--fg)' }}>Tier 2 (Metered)</strong>: 2 free daily runs on heavier operations (OCR, PDF bank statements, scanned extraction).
             </li>
             <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
-              <strong style={{ color: 'var(--fg)' }}>Tier 3 (Pro)</strong>: High-fidelity B2B utilities, saved history database, and batch processing up to 500 files at once for $9/month globally or ₹199/month in India/Domestic.
+              <strong style={{ color: 'var(--fg)' }}>Tier 3 (Pro)</strong>: High-fidelity B2C utilities, saved history database, and batch processing up to 500 files at once for $9/month globally.
             </li>
           </ul>
 
@@ -5901,10 +5901,7 @@ function AccountPage({
   const nextStr = formatter.format(nextDate);
 
   const planName = userPlan === 'api' ? 'Developer API Pro' : userPlan === 'pro' ? 'Pro Workspace' : userPlan === 'admin' ? 'System Administrator' : 'Free Tier';
-  const isIndia = pricingCohort === 'india';
-  const planPrice = isIndia 
-    ? (userPlan === 'api' ? '₹999' : userPlan === 'pro' ? '₹199' : '₹0')
-    : (userPlan === 'api' ? '$29.00' : userPlan === 'pro' ? '$9.00' : '$0.00');
+  const planPrice = userPlan === 'api' ? '$29.00' : userPlan === 'pro' ? '$9.00' : '$0.00';
   const planPeriod = userPlan === 'free' ? 'forever' : 'month';
   const planLimits = userPlan === 'api' 
     ? 'Unlimited browser usage + 30,000 monthly API bearer token runs' 
@@ -6380,9 +6377,19 @@ function AccountPage({
               )}
 
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto' }}>
-                <div style={{ display: 'flex', gap: 12, width: '100%' }}>
-                  {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? (
-                    <>
+                {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                    <button onClick={onShowPaywall} className="reset" style={{
+                      width: '100%', padding: '10px 14px', borderRadius: 8,
+                      background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
+                      border: '1px solid var(--border)',
+                      color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                      textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                    }}>
+                      <Icon.Sparkles size={14} style={{ color: 'white' }} />
+                      <span>Change Plan (Upgrade / Downgrade)</span>
+                    </button>
+                    <div style={{ display: 'flex', gap: 10, width: '100%' }}>
                       <button onClick={handleManageBilling} className="reset" style={{
                         flex: 1, padding: '10px 14px', borderRadius: 8,
                         background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
@@ -6399,8 +6406,10 @@ function AccountPage({
                           color: 'oklch(0.78 0.16 15)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
                         }}>Cancel Subscription</button>
                       )}
-                    </>
-                  ) : (
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: 12, width: '100%' }}>
                     <button onClick={onShowPaywall} className="reset" style={{
                       flex: 1, padding: '10px 14px', borderRadius: 8,
                       background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
@@ -6411,8 +6420,8 @@ function AccountPage({
                       <Icon.Sparkles size={14} style={{ color: 'white' }} />
                       <span>Upgrade to Premium</span>
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -6659,6 +6668,78 @@ function AccountPage({
         onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
         >Return to App Console</button>
       </div>
+
+      {/* Subscription Cancellation Confirmation Dialog Modal */}
+      {cancelModalOpen && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 10000,
+          background: 'oklch(0.12 0.005 250 / 0.75)',
+          backdropFilter: 'blur(16px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: 20,
+        }} onClick={() => setCancelModalOpen(false)}>
+          <div style={{
+            width: '100%', maxWidth: 460,
+            background: 'var(--bg-elev-1)',
+            border: '1px solid oklch(0.60 0.20 20 / 0.3)',
+            borderRadius: 16,
+            padding: 28,
+            boxShadow: '0 20px 40px oklch(0 0 0 / 0.4)',
+            display: 'flex', flexDirection: 'column', gap: 20,
+            animation: 'fadeIn 0.2s ease-out',
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <span style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 40, height: 40, borderRadius: '50%',
+                background: 'oklch(0.18 0.010 20 / 0.15)',
+                border: '1px solid oklch(0.60 0.20 20 / 0.3)',
+                color: 'oklch(0.65 0.22 20)',
+              }}>
+                <Icon.AlertCircle size={20} />
+              </span>
+              <div>
+                <h3 style={{ fontSize: 16, fontWeight: 600, color: 'white', margin: 0 }}>Cancel Subscription?</h3>
+                <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Confirm subscription cancellation request</p>
+              </div>
+            </div>
+
+            <p style={{ fontSize: 13, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
+              Are you sure you want to cancel your premium subscription? You will still retain active access to all **{planName}** features until **{nextStr}**, after which your account will return to the Free Tier.
+            </p>
+
+            <div style={{ display: 'flex', gap: 12, borderTop: '1px solid var(--border)', paddingTop: 18 }}>
+              <button
+                type="button"
+                onClick={() => setCancelModalOpen(false)}
+                className="reset"
+                style={{
+                  flex: 1, padding: '10px 14px', borderRadius: 8,
+                  background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                  color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                  textAlign: 'center'
+                }}
+              >
+                No, Keep Premium
+              </button>
+              <button
+                type="button"
+                disabled={isCancelingSub}
+                onClick={handleCancelSubscription}
+                className="reset"
+                style={{
+                  flex: 1, padding: '10px 14px', borderRadius: 8,
+                  background: 'oklch(0.65 0.22 20)',
+                  color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                  textAlign: 'center'
+                }}
+              >
+                {isCancelingSub ? 'Canceling...' : 'Yes, Cancel Plan'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -7562,10 +7643,10 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
               <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'oklch(0.70 0.12 145)' }}>
                   <Icon.Check size={12} strokeWidth={2.5} />
-                  <span>Purchasing Power Parity Active</span>
+                  <span>Global Sandbox Portal</span>
                 </div>
                 <p style={{ fontSize: 11, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.35 }}>
-                  Pricing automatically optimized for {pricingCohort === 'india' ? 'India economics' : 'global economics'} ({pricingCohort.toUpperCase()}).
+                  Flat-rate pricing is simple and transparent. Test credit cards accepted.
                 </p>
               </div>
             </div>
@@ -7900,20 +7981,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
       }
 
       setCountryCode(cc);
-      if (cc === 'IN') {
-        setPricingCohort('india');
-      } else {
-        const midIncome = ['BR', 'MX', 'TR', 'ZA', 'RU', 'CN', 'MY', 'TH', 'CO', 'PE', 'AR', 'CL', 'UA', 'PL', 'RO', 'HU'];
-        const highIncome = ['US', 'CA', 'GB', 'AU', 'NZ', 'DE', 'FR', 'JP', 'SG', 'HK', 'CH', 'IE', 'SE', 'NO', 'DK', 'FI', 'NL', 'BE', 'AT', 'KR', 'TW', 'IL'];
-        
-        if (highIncome.includes(cc)) {
-          setPricingCohort('high');
-        } else if (midIncome.includes(cc)) {
-          setPricingCohort('mid');
-        } else {
-          setPricingCohort('low');
-        }
-      }
+      setPricingCohort('high');
     }
     fetchCountry();
   }, []);
