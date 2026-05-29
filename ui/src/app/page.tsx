@@ -7514,9 +7514,10 @@ interface PaywallModalProps {
   pricingCohort: string;
   userPlan: 'free' | 'pro' | 'admin' | 'api';
   setUserPlan: (plan: 'free' | 'pro' | 'admin' | 'api') => void;
+  subscriptionId: string | null;
 }
 
-function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supabase, pricingCohort, userPlan, setUserPlan }: PaywallModalProps) {
+function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supabase, pricingCohort, userPlan, setUserPlan, subscriptionId }: PaywallModalProps) {
   const [checkoutSpinner, setCheckoutSpinner] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
@@ -7550,8 +7551,8 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
         return;
       }
 
-      // Check if user is upgrading/downgrading from an existing plan
-      const isChangingPlan = userPlan === 'pro' || userPlan === 'api';
+      // Check if user is upgrading/downgrading from an existing plan (fallback to new checkout if no subscriptionId is linked in database yet)
+      const isChangingPlan = (userPlan === 'pro' || userPlan === 'api') && !!subscriptionId;
 
       if (isChangingPlan) {
         // Programmatically swap plans with native Stripe proration via our API
@@ -8338,6 +8339,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
           pricingCohort={pricingCohort} 
           userPlan={userPlan}
           setUserPlan={setUserPlan}
+          subscriptionId={subscriptionId}
         />
         {showSuccessBanner && (
           <div style={{
@@ -8500,6 +8502,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
         pricingCohort={pricingCohort} 
         userPlan={userPlan}
         setUserPlan={setUserPlan}
+        subscriptionId={subscriptionId}
       />
       {showSuccessBanner && (
         <div style={{
