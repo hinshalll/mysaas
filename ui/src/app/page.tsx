@@ -7534,8 +7534,13 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
   const currency = pricingData.currency;
 
   async function handlePlanClick(planName: 'pro' | 'api') {
-    setCheckoutSpinner(true);
     setCheckoutError(null);
+    if (userPlan === planName) {
+      setCheckoutError(`You are already subscribed to the ${planName === 'api' ? 'Developer API Pro' : 'Pro Workspace'} plan.`);
+      return;
+    }
+
+    setCheckoutSpinner(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -7545,6 +7550,34 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
         return;
       }
 
+      // Check if user is upgrading/downgrading from an existing plan
+      const isChangingPlan = userPlan === 'pro' || userPlan === 'api';
+
+      if (isChangingPlan) {
+        // Programmatically swap plans with native Stripe proration via our API
+        const response = await fetch('/billing/upgrade', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            planId: planName,
+            token
+          }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to update subscription tier.');
+        }
+
+        // Instantly reload into their account dashboard showing success
+        setUserPlan(planName);
+        window.location.href = '/account?checkout=success';
+        return;
+      }
+
+      // If they are on a free tier, construct new checkout session
       const cohort = pricingCohort === 'india' ? 'india' : 'global';
 
       const response = await fetch('/billing/checkout', {
