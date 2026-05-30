@@ -43,7 +43,8 @@ export async function POST(req: Request) {
     const isTestMode = process.env.CREEM_API_KEY?.startsWith('creem_test_') ?? true;
     const CREEM_BASE_URL = isTestMode ? 'https://test-api.creem.io/v1' : 'https://api.creem.io/v1';
 
-    const successUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://mysaastools.vercel.app'}/account?checkout=success`;
+    const requestUrl = new URL(req.url);
+    const successUrl = `${requestUrl.origin}/account?checkout=success`;
 
     const creemResponse = await fetch(`${CREEM_BASE_URL}/checkouts`, {
       method: 'POST',

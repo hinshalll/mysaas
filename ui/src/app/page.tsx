@@ -5911,6 +5911,41 @@ function AccountPage({
     fetchUsage();
   }, [sessionUser]);
 
+  // Auto-sync billing status on mount to ensure database self-heals silently
+  useEffect(() => {
+    if (!supabase || !sessionUser || isAnonUser) return;
+    
+    let active = true;
+    
+    async function autoSyncBilling() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token || !active) return;
+
+        const response = await fetch('/billing/sync', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        });
+
+        if (response.ok && active) {
+          onRefreshProfile();
+        }
+      } catch (err) {
+        console.warn("Silent billing auto-sync bypassed:", err);
+      }
+    }
+
+    autoSyncBilling();
+
+    return () => {
+      active = false;
+    };
+  }, [sessionUser, isAnonUser]);
+
   if (!isLoggedIn) {
     return (
       <div style={{ maxWidth: 640, margin: '80px auto', padding: '0 32px', textAlign: 'center' }}>
@@ -6357,7 +6392,7 @@ function AccountPage({
                       <>
                         <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.65 0.20 50)', boxShadow: '0 0 8px oklch(0.65 0.20 50)' }} />
                         <span style={{ fontSize: 12, color: 'oklch(0.65 0.20 50)', fontWeight: 600 }}>
-                          Canceling (Grace Period)
+                          Active (Canceling)
                         </span>
                       </>
                     ) : (userPlan === 'pro' || userPlan === 'api') ? (
@@ -6442,15 +6477,6 @@ function AccountPage({
                         }}>Cancel Subscription</button>
                       )}
                     </div>
-                    <button onClick={handleSyncBilling} disabled={isSyncingBilling} className="reset" style={{
-                      width: '100%', padding: '10px 14px', borderRadius: 8,
-                      background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-                      color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                      textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                    }}>
-                      <Icon.Loader size={14} style={{ animation: isSyncingBilling ? 'spin 1s linear infinite' : 'none' }} />
-                      <span>{isSyncingBilling ? 'Synchronizing Status...' : 'Sync & Refresh Billing Status'}</span>
-                    </button>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
@@ -6463,15 +6489,6 @@ function AccountPage({
                     }}>
                       <Icon.Sparkles size={14} style={{ color: 'white' }} />
                       <span>Upgrade to Premium</span>
-                    </button>
-                    <button onClick={handleSyncBilling} disabled={isSyncingBilling} className="reset" style={{
-                      width: '100%', padding: '10px 14px', borderRadius: 8,
-                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                      color: 'var(--fg-dim)', fontWeight: 550, fontSize: 12, cursor: 'pointer',
-                      textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                    }}>
-                      <Icon.Loader size={12} style={{ animation: isSyncingBilling ? 'spin 1s linear infinite' : 'none' }} />
-                      <span>{isSyncingBilling ? 'Syncing...' : 'Sync & Refresh Billing Status'}</span>
                     </button>
                   </div>
                 )}

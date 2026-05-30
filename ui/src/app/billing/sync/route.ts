@@ -91,7 +91,7 @@ export async function POST(req: Request) {
     const customerId = customer.id;
 
     // 5. List all active subscriptions for this customer from Creem
-    const subsResponse = await fetch(`${CREEM_BASE_URL}/subscriptions?customer_id=${customerId}`, {
+    const subsResponse = await fetch(`${CREEM_BASE_URL}/customers/${customerId}/subscriptions`, {
       method: 'GET',
       headers: {
         'x-api-key': process.env.CREEM_API_KEY || '',
@@ -108,7 +108,9 @@ export async function POST(req: Request) {
     if (Array.isArray(subsData)) {
       subsList = subsData;
     } else if (subsData && typeof subsData === 'object') {
-      if (Array.isArray(subsData.data)) {
+      if (Array.isArray(subsData.items)) {
+        subsList = subsData.items;
+      } else if (Array.isArray(subsData.data)) {
         subsList = subsData.data;
       } else {
         subsList = [subsData];
