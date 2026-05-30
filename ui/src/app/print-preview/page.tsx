@@ -8,12 +8,11 @@ export default function PrintPreviewPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    // Clear any previous print html first to avoid stale data
-    localStorage.removeItem('print_html');
-
     function checkAndPrint() {
       const html = localStorage.getItem('print_html');
       if (html) {
+        // Clean up localStorage immediately upon consumption to prevent lingering stale data
+        localStorage.removeItem('print_html');
         setLoading(false);
         document.open();
         document.write(html);
