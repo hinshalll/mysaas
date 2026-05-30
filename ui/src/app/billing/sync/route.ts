@@ -119,7 +119,7 @@ export async function POST(req: Request) {
 
     // Filter for active, trialing, or grace-period active subscriptions
     const activeSub = subsList.find((sub: any) => 
-      ['active', 'trialing', 'past_due', 'cancelling'].includes(sub.status || '')
+      ['active', 'trialing', 'past_due', 'cancelling', 'scheduled_cancel'].includes(sub.status || '')
     );
 
     if (!activeSub) {
@@ -162,10 +162,10 @@ export async function POST(req: Request) {
         customer_id: customerId,
         subscription_status: activeSub.status || 'active',
         tier: resolvedTier,
-        current_period_start: activeSub.current_period_start || new Date().toISOString(),
-        current_period_end: activeSub.current_period_end || null,
-        canceled_at: activeSub.canceled_at || null,
-        cancel_at_period_end: activeSub.cancel_at_period_end || false,
+        current_period_start: activeSub.currentPeriodStartDate || activeSub.current_period_start || activeSub.current_period_start_date || new Date().toISOString(),
+        current_period_end: activeSub.currentPeriodEndDate || activeSub.current_period_end || activeSub.current_period_end_date || null,
+        canceled_at: activeSub.canceledAt || activeSub.canceled_at || null,
+        cancel_at_period_end: activeSub.status === 'scheduled_cancel' || !!activeSub.cancel_at_period_end,
       })
       .eq('id', user.id);
 

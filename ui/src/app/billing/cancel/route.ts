@@ -56,6 +56,11 @@ export async function POST(req: Request) {
         'x-api-key': process.env.CREEM_API_KEY || '',
         'Content-Type': 'application/json',
       },
+      body: JSON.stringify({
+        mode: 'scheduled',
+        onExecute: 'cancel',
+        on_execute: 'cancel',
+      }),
     });
 
     if (!creemResponse.ok) {
