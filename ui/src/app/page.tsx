@@ -5753,6 +5753,41 @@ function AccountPage({
 
   const [uuidCopied, setUuidCopied] = useState(false);
   const [dailyUsageCount, setDailyUsageCount] = useState(0);
+  const [isSyncingBilling, setIsSyncingBilling] = useState(false);
+
+  const handleSyncBilling = async () => {
+    setIsSyncingBilling(true);
+    setBillingMessage(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setBillingMessage("Authentication session expired. Try logging in again.");
+        setBillingSuccess(false);
+        return;
+      }
+
+      const response = await fetch('/billing/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to sync status.');
+
+      setBillingSuccess(true);
+      setBillingMessage(`✓ ${data.message}`);
+      onRefreshProfile();
+    } catch (err: any) {
+      setBillingSuccess(false);
+      setBillingMessage("Sync failed: " + err.message);
+    } finally {
+      setIsSyncingBilling(false);
+    }
+  };
 
   // Secure customer portal dynamic redirection
   const handleManageBilling = async () => {
@@ -6407,11 +6442,20 @@ function AccountPage({
                         }}>Cancel Subscription</button>
                       )}
                     </div>
+                    <button onClick={handleSyncBilling} disabled={isSyncingBilling} className="reset" style={{
+                      width: '100%', padding: '10px 14px', borderRadius: 8,
+                      background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+                      color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                      textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                    }}>
+                      <Icon.Loader size={14} style={{ animation: isSyncingBilling ? 'spin 1s linear infinite' : 'none' }} />
+                      <span>{isSyncingBilling ? 'Synchronizing Status...' : 'Sync & Refresh Billing Status'}</span>
+                    </button>
                   </div>
                 ) : (
-                  <div style={{ display: 'flex', gap: 12, width: '100%' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
                     <button onClick={onShowPaywall} className="reset" style={{
-                      flex: 1, padding: '10px 14px', borderRadius: 8,
+                      width: '100%', padding: '10px 14px', borderRadius: 8,
                       background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
                       border: '1px solid var(--border)',
                       color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
@@ -6419,6 +6463,15 @@ function AccountPage({
                     }}>
                       <Icon.Sparkles size={14} style={{ color: 'white' }} />
                       <span>Upgrade to Premium</span>
+                    </button>
+                    <button onClick={handleSyncBilling} disabled={isSyncingBilling} className="reset" style={{
+                      width: '100%', padding: '10px 14px', borderRadius: 8,
+                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                      color: 'var(--fg-dim)', fontWeight: 550, fontSize: 12, cursor: 'pointer',
+                      textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                    }}>
+                      <Icon.Loader size={12} style={{ animation: isSyncingBilling ? 'spin 1s linear infinite' : 'none' }} />
+                      <span>{isSyncingBilling ? 'Syncing...' : 'Sync & Refresh Billing Status'}</span>
                     </button>
                   </div>
                 )}
