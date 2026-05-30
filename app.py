@@ -1,7 +1,7 @@
 import streamlit as st
 import re
-from engines.tool_ai_formatter import generate_document
-from engines.tool_json import process_json
+from ui.src.app.tools.universal_ai_formatter.engine import generate_document
+from ui.src.app.tools.json_formatter_validator.engine import process_json
 
 # --- GLOBAL CONFIGURATION ---
 GLOBAL_APP_NAME = "MySaaS"
