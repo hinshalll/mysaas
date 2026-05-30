@@ -8527,7 +8527,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     const currentLimit = isTier2 ? limitTier2 : limitTier1;
 
     if (count >= currentLimit) {
-      setShowPaywall(true);
+      handleShowPaywall();
       return false;
     }
 
@@ -8543,7 +8543,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     }
 
     return true;
-  }, [sessionUser, isAnonUser, userPlan]);
+  }, [sessionUser, isAnonUser, userPlan, handleShowPaywall]);
 
   // Initialize theme from localStorage on client side mount
   useEffect(() => {
