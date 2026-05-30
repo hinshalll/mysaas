@@ -8616,21 +8616,24 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     }
   }, []);
 
-  const handleShowPaywall = useCallback((reason?: 'limit' | 'upgrade') => {
+  const handleShowPaywall = useCallback((reason?: 'limit' | 'upgrade', toolName?: string, currentLimit?: number) => {
     const isGuest = !sessionUser || isAnonUser;
 
     if (reason === 'limit') {
+      const displayTool = toolName || 'our SaaS tools';
+      const displayLimit = currentLimit || (isGuest ? 5 : 20);
+
       if (isGuest) {
         setCustomAlert({
-          title: "Daily Limit Reached",
-          message: "You've reached the free guest limit of 5 runs today. Please sign in or create a free account to increase your limit to 20 daily runs, or upgrade to a Pro workspace for unlimited high-speed exports!",
+          title: `Limit Reached for ${displayTool}`,
+          message: `You've reached the free guest limit of ${displayLimit} daily runs for ${displayTool}. Please sign in or create a free account to increase your limit to 20 daily runs, or upgrade to a Pro workspace for unlimited high-speed exports!`,
           actionLabel: "Sign In / Up",
           onAction: () => setAuthOpen(true)
         });
       } else {
         setCustomAlert({
-          title: "Daily Limit Reached",
-          message: "You've reached your free limit of 20 daily runs. Upgrade to a Pro workspace to get unlimited high-speed exports, premium formatting themes, and API access!",
+          title: `Limit Reached for ${displayTool}`,
+          message: `You've reached your free limit of ${displayLimit} daily runs for ${displayTool}. Upgrade to a Pro workspace to get unlimited high-speed exports, premium formatting themes, and API access!`,
           actionLabel: "Upgrade to Pro",
           onAction: () => setShowPaywall(true)
         });
@@ -8870,7 +8873,9 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     const currentLimit = isTier2 ? limitTier2 : limitTier1;
 
     if (count >= currentLimit) {
-      handleShowPaywall('limit');
+      const tool = ALL_TOOLS.find(t => t.id === toolId);
+      const toolName = tool ? tool.name : 'this tool';
+      handleShowPaywall('limit', toolName, currentLimit);
       return false;
     }
 
