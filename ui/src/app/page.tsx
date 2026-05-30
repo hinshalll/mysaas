@@ -4712,15 +4712,16 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
       }}>
         {/* Tier 1 */}
         <div className="glass-card">
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 1: Free</div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 1: Free</div>
           <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Zero-Compute</h2>
           <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>$0 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ forever</span></div>
-          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Perfect for quick daily copy-pastes and text utilities.</p>
+          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Perfect for quick daily copy-pastes and standard interactive tools.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
-            <Feature on={true}>Unlimited daily usage on Free Tools</Feature>
-            <Feature on={true}>Universal AI Formatter (Tool 1)</Feature>
+            <Feature on={true}>20 daily runs on Free tools</Feature>
+            <Feature on={true}>2 daily high-compute OCR scans</Feature>
             <Feature on={true}>JSON Formatter & Validator</Feature>
-            <Feature on={false}>Bulk & batch statements processing</Feature>
+            <Feature on={false}>Unlimited browser tool runs</Feature>
+            <Feature on={false}>Developer API bearer keys</Feature>
           </ul>
           <button onClick={onLaunch} className="reset" style={{
             width: '100%', padding: '12px', borderRadius: 8,
@@ -4731,7 +4732,7 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           }}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
           onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
-          >Get Started</button>
+          >Get Started Free</button>
         </div>
 
         {/* Tier 2 */}
@@ -4748,15 +4749,16 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
             fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 12,
             textTransform: 'uppercase', letterSpacing: '0.05em',
           }} className="mono">Popular</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 2: Metered</div>
-          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Moderate-Compute</h2>
-          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>2 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>free runs / day</span></div>
-          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Full access to locked parsers, OCR, bank statements, and subtitle resyncer tools.</p>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 2: Pro</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Pro Workspace</h2>
+          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>$9 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ month</span></div>
+          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Complete interactive browser-level cockpit for heavy document workflows.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
-            <Feature on={true}>2 free runs/day on Tier 2 Tools</Feature>
-            <Feature on={true}>Screenshot to Excel & PDF Extractor</Feature>
-            <Feature on={true}>Generic PDF Bank Parser</Feature>
-            <Feature on={true}>Auto-Redactor & Subtitle Syncer</Feature>
+            <Feature on={true} em={true}>Unlimited browser tool runs</Feature>
+            <Feature on={true} em={true}>1,000 high-fidelity OCR scans/mo</Feature>
+            <Feature on={true} em={true}>Visual PDF Diff Checker</Feature>
+            <Feature on={true} em={true}>Custom branded watermark removal</Feature>
+            <Feature on={false}>Developer API bearer keys</Feature>
           </ul>
           <button onClick={onLaunch} className="reset" style={{
             width: '100%', padding: '12px', borderRadius: 8,
@@ -4764,20 +4766,21 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
             color: 'white', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
             textAlign: 'center', marginTop: 'auto',
             boxShadow: '0 4px 14px oklch(0.50 0.20 265 / 0.3)',
-          }}>Try Metered Free</button>
+          }}>Unlock Pro Vault</button>
         </div>
 
         {/* Tier 3 */}
         <div className="glass-card">
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 3: Pro</div>
-          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Pro Workspace</h2>
-          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>$9 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ month</span></div>
-          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>For heavy workflows, B2B parsing, teams, and high-volume parsing.</p>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.16 145)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 3: API</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Developer API Pro</h2>
+          <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>$29 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ month</span></div>
+          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Direct programmatic integration, massive metered query bounds, and data webhooks.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
-            <Feature on={true} em={true}>Unlimited daily runs on all tools</Feature>
-            <Feature on={true} em={true}>Visual PDF Diff Checker</Feature>
-            <Feature on={true} em={true}>Bulk & Batch process 500 files</Feature>
-            <Feature on={true} em={true}>Custom branded exports & watermarks</Feature>
+            <Feature on={true} em={true}><strong>All Pro Workspace features included</strong></Feature>
+            <Feature on={true} em={true}><strong>30,000 monthly API bearer token runs</strong></Feature>
+            <Feature on={true} em={true}><strong>Direct Developer API keys console</strong></Feature>
+            <Feature on={true} em={true}>Custom webhooks and callbacks</Feature>
+            <Feature on={true} em={true}>Priority API server computing bounds</Feature>
           </ul>
           <button onClick={onLaunch} className="reset" style={{
             width: '100%', padding: '12px', borderRadius: 8,
@@ -4788,7 +4791,7 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           }}
           onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
           onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
-          >Unlock Pro Vault</button>
+          >Get API Vault Keys</button>
         </div>
       </div>
 
@@ -7788,33 +7791,66 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
           <div style={{ display: 'flex', flexDirection: 'row', minHeight: 460 }} className="fade-in">
             {/* Left Info bar */}
             <div style={{
-              flex: '1.1', background: 'oklch(0.16 0.012 265 / 0.4)',
-              borderRight: '1px solid var(--border)', padding: 36,
-              display: 'flex', flexDirection: 'column', gap: 24
+              flex: '1.2', background: 'oklch(0.16 0.012 265 / 0.4)',
+              borderRight: '1px solid var(--border)', padding: '36px 30px',
+              display: 'flex', flexDirection: 'column', gap: 28,
+              boxSizing: 'border-box'
             }}>
               <div>
-                <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Vault Access</span>
-                <h3 style={{ fontSize: 22, fontWeight: 600, color: 'white', margin: '6px 0 0', letterSpacing: '-0.02em' }}>Choose Your Tier</h3>
+                <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Vault Access Comparison</span>
+                <h3 style={{ fontSize: 21, fontWeight: 600, color: 'white', margin: '6px 0 0', letterSpacing: '-0.02em' }}>Understand Your Benefits</h3>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <span className="mono" style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Unlocked Pro Features</span>
-                <ul style={{ ...listStyle, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <Feature on={true} em={true}>Unlimited runs on all 20+ tools</Feature>
-                  <Feature on={true} em={true}>High-compute PDF scanned OCR</Feature>
-                  <Feature on={true} em={true}>Visual PDF Diff Checker</Feature>
-                  <Feature on={true} em={true}>White-Label output watermark removal</Feature>
-                  <Feature on={true} em={true}>Persistent database history sync</Feature>
-                </ul>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                {/* 1. Pro Workspace Block */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.70 0.18 265)' }} />
+                    Pro Workspace Tier ($9/mo)
+                  </span>
+                  <ul style={{ ...listStyle, display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 12 }}>
+                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> Unlimited browser tool computing
+                    </li>
+                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> 1,000 PDF document OCR scans/mo
+                    </li>
+                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> PDF Diff tool & watermark removal
+                    </li>
+                  </ul>
+                </div>
+
+                {/* 2. Developer API Pro Block */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'oklch(0.78 0.16 145)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }} />
+                    Developer API Pro Tier ($29/mo)
+                  </span>
+                  <ul style={{ ...listStyle, display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 12 }}>
+                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>All Pro Workspace features included</strong>
+                    </li>
+                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>30,000 monthly API bearer token runs</strong>
+                    </li>
+                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>Direct Developer API keys console</strong>
+                    </li>
+                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> Custom webhook status callbacks
+                    </li>
+                  </ul>
+                </div>
               </div>
 
               <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'oklch(0.70 0.12 145)' }}>
                   <Icon.Check size={12} strokeWidth={2.5} />
-                  <span>Global Sandbox Portal</span>
+                  <span>Transparent Sandbox Proration</span>
                 </div>
                 <p style={{ fontSize: 11, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.35 }}>
-                  Flat-rate pricing is simple and transparent. Test credit cards accepted.
+                  Upgrade instantly at any time. Card details are charged safely and prorated immediately.
                 </p>
               </div>
             </div>
