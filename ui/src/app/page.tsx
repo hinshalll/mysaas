@@ -368,6 +368,7 @@ export const GLOBAL_CSS = `:root {
     .featured-grid { grid-template-columns: 1fr !important; }
     .featured-grid > div:last-child { justify-self: start; }
     .shelf-header h2 { display: none; }
+    .mobile-menu-btn { display: inline-flex !important; }
   }
 
   @media (max-width: 480px) {
@@ -482,6 +483,7 @@ function TopBar({
   brandName, setBrandName, sessionUser, isAnonUser, userPlan, onOpenAuthModal, onSignOut, onShowPaywall, onOpenTool
 }: TopBarProps) {
   const [isEditingBrand, setIsEditingBrand] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -696,6 +698,170 @@ function TopBar({
       title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
         {theme === 'dark' ? <Icon.Sun size={15} /> : <Icon.Moon size={15} />}
       </button>
+
+      {/* Mobile Menu Toggle Button */}
+      <button 
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="reset mobile-menu-btn"
+        style={{
+          display: 'none', // Hidden on desktop, shown on mobile via CSS
+          alignItems: 'center', justifyContent: 'center',
+          width: 32, height: 32, borderRadius: 8,
+          cursor: 'pointer',
+          background: mobileMenuOpen ? 'var(--bg-hover)' : 'var(--bg-elev-1)',
+          border: '1px solid var(--border)',
+          color: 'var(--fg)',
+          transition: 'all 0.2s',
+        }}
+        title="Toggle Menu"
+      >
+        {mobileMenuOpen ? <Icon.X size={15} /> : <Icon.Menu size={15} />}
+      </button>
+
+      {/* Mobile Menu Panel */}
+      {mobileMenuOpen && (
+        <div style={{
+          position: 'absolute',
+          top: 56, left: 0, right: 0,
+          background: 'oklch(0.145 0 0 / 0.95)',
+          backdropFilter: 'blur(20px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+          borderBottom: '1px solid var(--border)',
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          zIndex: 40,
+          boxShadow: '0 20px 40px oklch(0 0 0 / 0.5)',
+          animation: 'slideDownMenu 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}>
+          <style>{`
+            @keyframes slideDownMenu {
+              from { transform: translateY(-10px); opacity: 0; }
+              to { transform: translateY(0); opacity: 1; }
+            }
+          `}</style>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Navigation</span>
+            <Link 
+              href="/pricing" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)' }}
+            >
+              Pricing
+            </Link>
+            <Link 
+              href="/docs" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+            >
+              Docs
+            </Link>
+            <Link 
+              href="/developer" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+            >
+              Developer API
+            </Link>
+          </div>
+
+          <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Account Workspace</span>
+            
+            {sessionUser && !isAnonUser ? (
+              <>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 12px', borderRadius: 8,
+                  background: 'var(--bg-elev-1)', border: '1px solid var(--border)'
+                }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 500, color: 'white' }}>
+                      {sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0]}
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>
+                      Active Plan: <span className="mono" style={{ color: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)', fontWeight: 700 }}>{userPlan.toUpperCase()}</span>
+                    </span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                  <button 
+                    onClick={() => {
+                      onOpenTool('account');
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      flex: 1, padding: '10px',
+                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                      borderRadius: 8, color: 'white', fontWeight: 500, fontSize: 13,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Account Settings
+                  </button>
+                  <button 
+                    onClick={() => {
+                      onSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'oklch(0.60 0.15 20 / 0.1)', border: '1px solid oklch(0.60 0.15 20 / 0.3)',
+                      borderRadius: 8, color: 'oklch(0.75 0.15 20)', fontWeight: 500, fontSize: 13,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button 
+                onClick={() => {
+                  onOpenAuthModal();
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  padding: '10px',
+                  background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 305))',
+                  border: 'none', borderRadius: 8,
+                  color: 'white', fontWeight: 600, fontSize: 13.5,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px oklch(0.50 0.20 280 / 0.2)'
+                }}
+              >
+                Sign In / Up
+              </button>
+            )}
+
+            {userPlan !== 'pro' && (
+              <button 
+                onClick={() => {
+                  onShowPaywall();
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  padding: '10px',
+                  background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
+                  border: 'none', borderRadius: 8,
+                  color: 'white', fontWeight: 600, fontSize: 13.5,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px oklch(0.50 0.20 280 / 0.3)',
+                  marginTop: 4,
+                }}
+              >
+                Upgrade to Pro
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -2867,6 +3033,7 @@ interface LandingNavProps {
 
 function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBrandName, sessionUser, isAnonUser, userPlan, onOpenAuthModal, onSignOut }: LandingNavProps) {
   const [isEditingBrand, setIsEditingBrand] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
     <header style={{
       position: 'sticky', top: 0, zIndex: 30,
@@ -3039,6 +3206,166 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
       title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
         {theme === 'dark' ? <Icon.Sun size={15} /> : <Icon.Moon size={15} />}
       </button>
+
+      {/* Mobile Menu Toggle Button for LandingNav */}
+      <button 
+        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        className="reset mobile-menu-btn"
+        style={{
+          display: 'none', // Hidden on desktop, shown on mobile via CSS
+          alignItems: 'center', justifyContent: 'center',
+          width: 32, height: 32, borderRadius: 8,
+          cursor: 'pointer',
+          background: mobileMenuOpen ? 'var(--bg-hover)' : 'var(--bg-elev-1)',
+          border: '1px solid var(--border)',
+          color: 'var(--fg)',
+          transition: 'all 0.2s',
+        }}
+        title="Toggle Menu"
+      >
+        {mobileMenuOpen ? <Icon.X size={15} /> : <Icon.Menu size={15} />}
+      </button>
+
+      {/* Mobile Menu Panel for LandingNav */}
+      {mobileMenuOpen && (
+        <div style={{
+          position: 'absolute',
+          top: 64, left: 0, right: 0,
+          background: 'oklch(0.145 0 0 / 0.95)',
+          backdropFilter: 'blur(20px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(20px) saturate(140%)',
+          borderBottom: '1px solid var(--border)',
+          padding: '16px 20px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 12,
+          zIndex: 40,
+          boxShadow: '0 20px 40px oklch(0 0 0 / 0.5)',
+          animation: 'slideDownMenu 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}>
+          <style>{`
+            @keyframes slideDownMenu {
+              from { transform: translateY(-10px); opacity: 0; }
+              to { transform: translateY(0); opacity: 1; }
+            }
+          `}</style>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            <span style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Navigation</span>
+            <Link 
+              href="/dashboard" 
+              onClick={(e) => {
+                e.preventDefault();
+                onLaunch();
+                setMobileMenuOpen(false);
+              }}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)' }}
+            >
+              Launch App
+            </Link>
+            <Link 
+              href="/pricing" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+            >
+              Pricing
+            </Link>
+            <Link 
+              href="/changelog" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+            >
+              Changelog
+            </Link>
+            <Link 
+              href="/docs" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+            >
+              Docs
+            </Link>
+            <Link 
+              href="/developer" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+            >
+              Developer API
+            </Link>
+          </div>
+
+          <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <span style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Account Workspace</span>
+            
+            {sessionUser && !isAnonUser ? (
+              <>
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: 10,
+                  padding: '10px 12px', borderRadius: 8,
+                  background: 'var(--bg-elev-1)', border: '1px solid var(--border)'
+                }}>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: 13.5, fontWeight: 500, color: 'white' }}>
+                      {sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0]}
+                    </span>
+                    <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>
+                      Active Plan: <span className="mono" style={{ color: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)', fontWeight: 700 }}>{userPlan.toUpperCase()}</span>
+                    </span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                  <Link 
+                    href="/account"
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{
+                      flex: 1, padding: '10px', textAlign: 'center',
+                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                      borderRadius: 8, color: 'white', fontWeight: 500, fontSize: 13,
+                      textDecoration: 'none'
+                    }}
+                  >
+                    Account Settings
+                  </Link>
+                  <button 
+                    onClick={() => {
+                      onSignOut();
+                      setMobileMenuOpen(false);
+                    }}
+                    style={{
+                      padding: '10px 16px',
+                      background: 'oklch(0.60 0.15 20 / 0.1)', border: '1px solid oklch(0.60 0.15 20 / 0.3)',
+                      borderRadius: 8, color: 'oklch(0.75 0.15 20)', fontWeight: 500, fontSize: 13,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button 
+                onClick={() => {
+                  onOpenAuthModal();
+                  setMobileMenuOpen(false);
+                }}
+                style={{
+                  padding: '10px',
+                  background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 305))',
+                  border: 'none', borderRadius: 8,
+                  color: 'white', fontWeight: 600, fontSize: 13.5,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px oklch(0.50 0.20 280 / 0.2)'
+                }}
+              >
+                Sign In / Up
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </header>
   );
 }
@@ -8298,10 +8625,68 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   // Paywall states
   const [showPaywall, setShowPaywall] = useState(false);
 
+  // Premium Custom UI Notifications states
+  const [customAlert, setCustomAlert] = useState<{
+    title: string;
+    message: string;
+    actionLabel?: string;
+    onAction?: () => void;
+  } | null>(null);
+  const [customToast, setCustomToast] = useState<string | null>(null);
+
+  // Auto-dismiss custom success toasts
+  useEffect(() => {
+    if (customToast) {
+      const timer = setTimeout(() => {
+        setCustomToast(null);
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [customToast]);
+
+  // Global window.alert override with premium custom modal/toast layouts
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      window.alert = (message: string) => {
+        const msgLower = message.toLowerCase();
+        
+        // For quick success/copy indicators, show a premium floating auto-dismissing toast
+        if (msgLower.includes("copied") || msgLower.includes("success") || message.length < 35) {
+          setCustomToast(message);
+          return;
+        }
+        
+        // For warnings, locks, and system alerts, show the gorgeous modal
+        if (msgLower.includes("sign in") || msgLower.includes("account") || msgLower.includes("limit")) {
+          setCustomAlert({
+            title: "Authentication Required",
+            message: message,
+            actionLabel: "Sign In / Up",
+            onAction: () => setAuthOpen(true)
+          });
+        } else if (msgLower.includes("error") || msgLower.includes("failed")) {
+          setCustomAlert({
+            title: "System Notification",
+            message: message
+          });
+        } else {
+          setCustomAlert({
+            title: "Notification Alert",
+            message: message
+          });
+        }
+      };
+    }
+  }, []);
+
   const handleShowPaywall = useCallback(() => {
     if (!sessionUser || isAnonUser) {
-      alert("Please sign in or create an account to upgrade to a Pro workspace!");
-      setAuthOpen(true);
+      setCustomAlert({
+        title: "Authentication Required",
+        message: "Please sign in or create an account to upgrade to a Pro workspace and unlock premium features!",
+        actionLabel: "Sign In / Up",
+        onAction: () => setAuthOpen(true)
+      });
     } else {
       setShowPaywall(true);
     }
@@ -8859,6 +9244,124 @@ export function App({ initialSlug }: { initialSlug?: string }) {
           }}>
             <Icon.X size={14} />
           </button>
+        </div>
+      )}
+
+      {/* Global Premium Glassmorphic Alert Modal */}
+      {customAlert && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          zIndex: 100000,
+          background: 'oklch(0.12 0.015 250 / 0.55)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          animation: 'fadeIn 0.2s ease-out',
+        }}>
+          <div style={{
+            background: 'oklch(0.18 0.015 250 / 0.85)',
+            border: '1px solid var(--border)',
+            borderRadius: 16,
+            padding: 24,
+            maxWidth: 400,
+            width: '90%',
+            boxShadow: '0 24px 60px oklch(0 0 0 / 0.5), inset 0 1px 0 oklch(1 0 0 / 0.05)',
+            textAlign: 'center',
+            display: 'flex', flexDirection: 'column', gap: 18,
+            animation: 'scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)',
+          }}>
+            <style>{`
+              @keyframes scaleIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+            `}</style>
+            
+            <div style={{
+              width: 48, height: 48, borderRadius: '50%',
+              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              alignSelf: 'center',
+              boxShadow: '0 0 12px oklch(0.70 0.18 265 / 0.3)',
+            }}>
+              <Icon.Info size={20} style={{ color: 'white' }} />
+            </div>
+
+            <div>
+              <h3 style={{
+                fontSize: 18, fontWeight: 600, color: 'white',
+                marginBottom: 8, letterSpacing: '-0.015em'
+              }}>{customAlert.title}</h3>
+              <p style={{
+                fontSize: 13.5, lineHeight: 1.5, color: 'var(--fg-muted)',
+                margin: 0
+              }}>{customAlert.message}</p>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center', marginTop: 4 }}>
+              {customAlert.actionLabel && customAlert.onAction && (
+                <button
+                  onClick={() => {
+                    customAlert.onAction?.();
+                    setCustomAlert(null);
+                  }}
+                  style={{
+                    padding: '8px 16px',
+                    background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 305))',
+                    color: 'white',
+                    fontWeight: 600, fontSize: 13,
+                    borderRadius: 8, border: 'none', cursor: 'pointer',
+                    boxShadow: '0 4px 12px oklch(0.62 0.20 305 / 0.3)',
+                  }}
+                >
+                  {customAlert.actionLabel}
+                </button>
+              )}
+              <button
+                onClick={() => setCustomAlert(null)}
+                style={{
+                  padding: '8px 16px',
+                  background: 'var(--bg-elev-1)',
+                  border: '1px solid var(--border)',
+                  color: 'var(--fg)',
+                  fontWeight: 500, fontSize: 13,
+                  borderRadius: 8, cursor: 'pointer',
+                }}
+              >
+                Dismiss
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Premium Auto-Dismissing Toast Notification */}
+      {customToast && (
+        <div style={{
+          position: 'fixed', bottom: 32, left: '50%', transform: 'translateX(-50%)',
+          zIndex: 100000,
+          background: 'oklch(0.20 0.03 260 / 0.85)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          border: '1px solid var(--border)',
+          boxShadow: '0 8px 30px oklch(0 0 0 / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.1)',
+          borderRadius: 12, padding: '12px 20px',
+          display: 'flex', alignItems: 'center', gap: 10,
+          color: 'white', fontSize: 13.5, fontWeight: 500,
+          animation: 'slideUpToast 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}>
+          <style>{`
+            @keyframes slideUpToast {
+              from { transform: translate(-50%, 20px); opacity: 0; }
+              to { transform: translate(-50%, 0); opacity: 1; }
+            }
+          `}</style>
+          <div style={{
+            width: 18, height: 18, borderRadius: '50%',
+            background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'white', flexShrink: 0
+          }}>
+            <Icon.Check size={11} strokeWidth={3} />
+          </div>
+          <span>{customToast}</span>
         </div>
       )}
     </>
