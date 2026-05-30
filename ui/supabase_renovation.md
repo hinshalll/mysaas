@@ -37,7 +37,7 @@ create table public.profiles (
   username text,
   company text,
   role text,
-  tier text default 'free' check (tier in ('free', 'pro', 'admin')),
+  tier text default 'free' check (tier in ('free', 'pro', 'admin', 'api')),
   api_key text,
   fake_door_waitlisted boolean default false,
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
