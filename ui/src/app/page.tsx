@@ -1528,16 +1528,77 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
     if (downloading) return;
     setDownloading(true);
 
+    const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isPdf = format.value === 'pdf';
+    let printWindow: Window | null = null;
+    
+    if (isPdf && isMobile) {
+      printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.open();
+        printWindow.document.write(`
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <title>Preparing PDF...</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <style>
+              body {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                height: 100vh;
+                margin: 0;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                background-color: #0b0f19;
+                color: #f3f4f6;
+              }
+              .spinner {
+                border: 3px solid rgba(255, 255, 255, 0.1);
+                width: 36px;
+                height: 36px;
+                border-radius: 50%;
+                border-left-color: #6366f1;
+                animation: spin 1s linear infinite;
+                margin-bottom: 16px;
+              }
+              @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              .text {
+                font-size: 14px;
+                font-weight: 500;
+                letter-spacing: 0.05em;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="spinner"></div>
+            <div class="text">Generating Document PDF...</div>
+          </body>
+          </html>
+        `);
+        printWindow.document.close();
+      }
+    }
+
     try {
       const allowed = await checkAndLogUsage(tool.id, false);
       if (!allowed) {
+        if (printWindow) printWindow.close();
         setDownloading(false);
         return;
       }
 
       // Track this file download inside history table if they are logged in
       const smartName = `formatted-doc-${Date.now().toString().slice(-4)}${format.tag}`;
-      await saveToCloudHistory(smartName);
+      try {
+        await saveToCloudHistory(smartName);
+      } catch (err) {
+        console.error("Failed to save to cloud history", err);
+      }
 
       // Detect if we are in text/code mode or WYSIWYG mode
       const isTextMode = format.value === 'md' || format.value === 'txt';
@@ -1678,11 +1739,8 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
       `;
 
       if (format.value === 'pdf') {
-        const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-
         if (isMobile) {
           // --- MOBILE: CLEAN SELF-CLOSING NEW TAB PRINTING ---
-          const printWindow = window.open('', '_blank');
           if (printWindow) {
             // Embed an automatic print-and-close controller inside the HTML
             const mobileHtml = formattedHtml.replace('</body>', `
@@ -1702,7 +1760,8 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
             printWindow.document.write(mobileHtml);
             printWindow.document.close();
           } else {
-            alert("Popup blocked. Please allow popups for this site to download PDFs.");
+            // Fallback in case popup was blocked/closed
+            alert("Unable to open print preview tab. Please ensure popups are allowed.");
           }
         } else {
           // --- DESKTOP: STEALTH IFRAME PRINT ---
@@ -1781,6 +1840,9 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
       }
 
     } catch (error: any) {
+      if (printWindow) {
+        try { printWindow.close(); } catch (_) {}
+      }
       alert("Error generating document locally:\n" + error.message);
     } finally {
       setDownloading(false);
