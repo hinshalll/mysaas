@@ -41,7 +41,7 @@ import {
   List, ListOrdered, Quote, Code, Link as LucideLink,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
   Sun, Moon, Eye, EyeOff,
-  CreditCard, AlertCircle,
+  CreditCard, AlertCircle, Info,
   Lock, FileDown
 } from 'lucide-react';
 
@@ -60,7 +60,7 @@ const Icon: Record<string, React.ComponentType<any>> = {
   LinkIcon: LucideLink, Eraser2: Eraser,
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
   Sun, Moon, Eye, EyeOff,
-  CreditCard, AlertCircle,
+  CreditCard, AlertCircle, Info,
   Lock, FileDown
 };
 
