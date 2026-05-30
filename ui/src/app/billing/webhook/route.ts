@@ -2,26 +2,6 @@ import { Webhook } from '@creem_io/nextjs';
 import { supabaseAdmin } from '../../utils/supabaseAdmin';
 import { getTierFromProductId } from '../../utils/creemProducts';
 
-const safeDate = (val: any) => {
-  if (!val) return null;
-  if (typeof val === 'number') {
-    const date = new Date(val < 9999999999 ? val * 1000 : val);
-    return date.toISOString();
-  }
-  if (typeof val === 'string') {
-    try {
-      const date = new Date(val);
-      if (!isNaN(date.getTime())) {
-        return date.toISOString();
-      }
-    } catch {}
-  }
-  if (val instanceof Date) {
-    return val.toISOString();
-  }
-  return null;
-};
-
 export const POST = Webhook({
   webhookSecret: process.env.CREEM_WEBHOOK_SECRET || '',
 
@@ -34,7 +14,6 @@ export const POST = Webhook({
 
       let userId = metadata?.referenceId as string | undefined;
 
-      // Fallback search by email if referenceId is somehow missing
       if (!userId && customer?.email) {
         const { data } = await supabaseAdmin
           .from('profiles')
@@ -45,14 +24,17 @@ export const POST = Webhook({
       }
 
       if (!userId) {
-        console.error('onGrantAccess failed: User ID could not be resolved from metadata or email', { customer, metadata });
+        console.error('onGrantAccess: Could not resolve user ID', { customer, metadata });
         return;
       }
 
-      // Resolve internal tier based on Creem Product ID
-      const resolvedTier = getTierFromProductId(product?.id || '') || 'pro';
+      const productId = typeof product === 'string' ? product : product?.id || '';
+      const resolvedTier = getTierFromProductId(productId) || 'pro';
 
-      console.log(`Granting ${resolvedTier} access to user ID: ${userId}`, { subscription });
+      // Normalize dates — webhook payload may use snake_case or camelCase
+      const periodStart = subscription?.currentPeriodStartDate || subscription?.current_period_start_date || subscription?.current_period_start;
+      const periodEnd = subscription?.currentPeriodEndDate || subscription?.current_period_end_date || subscription?.current_period_end;
+      const canceledAt = subscription?.canceledAt || subscription?.canceled_at;
 
       const { error } = await supabaseAdmin
         .from('profiles')
@@ -61,18 +43,18 @@ export const POST = Webhook({
           customer_id: customer?.id || null,
           subscription_status: subscription?.status || 'active',
           tier: resolvedTier,
-          current_period_start: safeDate(subscription?.current_period_start || subscription?.currentPeriodStartDate) || new Date().toISOString(),
-          current_period_end: safeDate(subscription?.current_period_end || subscription?.currentPeriodEndDate) || null,
-          canceled_at: safeDate(subscription?.canceled_at || subscription?.canceledAt) || null,
-          cancel_at_period_end: subscription?.status === 'scheduled_cancel' || !!subscription?.cancel_at_period_end,
+          current_period_start: periodStart ? new Date(periodStart).toISOString() : new Date().toISOString(),
+          current_period_end: periodEnd ? new Date(periodEnd).toISOString() : null,
+          canceled_at: canceledAt ? new Date(canceledAt).toISOString() : null,
+          cancel_at_period_end: subscription?.status === 'scheduled_cancel',
         })
         .eq('id', userId);
 
       if (error) {
-        console.error(`onGrantAccess Database update error for user ${userId}:`, error);
+        console.error(`onGrantAccess DB error for ${userId}:`, error);
       }
     } catch (err) {
-      console.error('Error executing onGrantAccess webhook callback:', err);
+      console.error('onGrantAccess error:', err);
     }
   },
 
@@ -82,7 +64,6 @@ export const POST = Webhook({
       const metadata = event?.metadata;
       let userId = metadata?.referenceId as string | undefined;
 
-      // Fallback search by email
       if (!userId && customer?.email) {
         const { data } = await supabaseAdmin
           .from('profiles')
@@ -93,11 +74,9 @@ export const POST = Webhook({
       }
 
       if (!userId) {
-        console.error('onRevokeAccess failed: User ID could not be resolved', { customer, metadata });
+        console.error('onRevokeAccess: Could not resolve user ID', { customer, metadata });
         return;
       }
-
-      console.log(`Revoking subscription access for user ID: ${userId}`);
 
       const { error } = await supabaseAdmin
         .from('profiles')
@@ -113,10 +92,10 @@ export const POST = Webhook({
         .eq('id', userId);
 
       if (error) {
-        console.error(`onRevokeAccess Database update error for user ${userId}:`, error);
+        console.error(`onRevokeAccess DB error for ${userId}:`, error);
       }
     } catch (err) {
-      console.error('Error executing onRevokeAccess webhook callback:', err);
+      console.error('onRevokeAccess error:', err);
     }
   },
 });

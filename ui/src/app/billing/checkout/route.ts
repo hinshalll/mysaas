@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { authenticateRequest } from '../../utils/authHelper';
 import { getCreemProductId } from '../../utils/creemProducts';
+import { getCreemClient } from '../../utils/creemClient';
 
 export async function POST(req: Request) {
   try {
@@ -8,78 +9,41 @@ export async function POST(req: Request) {
     try {
       body = await req.json();
     } catch {
-      return NextResponse.json({ error: 'Malformed JSON payload body.' }, { status: 400 });
+      return NextResponse.json({ error: 'Malformed request body.' }, { status: 400 });
     }
 
     const { planId, cohort = 'global', token } = body;
 
-    if (!planId || !['pro', 'api'].includes(planId)) {
-      return NextResponse.json({ error: 'Invalid or missing planId (must be pro or api).' }, { status: 400 });
+    if (!planId || (planId !== 'pro' && planId !== 'api')) {
+      return NextResponse.json({ error: 'Invalid or missing plan selection.' }, { status: 400 });
     }
 
-    if (!token) {
-      return NextResponse.json({ error: 'Missing active user session token.' }, { status: 401 });
-    }
+    const user = await authenticateRequest(token);
 
-    // 1. Initialize standard Supabase client to verify JWT
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-    // 2. Validate token and get authenticated user securely
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized session or expired token.' }, { status: 401 });
-    }
-
-    // 3. Resolve Product ID based on plan and cohort
     const creemProductId = getCreemProductId(planId, cohort);
     if (!creemProductId) {
-      return NextResponse.json({ error: `No Creem Product ID configured for plan '${planId}' in cohort '${cohort}'.` }, { status: 500 });
+      return NextResponse.json({ error: `No product configured for plan '${planId}'.` }, { status: 500 });
     }
 
-    // 4. Create Creem checkout session via API
-    const isTestMode = process.env.CREEM_API_KEY?.startsWith('creem_test_') ?? true;
-    const CREEM_BASE_URL = isTestMode ? 'https://test-api.creem.io/v1' : 'https://api.creem.io/v1';
+    const successUrl = `${new URL(req.url).origin}/account?checkout=success`;
+    const creem = getCreemClient();
 
-    const requestUrl = new URL(req.url);
-    const successUrl = `${requestUrl.origin}/account?checkout=success`;
-
-    const creemResponse = await fetch(`${CREEM_BASE_URL}/checkouts`, {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.CREEM_API_KEY || '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        product_id: creemProductId,
-        success_url: successUrl,
-        customer: {
-          email: user.email,
-        },
-        metadata: {
-          referenceId: user.id,
-        },
-      }),
+    const result = await creem.checkouts.create({
+      productId: creemProductId,
+      successUrl,
+      customer: { email: user.email || '' },
+      metadata: { referenceId: user.id },
     });
 
-    if (!creemResponse.ok) {
-      const errorText = await creemResponse.text();
-      console.error('Creem API session creation failed:', errorText);
-      return NextResponse.json({ error: 'Failed to create checkout session with Creem.' }, { status: 502 });
-    }
-
-    const checkoutData = await creemResponse.json();
-
-    if (!checkoutData.checkout_url) {
+    if (!result.checkoutUrl) {
       return NextResponse.json({ error: 'Checkout URL not returned from payment gateway.' }, { status: 502 });
     }
 
-    return NextResponse.json({ checkoutUrl: checkoutData.checkout_url });
-
-  } catch (err) {
-    console.error('Checkout route error:', err);
-    return NextResponse.json({ error: 'Internal server error occurred creating session.' }, { status: 500 });
+    return NextResponse.json({ checkoutUrl: result.checkoutUrl });
+  } catch (err: any) {
+    console.error('Checkout error:', err);
+    const message = err.message || 'Failed to create checkout session.';
+    const status = err.status || 500;
+    return NextResponse.json({ error: message }, { status });
   }
 }

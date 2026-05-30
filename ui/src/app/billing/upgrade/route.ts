@@ -1,143 +1,87 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { authenticateRequest } from '../../utils/authHelper';
 import { supabaseAdmin } from '../../utils/supabaseAdmin';
 import { getCreemProductId } from '../../utils/creemProducts';
-
-const safeDate = (val: any) => {
-  if (!val) return null;
-  if (typeof val === 'number') {
-    const date = new Date(val < 9999999999 ? val * 1000 : val);
-    return date.toISOString();
-  }
-  if (typeof val === 'string') {
-    try {
-      const date = new Date(val);
-      if (!isNaN(date.getTime())) {
-        return date.toISOString();
-      }
-    } catch {}
-  }
-  if (val instanceof Date) {
-    return val.toISOString();
-  }
-  return null;
-};
+import { getCreemClient } from '../../utils/creemClient';
 
 export async function POST(req: Request) {
   try {
-    let body;
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json({ error: 'Malformed JSON payload body.' }, { status: 400 });
+    const { planId, token } = await req.json();
+
+    if (planId !== 'pro' && planId !== 'api') {
+      return NextResponse.json({ error: 'Invalid plan selected' }, { status: 400 });
     }
 
-    const { planId, token } = body;
+    const user = await authenticateRequest(token);
 
-    if (!planId || !['pro', 'api'].includes(planId)) {
-      return NextResponse.json({ error: 'Invalid or missing target planId (must be pro or api).' }, { status: 400 });
-    }
-
-    if (!token) {
-      return NextResponse.json({ error: 'Missing active user session token.' }, { status: 401 });
-    }
-
-    // 1. Initialize standard Supabase client to verify JWT
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-
-    // 2. Validate token and get authenticated user securely
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-    
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized session or expired token.' }, { status: 401 });
-    }
-
-    // 3. Fetch user's active subscription details from database via admin client
-    const { data: profile, error: dbError } = await supabaseAdmin
+    const { data: profile, error: profileError } = await supabaseAdmin
       .from('profiles')
       .select('subscription_id, subscription_status, tier')
       .eq('id', user.id)
       .single();
 
-    if (dbError || !profile) {
-      return NextResponse.json({ error: 'User profile not found.' }, { status: 404 });
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    const subscriptionId = profile.subscription_id;
+    const { subscription_id: subscriptionId, subscription_status, tier } = profile;
 
     if (!subscriptionId) {
-      return NextResponse.json({ error: 'No active subscription found to upgrade or downgrade.' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'No active subscription found. Please subscribe first.' },
+        { status: 400 },
+      );
     }
 
-    if (profile.tier === planId) {
-      return NextResponse.json({ error: `You are already subscribed to the ${planId} plan.` }, { status: 400 });
+    if (tier === planId) {
+      return NextResponse.json(
+        { error: `You are already on the ${planId} plan.` },
+        { status: 400 },
+      );
     }
 
-    // 4. Resolve Product ID for the target plan (force global cohort USD)
+    const creem = getCreemClient();
+
+    if (subscription_status === 'scheduled_cancel') {
+      await creem.subscriptions.resume(subscriptionId);
+    }
+
     const creemProductId = getCreemProductId(planId, 'global');
-    if (!creemProductId) {
-      return NextResponse.json({ error: `No Creem Product ID configured for plan '${planId}'.` }, { status: 500 });
-    }
 
-    // 5. Call Creem programmatic subscription upgrade endpoint
-    const isTestMode = process.env.CREEM_API_KEY?.startsWith('creem_test_') ?? true;
-    const CREEM_BASE_URL = isTestMode ? 'https://test-api.creem.io/v1' : 'https://api.creem.io/v1';
-
-    const creemResponse = await fetch(`${CREEM_BASE_URL}/subscriptions/${subscriptionId}/upgrade`, {
-      method: 'POST',
-      headers: {
-        'x-api-key': process.env.CREEM_API_KEY || '',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        product_id: creemProductId,
-      }),
+    const result = await creem.subscriptions.upgrade(subscriptionId, {
+      productId: creemProductId,
     });
 
-    if (!creemResponse.ok) {
-      const errorText = await creemResponse.text();
-      console.error('Creem subscription upgrade failed:', errorText);
-      let errorMessage = 'Failed to update subscription in payment gateway.';
-      try {
-        const parsed = JSON.parse(errorText);
-        if (parsed.message) errorMessage = parsed.message;
-        else if (parsed.error) errorMessage = parsed.error;
-      } catch {}
-      return NextResponse.json({ error: errorMessage }, { status: 502 });
-    }
-
-    const updatedSubscription = await creemResponse.json();
-
-    // 6. Sync updated subscription tier in our database with robust timestamp converting
     const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({
         tier: planId,
-        subscription_id: updatedSubscription.id || subscriptionId,
-        subscription_status: updatedSubscription.status || 'active',
-        current_period_start: safeDate(updatedSubscription.currentPeriodStartDate || updatedSubscription.current_period_start || updatedSubscription.current_period_start_date) || new Date().toISOString(),
-        current_period_end: safeDate(updatedSubscription.currentPeriodEndDate || updatedSubscription.current_period_end || updatedSubscription.current_period_end_date) || null,
-        canceled_at: safeDate(updatedSubscription.canceledAt || updatedSubscription.canceled_at) || null,
-        cancel_at_period_end: updatedSubscription.status === 'scheduled_cancel' || !!updatedSubscription.cancel_at_period_end,
+        subscription_id: result.id || subscriptionId,
+        subscription_status: result.status || 'active',
+        current_period_start:
+          result.currentPeriodStartDate?.toISOString() || new Date().toISOString(),
+        current_period_end: result.currentPeriodEndDate?.toISOString() || null,
+        canceled_at: null,
+        cancel_at_period_end: false,
       })
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Failed to sync updated subscription status in database:', updateError);
-      return NextResponse.json({ 
-        error: `Failed to sync tier changes in local database: ${updateError.message || JSON.stringify(updateError)}` 
-      }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Plan changed but failed to update profile. Contact support.' },
+        { status: 500 },
+      );
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `Successfully changed plan to ${planId === 'api' ? 'Developer API Pro' : 'Pro Workspace'}. Proration applied.` 
+    return NextResponse.json({
+      success: true,
+      message: 'Plan changed successfully. Proration applied.',
     });
-
-  } catch (err) {
-    console.error('Upgrade route error:', err);
-    return NextResponse.json({ error: 'Internal server error occurred processing subscription change.' }, { status: 500 });
+  } catch (err: unknown) {
+    if (err instanceof Response || (err && typeof err === 'object' && 'status' in err)) {
+      throw err;
+    }
+    const message = err instanceof Error ? err.message : 'Upgrade failed';
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 }

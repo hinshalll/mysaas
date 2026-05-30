@@ -5741,6 +5741,7 @@ function AccountPage({
   // UI state-managed modal overlays & toasts
   const [cancelModalOpen, setCancelModalOpen] = useState(false);
   const [isCancelingSub, setIsCancelingSub] = useState(false);
+  const [isResumingSub, setIsResumingSub] = useState(false);
   const [billingMessage, setBillingMessage] = useState<string | null>(null);
   const [billingSuccess, setBillingSuccess] = useState(false);
 
@@ -5753,41 +5754,9 @@ function AccountPage({
 
   const [uuidCopied, setUuidCopied] = useState(false);
   const [dailyUsageCount, setDailyUsageCount] = useState(0);
-  const [isSyncingBilling, setIsSyncingBilling] = useState(false);
 
-  const handleSyncBilling = async () => {
-    setIsSyncingBilling(true);
-    setBillingMessage(null);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      if (!token) {
-        setBillingMessage("Authentication session expired. Try logging in again.");
-        setBillingSuccess(false);
-        return;
-      }
-
-      const response = await fetch('/billing/sync', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'Failed to sync status.');
-
-      setBillingSuccess(true);
-      setBillingMessage(`✓ ${data.message}`);
-      onRefreshProfile();
-    } catch (err: any) {
-      setBillingSuccess(false);
-      setBillingMessage("Sync failed: " + err.message);
-    } finally {
-      setIsSyncingBilling(false);
-    }
-  };
+  // Computed: subscription is being canceled but still active until period end
+  const isCanceling = cancelAtPeriodEnd || subscriptionStatus === 'scheduled_cancel';
 
   // Secure customer portal dynamic redirection
   const handleManageBilling = async () => {
@@ -5808,7 +5777,7 @@ function AccountPage({
     }
   };
 
-  // Grace Period programmatic cancellation handler
+  // Programmatic cancellation handler — schedules cancel at period end
   const handleCancelSubscription = async () => {
     setIsCancelingSub(true);
     setBillingMessage(null);
@@ -5823,9 +5792,7 @@ function AccountPage({
 
       const response = await fetch('/billing/cancel', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token }),
       });
 
@@ -5833,7 +5800,7 @@ function AccountPage({
       if (!response.ok) throw new Error(data.error || 'Failed to cancel subscription.');
 
       setBillingSuccess(true);
-      setBillingMessage("✓ Subscription successfully scheduled for cancellation at the end of the current period.");
+      setBillingMessage("✓ Your subscription has been canceled. You'll retain access until the end of your current billing period.");
       onRefreshProfile();
     } catch (err: any) {
       setBillingSuccess(false);
@@ -5841,6 +5808,39 @@ function AccountPage({
     } finally {
       setIsCancelingSub(false);
       setCancelModalOpen(false);
+    }
+  };
+
+  // Resume a scheduled_cancel subscription
+  const handleResumeSubscription = async () => {
+    setIsResumingSub(true);
+    setBillingMessage(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setBillingMessage("Authentication session expired.");
+        setBillingSuccess(false);
+        return;
+      }
+
+      const response = await fetch('/billing/resume', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to resume subscription.');
+
+      setBillingSuccess(true);
+      setBillingMessage("✓ Subscription resumed! Your plan will continue as normal.");
+      onRefreshProfile();
+    } catch (err: any) {
+      setBillingSuccess(false);
+      setBillingMessage("Resume failed: " + err.message);
+    } finally {
+      setIsResumingSub(false);
     }
   };
 
@@ -6388,18 +6388,18 @@ function AccountPage({
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {cancelAtPeriodEnd ? (
+                    {isCanceling ? (
                       <>
                         <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.65 0.20 50)', boxShadow: '0 0 8px oklch(0.65 0.20 50)' }} />
                         <span style={{ fontSize: 12, color: 'oklch(0.65 0.20 50)', fontWeight: 600 }}>
-                          Active (Canceling)
+                          Canceling
                         </span>
                       </>
                     ) : (userPlan === 'pro' || userPlan === 'api') ? (
                       <>
                         <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.78 0.16 145)', boxShadow: '0 0 8px oklch(0.78 0.16 145)' }} />
                         <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)', fontWeight: 600 }}>
-                          Active Subscribed
+                          Active
                         </span>
                       </>
                     ) : (
@@ -6411,9 +6411,9 @@ function AccountPage({
                       </>
                     )}
                   </div>
-                  {cancelAtPeriodEnd && (
+                  {isCanceling && (
                     <p style={{ fontSize: 12, color: 'oklch(0.65 0.20 50 / 0.9)', margin: 0, lineHeight: 1.4 }}>
-                      Your premium access remains operational until **{nextStr}**, after which billing stops and your account reverts to the Free tier.
+                      Your plan remains active until <strong>{nextStr}</strong>. After that, your account will revert to the Free tier.
                     </p>
                   )}
                 </div>
@@ -6430,11 +6430,11 @@ function AccountPage({
                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <div>
                     <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">
-                      {cancelAtPeriodEnd ? 'Access Expires' : 'Next Billing Date'}
+                      {isCanceling ? 'Access Expires' : 'Next Billing Date'}
                     </span>
                     <span style={{ fontSize: 13, color: 'white', fontWeight: 500 }}>{nextStr}</span>
                   </div>
-                  {!cancelAtPeriodEnd && (
+                  {!isCanceling && (
                     <div>
                       <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">Payment Partner</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--fg-muted)' }}>
@@ -6449,16 +6449,18 @@ function AccountPage({
               <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto' }}>
                 {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-                    <button onClick={onShowPaywall} className="reset" style={{
-                      width: '100%', padding: '10px 14px', borderRadius: 8,
-                      background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
-                      border: '1px solid var(--border)',
-                      color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                      textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                    }}>
-                      <Icon.Sparkles size={14} style={{ color: 'white' }} />
-                      <span>Change Plan (Upgrade / Downgrade)</span>
-                    </button>
+                    {!isCanceling && (
+                      <button onClick={onShowPaywall} className="reset" style={{
+                        width: '100%', padding: '10px 14px', borderRadius: 8,
+                        background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
+                        border: '1px solid var(--border)',
+                        color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                        textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                      }}>
+                        <Icon.Sparkles size={14} style={{ color: 'white' }} />
+                        <span>Change Plan</span>
+                      </button>
+                    )}
                     <div style={{ display: 'flex', gap: 10, width: '100%' }}>
                       <button onClick={handleManageBilling} className="reset" style={{
                         flex: 1, padding: '10px 14px', borderRadius: 8,
@@ -6467,9 +6469,15 @@ function AccountPage({
                         textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
                       }}>
                         <Icon.Grid size={14} />
-                        <span>Manage Sub / Portal</span>
+                        <span>Manage Billing</span>
                       </button>
-                      {!cancelAtPeriodEnd && (
+                      {isCanceling ? (
+                        <button onClick={handleResumeSubscription} disabled={isResumingSub} className="reset" style={{
+                          flex: 1, padding: '10px 14px', borderRadius: 8,
+                          background: 'oklch(0.18 0.010 145 / 0.15)', border: '1px solid oklch(0.70 0.16 145 / 0.3)',
+                          color: 'oklch(0.78 0.16 145)', fontWeight: 600, fontSize: 12.5, cursor: isResumingSub ? 'not-allowed' : 'pointer',
+                        }}>{isResumingSub ? 'Resuming...' : 'Resume Subscription'}</button>
+                      ) : (
                         <button onClick={() => setCancelModalOpen(true)} className="reset" style={{
                           flex: 1, padding: '10px 14px', borderRadius: 8,
                           background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
@@ -7622,25 +7630,15 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
         return;
       }
 
-      // Check if user is upgrading/downgrading from an existing plan (fallback to new checkout if no subscriptionId is linked in database yet)
+      // Check if user is upgrading/downgrading from an existing plan
       const isChangingPlan = (userPlan === 'pro' || userPlan === 'api') && !!subscriptionId;
 
       if (isChangingPlan) {
-        if (cancelAtPeriodEnd) {
-          setCheckoutError("Your active plan is scheduled for cancellation at the end of this billing cycle. To change plans, please manage your billing in the portal or wait until the current billing period ends to subscribe to a new tier.");
-          setCheckoutSpinner(false);
-          return;
-        }
-        // Programmatically swap plans with native Stripe proration via our API
+        // The backend upgrade route handles resuming scheduled_cancel automatically
         const response = await fetch('/billing/upgrade', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            planId: planName,
-            token
-          }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId: planName, token }),
         });
 
         const data = await response.json();
@@ -7648,7 +7646,6 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
           throw new Error(data.error || 'Failed to update subscription tier.');
         }
 
-        // Instantly reload into their account dashboard showing success
         setUserPlan(planName);
         window.location.href = '/account?checkout=success';
         return;

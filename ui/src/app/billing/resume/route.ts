@@ -30,31 +30,28 @@ export async function POST(request: Request) {
       );
     }
 
-    if (subscriptionStatus !== 'active') {
+    if (subscriptionStatus !== 'scheduled_cancel') {
       return NextResponse.json(
-        { success: false, error: 'Subscription is not active.' },
+        { success: false, error: 'Subscription is not pending cancellation.' },
         { status: 400 }
       );
     }
 
     const creem = getCreemClient();
-    const result = await creem.subscriptions.cancel(subscriptionId, {
-      mode: 'scheduled',
-      onExecute: 'cancel',
-    });
+    const result = await creem.subscriptions.resume(subscriptionId);
 
     const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({
-        subscription_status: result.status || 'scheduled_cancel',
-        cancel_at_period_end: true,
-        canceled_at: result.canceledAt?.toISOString() || new Date().toISOString(),
+        subscription_status: result.status || 'active',
+        cancel_at_period_end: false,
+        canceled_at: null,
         current_period_end: result.currentPeriodEndDate?.toISOString() || null,
       })
       .eq('id', user.id);
 
     if (updateError) {
-      console.error('Error updating profile after cancellation:', updateError);
+      console.error('Error updating profile after resume:', updateError);
       return NextResponse.json(
         { success: false, error: 'Failed to update subscription status.' },
         { status: 500 }
@@ -63,10 +60,10 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       success: true,
-      message: 'Subscription scheduled for cancellation at the end of the current billing period.',
+      message: 'Subscription resumed successfully.',
     });
   } catch (error) {
-    console.error('Error cancelling subscription:', error);
+    console.error('Error resuming subscription:', error);
     return NextResponse.json(
       { success: false, error: 'Internal server error.' },
       { status: 500 }
