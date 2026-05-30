@@ -8,6 +8,12 @@ export default function PrintPreviewPage() {
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
+    // Direct-access guard: instantly redirect back to home if accessed directly by user instead of programmatically
+    if (!window.opener) {
+      window.location.href = '/';
+      return;
+    }
+
     function checkAndPrint() {
       const html = localStorage.getItem('print_html');
       if (html) {
