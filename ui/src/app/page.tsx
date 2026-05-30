@@ -1678,56 +1678,80 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
       `;
 
       if (format.value === 'pdf') {
-        // Dynamically compute the OS-specific instruction copy to make it extremely clear for noobs & boomers
-        let instructions = "In the print window, change the 'Destination' dropdown to 'Save as PDF', then click the Save button.";
-        if (typeof navigator !== 'undefined') {
-          const ua = navigator.userAgent;
-          if (/iPhone|iPad|iPod/i.test(ua)) {
-            instructions = "iPhone/iPad Tip: Tap the Share icon (square with upward arrow) at the top-right of the print preview screen, then select 'Save to Files' to save your PDF.";
-          } else if (/Android/i.test(ua)) {
-            instructions = "Android Tip: Tap 'Select printer' at the top, choose 'Save as PDF', and then tap the round PDF download circle icon.";
-          } else if (/Macintosh|MacIntel/i.test(ua)) {
-            instructions = "Mac Tip: In the print window, set 'Destination' to 'Save as PDF' (in Safari, click the 'PDF' dropdown at the bottom-left and select 'Save as PDF').";
+        const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+        if (isMobile) {
+          // --- MOBILE: CLEAN SELF-CLOSING NEW TAB PRINTING ---
+          const printWindow = window.open('', '_blank');
+          if (printWindow) {
+            // Embed an automatic print-and-close controller inside the HTML
+            const mobileHtml = formattedHtml.replace('</body>', `
+              <script>
+                window.onload = function() {
+                  setTimeout(function() {
+                    window.focus();
+                    window.print();
+                    // Close the preview tab immediately after the print sheet is dismissed
+                    setTimeout(function() { window.close(); }, 300);
+                  }, 250);
+                };
+              </script>
+            </body>`);
+
+            printWindow.document.open();
+            printWindow.document.write(mobileHtml);
+            printWindow.document.close();
+          } else {
+            alert("Popup blocked. Please allow popups for this site to download PDFs.");
           }
+        } else {
+          // --- DESKTOP: STEALTH IFRAME PRINT ---
+          // Dynamically compute the OS-specific instruction copy to make it extremely clear for noobs & boomers
+          let instructions = "In the print window, change the 'Destination' dropdown to 'Save as PDF', then click the Save button.";
+          if (typeof navigator !== 'undefined') {
+            const ua = navigator.userAgent;
+            if (/Macintosh|MacIntel/i.test(ua)) {
+              instructions = "Mac Tip: In the print window, set 'Destination' to 'Save as PDF' (in Safari, click the 'PDF' dropdown at the bottom-left and select 'Save as PDF').";
+            }
+          }
+
+          // Show our beautiful boomer-friendly custom overlay hint immediately
+          setPdfToast(instructions);
+
+          // Wait 4.5 seconds so the user has time to read it!
+          await new Promise((resolve) => setTimeout(resolve, 4500));
+
+          const iframe = document.createElement('iframe');
+          iframe.style.position = 'fixed';
+          iframe.style.right = '0';
+          iframe.style.bottom = '0';
+          iframe.style.width = '0';
+          iframe.style.height = '0';
+          iframe.style.border = '0';
+          iframe.style.zIndex = '-9999';
+          document.body.appendChild(iframe);
+
+          const doc = iframe.contentWindow?.document;
+          if (!doc) throw new Error("Could not access document inside stealth iframe.");
+          
+          doc.open();
+          doc.write(formattedHtml);
+          doc.close();
+
+          // Give it a tiny moment to parse/load stylesheets
+          await new Promise((resolve) => setTimeout(resolve, 350));
+
+          // Hide the toast just before the print window pops up
+          setPdfToast(null);
+
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+
+          // Clean up the iframe after the print dialogue closes
+          setTimeout(() => {
+            iframe.remove();
+          }, 1000);
         }
-
-        // Show our beautiful boomer-friendly custom overlay hint immediately
-        setPdfToast(instructions);
-
-        // Wait 4.5 seconds so the user has time to read it!
-        await new Promise((resolve) => setTimeout(resolve, 4500));
-
-        // --- CLIENT-SIDE STEALTH IFRAME PRINT ---
-        const iframe = document.createElement('iframe');
-        iframe.style.position = 'fixed';
-        iframe.style.right = '0';
-        iframe.style.bottom = '0';
-        iframe.style.width = '0';
-        iframe.style.height = '0';
-        iframe.style.border = '0';
-        iframe.style.zIndex = '-9999';
-        document.body.appendChild(iframe);
-
-        const doc = iframe.contentWindow?.document;
-        if (!doc) throw new Error("Could not access document inside stealth iframe.");
-        
-        doc.open();
-        doc.write(formattedHtml);
-        doc.close();
-
-        // Give it a tiny moment to parse/load stylesheets
-        await new Promise((resolve) => setTimeout(resolve, 350));
-
-        // Hide the toast just before the print window pops up
-        setPdfToast(null);
-
-        iframe.contentWindow?.focus();
-        iframe.contentWindow?.print();
-
-        // Clean up the iframe after the print dialogue closes
-        setTimeout(() => {
-          iframe.remove();
-        }, 1000);
 
       } else {
         // --- CLIENT-SIDE BLOB DOWNLOAD FOR OTHER FORMATS ---
