@@ -1,0 +1,14 @@
+{
+  "name": "hf-pdf-compiler",
+  "version": "1.0.0",
+  "description": "Enterprise-grade HTML-to-PDF compiler microservice running warm headless Chrome.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "puppeteer-core": "^22.10.0"
+  }
+}

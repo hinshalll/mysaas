@@ -1860,61 +1860,130 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
       `;
 
       if (format.value === 'pdf') {
-        if (isMobile) {
-          // --- MOBILE: CLEAN SELF-CLOSING NEW TAB PRINTING ---
-          if (printWindow) {
-            localStorage.setItem('print_html', formattedHtml);
-          } else {
-            // Fallback in case popup was blocked/closed
-            alert("Unable to open print preview tab. Please ensure popups are allowed.");
-          }
-        } else {
-          // --- DESKTOP: STEALTH IFRAME PRINT ---
-          // Dynamically compute the OS-specific instruction copy to make it extremely clear for noobs & boomers
-          let instructions = "In the print window, change the 'Destination' dropdown to 'Save as PDF', then click the Save button.";
-          if (typeof navigator !== 'undefined') {
-            const ua = navigator.userAgent;
-            if (/Macintosh|MacIntel/i.test(ua)) {
-              instructions = "Mac Tip: In the print window, set 'Destination' to 'Save as PDF' (in Safari, click the 'PDF' dropdown at the bottom-left and select 'Save as PDF').";
+        const isPaid = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
+
+        const triggerLocalPrint = async () => {
+          if (isMobile) {
+            // --- MOBILE: CLEAN SELF-CLOSING NEW TAB PRINTING ---
+            if (printWindow) {
+              localStorage.setItem('print_html', formattedHtml);
+            } else {
+              // Fallback in case popup was blocked/closed
+              alert("Unable to open print preview tab. Please ensure popups are allowed.");
             }
+          } else {
+            // --- DESKTOP: STEALTH IFRAME PRINT ---
+            // Dynamically compute the OS-specific instruction copy to make it extremely clear for noobs & boomers
+            let instructions = "In the print window, change the 'Destination' dropdown to 'Save as PDF', then click the Save button.";
+            if (typeof navigator !== 'undefined') {
+              const ua = navigator.userAgent;
+              if (/Macintosh|MacIntel/i.test(ua)) {
+                instructions = "Mac Tip: In the print window, set 'Destination' to 'Save as PDF' (in Safari, click the 'PDF' dropdown at the bottom-left and select 'Save as PDF').";
+              }
+            }
+
+            // Show our beautiful boomer-friendly custom overlay hint immediately
+            setPdfToast(instructions);
+
+            // Wait 4.5 seconds so the user has time to read it!
+            await new Promise((resolve) => setTimeout(resolve, 4500));
+
+            const iframe = document.createElement('iframe');
+            iframe.style.position = 'fixed';
+            iframe.style.right = '0';
+            iframe.style.bottom = '0';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            iframe.style.zIndex = '-9999';
+            document.body.appendChild(iframe);
+
+            const doc = iframe.contentWindow?.document;
+            if (!doc) throw new Error("Could not access document inside stealth iframe.");
+            
+            doc.open();
+            doc.write(formattedHtml);
+            doc.close();
+
+            // Give it a tiny moment to parse/load stylesheets
+            await new Promise((resolve) => setTimeout(resolve, 350));
+
+            // Hide the toast just before the print window pops up
+            setPdfToast(null);
+
+            iframe.contentWindow?.focus();
+            iframe.contentWindow?.print();
+
+            // Clean up the iframe after the print dialogue closes
+            setTimeout(() => {
+              iframe.remove();
+            }, 1000);
+          }
+        };
+
+        // Try direct premium 1-click cloud generation for both free and paid users
+        if (printWindow && isPaid) {
+          // If they are a paid user, close the mobile popup immediately since they don't need print dialogues
+          try { printWindow.close(); } catch (_) {}
+        }
+
+        setPdfToast("Generating premium one-click PDF download...");
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5-second strict timeout
+
+        try {
+          // Get active session token if exists
+          const { data: { session } } = await supabase.auth.getSession();
+          const token = session?.access_token || '';
+
+          const response = await fetch('/api/v1/export-pdf', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              html: formattedHtml,
+              filename: smartName
+            }),
+            signal: controller.signal
+          });
+
+          clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            throw new Error("Cloud compiler endpoint returned an error status.");
           }
 
-          // Show our beautiful boomer-friendly custom overlay hint immediately
-          setPdfToast(instructions);
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = smartName;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          a.remove();
 
-          // Wait 4.5 seconds so the user has time to read it!
-          await new Promise((resolve) => setTimeout(resolve, 4500));
-
-          const iframe = document.createElement('iframe');
-          iframe.style.position = 'fixed';
-          iframe.style.right = '0';
-          iframe.style.bottom = '0';
-          iframe.style.width = '0';
-          iframe.style.height = '0';
-          iframe.style.border = '0';
-          iframe.style.zIndex = '-9999';
-          document.body.appendChild(iframe);
-
-          const doc = iframe.contentWindow?.document;
-          if (!doc) throw new Error("Could not access document inside stealth iframe.");
+          setPdfToast(null);
+        } catch (err: any) {
+          clearTimeout(timeoutId);
+          console.warn("[PDF Failsafe Switch] Cloud compiler timed out, failed, or hit rate limits. Silently falling back to client-side system print.", err);
           
-          doc.open();
-          doc.write(formattedHtml);
-          doc.close();
-
-          // Give it a tiny moment to parse/load stylesheets
-          await new Promise((resolve) => setTimeout(resolve, 350));
-
-          // Hide the toast just before the print window pops up
+          // Graceful fallback to client-side print (failsafe switch)
+          setPdfToast("Connecting to backup generator...");
+          await new Promise((resolve) => setTimeout(resolve, 800));
           setPdfToast(null);
 
-          iframe.contentWindow?.focus();
-          iframe.contentWindow?.print();
+          // Re-open mobile preview window if it was closed
+          if (isMobile && isPaid && !printWindow) {
+            try {
+              printWindow = window.open('/print-preview', '_blank');
+            } catch (_) {}
+          }
 
-          // Clean up the iframe after the print dialogue closes
-          setTimeout(() => {
-            iframe.remove();
-          }, 1000);
+          await triggerLocalPrint();
         }
 
       } else {
