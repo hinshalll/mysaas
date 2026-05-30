@@ -6100,6 +6100,9 @@ function AccountPage({
   const [billingMessage, setBillingMessage] = useState<string | null>(null);
   const [billingSuccess, setBillingSuccess] = useState(false);
 
+  const [invoices, setInvoices] = useState<any[]>([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(false);
+
   const [deactivateModalOpen, setDeactivateModalOpen] = useState(false);
   const [showDeactivateFields, setShowDeactivateFields] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
@@ -6129,6 +6132,255 @@ function AccountPage({
     } catch (err: any) {
       setBillingMessage("Failed to open portal: " + err.message);
       setBillingSuccess(false);
+    }
+  };
+
+  const fetchRealInvoices = useCallback(async () => {
+    if (!supabase || !sessionUser || isAnonUser || userPlan === 'free') {
+      setInvoices([]);
+      return;
+    }
+    setLoadingInvoices(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setLoadingInvoices(false);
+        return;
+      }
+      const response = await fetch(`/billing/invoices?token=${token}`);
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to fetch invoices');
+      setInvoices(data.orders || []);
+    } catch (e) {
+      console.warn("Failed to load Creem invoices:", e);
+    } finally {
+      setLoadingInvoices(false);
+    }
+  }, [sessionUser, isAnonUser, userPlan]);
+
+  useEffect(() => {
+    fetchRealInvoices();
+  }, [fetchRealInvoices]);
+
+  const handleDownloadRealReceipt = (order: any) => {
+    const orderDate = new Date(order.createdAt);
+    const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const formattedDate = formatter.format(orderDate);
+    const invoiceNo = `INV-${order.id.substring(0, 8).toUpperCase()}`;
+    const amountPaid = `$${(order.amount / 100).toFixed(2)}`;
+    
+    // Extrapolate next date by adding 30 days
+    const nextDate = new Date(orderDate.getTime() + 30 * 24 * 60 * 60 * 1000);
+    const renewalDateStr = formatter.format(nextDate);
+
+    const receiptHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Receipt ${invoiceNo}</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #111827;
+            background: #ffffff;
+            margin: 0;
+            padding: 40px;
+            font-size: 14px;
+            line-height: 1.5;
+          }
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+          .brand {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: #4f46e5;
+          }
+          .title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: right;
+          }
+          .invoice-no {
+            font-size: 18px;
+            font-weight: 700;
+            color: #111827;
+            margin-top: 4px;
+          }
+          .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+          }
+          .meta-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+          }
+          .meta-value {
+            font-size: 13.5px;
+            color: #374151;
+            word-break: break-all;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 40px;
+          }
+          th {
+            background: #f9fafb;
+            text-align: left;
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 600;
+            color: #4b5563;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e5e7eb;
+          }
+          td {
+            padding: 16px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #374151;
+          }
+          .total-row td {
+            font-weight: 700;
+            border-bottom: none;
+            background: #f9fafb;
+            font-size: 15px;
+          }
+          .footer {
+            margin-top: 60px;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #9ca3af;
+          }
+          .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            background: #ecfdf5;
+            color: #059669;
+            text-transform: uppercase;
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div class="brand">${brandName}</div>
+            <div style="color: #6b7280; font-size: 12px; margin-top: 4px;">mysaastools.vercel.app</div>
+          </div>
+          <div>
+            <div class="title">Payment Receipt</div>
+            <div class="invoice-no">${invoiceNo}</div>
+          </div>
+        </div>
+
+        <div class="meta-grid">
+          <div>
+            <div class="meta-label">Billed To</div>
+            <div class="meta-value">
+              <strong>Email:</strong> ${sessionUser?.email || 'N/A'}<br>
+              <strong>User ID:</strong> ${sessionUser?.id || 'N/A'}
+            </div>
+          </div>
+          <div>
+            <div class="meta-label">Payment Information</div>
+            <div class="meta-value">
+              <strong>Date Paid:</strong> ${formattedDate}<br>
+              <strong>Status:</strong> <span class="badge">Paid</span><br>
+              <strong>Method:</strong> Creem Sandbox Card Secure
+            </div>
+          </div>
+        </div>
+
+        <div class="meta-grid" style="margin-top: -20px; margin-bottom: 30px;">
+          <div>
+            <div class="meta-label">Subscription Details</div>
+            <div class="meta-value">
+              <strong>Order ID:</strong> ${order.id}<br>
+              <strong>Customer ID:</strong> ${customerId || 'N/A'}
+            </div>
+          </div>
+          <div>
+            <div class="meta-label">Billing Cycle</div>
+            <div class="meta-value">
+              <strong>Period:</strong> ${formattedDate} - ${renewalDateStr}
+            </div>
+          </div>
+        </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 70%;">Description</th>
+              <th style="text-align: right;">Unit Price</th>
+              <th style="text-align: right; width: 15%;">Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>
+                <strong>${planName} Plan Subscription</strong><br>
+                <span style="font-size: 11.5px; color: #6b7280;">Unlimited access to all 28 automated SaaS tools, watermarks stripped, and bulk processing.</span>
+              </td>
+              <td style="text-align: right; font-weight: 500;">${amountPaid}</td>
+              <td style="text-align: right; font-weight: 500;">${amountPaid}</td>
+            </tr>
+            <tr>
+              <td style="border: none;"></td>
+              <td style="text-align: right; color: #6b7280; font-size: 12px; border: none;">Subtotal</td>
+              <td style="text-align: right; font-weight: 500; border: none;">${amountPaid}</td>
+            </tr>
+            <tr>
+              <td></td>
+              <td style="text-align: right; color: #6b7280; font-size: 12px;">Tax (0%)</td>
+              <td style="text-align: right; font-weight: 500;">$0.00</td>
+            </tr>
+            <tr class="total-row">
+              <td></td>
+              <td style="text-align: right; font-size: 13px;">Total Paid</td>
+              <td style="text-align: right; color: #4f46e5;">${amountPaid}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="footer">
+          Thank you for choosing ${brandName}! If you have any billing questions, please visit your Customer Billing Portal.<br>
+          This is an official secure sandbox receipt generated for payment transaction reference.
+        </div>
+      </body>
+      </html>
+    `;
+
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('print_html', receiptHtml);
+      const printWindow = window.open('/print-preview', '_blank');
+      if (!printWindow) {
+        setBillingMessage("⚠️ Pop-up blocked! Please allow pop-ups for this website to view and download your receipt PDF.");
+      } else {
+        setBillingMessage("✓ Receipt opened in print preview! Select 'Save as PDF' to download.");
+      }
     }
   };
 
@@ -7102,36 +7354,81 @@ function AccountPage({
                 </div>
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {/* Real Dynamic Sandbox Receipt Row */}
-                  <div style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '12px 14px', background: 'var(--bg-elev-1)',
-                    border: '1px solid var(--border)', borderRadius: 10,
-                  }}>
-                    <div>
-                      <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>
-                        {(() => {
-                          const invoiceDate = currentPeriodEnd 
-                            ? new Date(new Date(currentPeriodEnd).getTime() - 30 * 24 * 60 * 60 * 1000)
-                            : new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
-                          return formatter.format(invoiceDate);
-                        })()}
+                  {loadingInvoices ? (
+                    <div style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      padding: '24px 20px', background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+                      borderRadius: 10
+                    }}>
+                      <Icon.Loader size={16} className="spin" style={{ color: 'var(--accent)' }} />
+                      <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>Retrieving Creem billing history...</span>
+                    </div>
+                  ) : invoices.length > 0 ? (
+                    invoices.map((order) => {
+                      const orderDate = new Date(order.createdAt);
+                      const formattedOrderDate = formatter.format(orderDate);
+                      const displayAmount = `$${(order.amount / 100).toFixed(2)}`;
+                      const invId = `INV-${order.id.substring(0, 8).toUpperCase()}`;
+
+                      return (
+                        <div key={order.id} style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                          padding: '12px 14px', background: 'var(--bg-elev-1)',
+                          border: '1px solid var(--border)', borderRadius: 10,
+                        }}>
+                          <div>
+                            <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>
+                              {formattedOrderDate}
+                            </div>
+                            <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>
+                              {invId} • {planName}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                            <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{displayAmount}</span>
+                            <button onClick={() => handleDownloadRealReceipt(order)} className="reset" style={{
+                              padding: '6px 10px', borderRadius: 6, background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                              color: 'var(--fg)', fontSize: 11, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                            }}>
+                              <Icon.FileDown size={12} />
+                              <span>PDF</span>
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    /* Fallback to computed dynamic billing row if empty */
+                    <div style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      padding: '12px 14px', background: 'var(--bg-elev-1)',
+                      border: '1px solid var(--border)', borderRadius: 10,
+                    }}>
+                      <div>
+                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>
+                          {(() => {
+                            const invoiceDate = currentPeriodEnd 
+                              ? new Date(new Date(currentPeriodEnd).getTime() - 30 * 24 * 60 * 60 * 1000)
+                              : new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+                            return formatter.format(invoiceDate);
+                          })()}
+                        </div>
+                        <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>
+                          {subscriptionId ? `INV-${subscriptionId.substring(0, 8).toUpperCase()}` : `INV-SANDBOX-${customerId?.substring(0, 6).toUpperCase() || 'NEW'}`} • {planName}
+                        </div>
                       </div>
-                      <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>
-                        {subscriptionId ? `INV-${subscriptionId.substring(0, 8).toUpperCase()}` : `INV-SANDBOX-${customerId?.substring(0, 6).toUpperCase() || 'NEW'}`} • {planName}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                        <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{planPrice}</span>
+                        <button onClick={handleDownloadReceipt} className="reset" style={{
+                          padding: '6px 10px', borderRadius: 6, background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                          color: 'var(--fg)', fontSize: 11, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                        }}>
+                          <Icon.FileDown size={12} />
+                          <span>PDF</span>
+                        </button>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{planPrice}</span>
-                      <button onClick={handleDownloadReceipt} className="reset" style={{
-                        padding: '6px 10px', borderRadius: 6, background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                        color: 'var(--fg)', fontSize: 11, fontWeight: 500, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
-                      }}>
-                        <Icon.FileDown size={12} />
-                        <span>PDF</span>
-                      </button>
-                    </div>
-                  </div>
+                  )}
 
                   {/* Portal Integration Button */}
                   <button 
