@@ -3,6 +3,26 @@ import { createClient } from '@supabase/supabase-js';
 import { supabaseAdmin } from '../../utils/supabaseAdmin';
 import { getCreemProductId } from '../../utils/creemProducts';
 
+const safeDate = (val: any) => {
+  if (!val) return null;
+  if (typeof val === 'number') {
+    const date = new Date(val < 9999999999 ? val * 1000 : val);
+    return date.toISOString();
+  }
+  if (typeof val === 'string') {
+    try {
+      const date = new Date(val);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+    } catch {}
+  }
+  if (val instanceof Date) {
+    return val.toISOString();
+  }
+  return null;
+};
+
 export async function POST(req: Request) {
   try {
     let body;
@@ -90,20 +110,25 @@ export async function POST(req: Request) {
 
     const updatedSubscription = await creemResponse.json();
 
-    // 6. Sync updated subscription tier in our database
+    // 6. Sync updated subscription tier in our database with robust timestamp converting
     const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({
         tier: planId,
+        subscription_id: updatedSubscription.id || subscriptionId,
         subscription_status: updatedSubscription.status || 'active',
-        current_period_end: updatedSubscription.current_period_end || null,
-        cancel_at_period_end: updatedSubscription.cancel_at_period_end || false,
+        current_period_start: safeDate(updatedSubscription.currentPeriodStartDate || updatedSubscription.current_period_start || updatedSubscription.current_period_start_date) || new Date().toISOString(),
+        current_period_end: safeDate(updatedSubscription.currentPeriodEndDate || updatedSubscription.current_period_end || updatedSubscription.current_period_end_date) || null,
+        canceled_at: safeDate(updatedSubscription.canceledAt || updatedSubscription.canceled_at) || null,
+        cancel_at_period_end: updatedSubscription.status === 'scheduled_cancel' || !!updatedSubscription.cancel_at_period_end,
       })
       .eq('id', user.id);
 
     if (updateError) {
       console.error('Failed to sync updated subscription status in database:', updateError);
-      return NextResponse.json({ error: 'Failed to sync tier changes in local database.' }, { status: 500 });
+      return NextResponse.json({ 
+        error: `Failed to sync tier changes in local database: ${updateError.message || JSON.stringify(updateError)}` 
+      }, { status: 500 });
     }
 
     return NextResponse.json({ 

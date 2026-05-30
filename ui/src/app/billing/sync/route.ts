@@ -3,6 +3,26 @@ import { createClient } from '@supabase/supabase-js';
 import { supabaseAdmin } from '../../utils/supabaseAdmin';
 import { getTierFromProductId } from '../../utils/creemProducts';
 
+const safeDate = (val: any) => {
+  if (!val) return null;
+  if (typeof val === 'number') {
+    const date = new Date(val < 9999999999 ? val * 1000 : val);
+    return date.toISOString();
+  }
+  if (typeof val === 'string') {
+    try {
+      const date = new Date(val);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString();
+      }
+    } catch {}
+  }
+  if (val instanceof Date) {
+    return val.toISOString();
+  }
+  return null;
+};
+
 export async function POST(req: Request) {
   try {
     let body;
@@ -154,6 +174,15 @@ export async function POST(req: Request) {
 
     console.log(`Self-healing billing status sync for user ${user.id}: setting tier to ${resolvedTier}`, { activeSub });
 
+    // Fetch existing profile to prevent overwriting active canceled statuses due to gateway propagation delays
+    const { data: existingProfile } = await supabaseAdmin
+      .from('profiles')
+      .select('cancel_at_period_end, canceled_at')
+      .eq('id', user.id)
+      .single();
+
+    const isCanceledLocal = existingProfile?.cancel_at_period_end || false;
+
     // 7. Update profile details securely in Supabase profiles database
     const { error: updateError } = await supabaseAdmin
       .from('profiles')
@@ -162,16 +191,18 @@ export async function POST(req: Request) {
         customer_id: customerId,
         subscription_status: activeSub.status || 'active',
         tier: resolvedTier,
-        current_period_start: activeSub.currentPeriodStartDate || activeSub.current_period_start || activeSub.current_period_start_date || new Date().toISOString(),
-        current_period_end: activeSub.currentPeriodEndDate || activeSub.current_period_end || activeSub.current_period_end_date || null,
-        canceled_at: activeSub.canceledAt || activeSub.canceled_at || null,
-        cancel_at_period_end: activeSub.status === 'scheduled_cancel' || !!activeSub.cancel_at_period_end,
+        current_period_start: safeDate(activeSub.currentPeriodStartDate || activeSub.current_period_start || activeSub.current_period_start_date) || new Date().toISOString(),
+        current_period_end: safeDate(activeSub.currentPeriodEndDate || activeSub.current_period_end || activeSub.current_period_end_date) || null,
+        canceled_at: safeDate(activeSub.canceledAt || activeSub.canceled_at || existingProfile?.canceled_at) || null,
+        cancel_at_period_end: activeSub.status === 'scheduled_cancel' || !!activeSub.cancel_at_period_end || isCanceledLocal,
       })
       .eq('id', user.id);
 
     if (updateError) {
       console.error('Failed to save synchronized profile data to database:', updateError);
-      return NextResponse.json({ error: 'Failed to save synced tier status in database.' }, { status: 500 });
+      return NextResponse.json({ 
+        error: `Failed to save synced tier status in database: ${updateError.message || JSON.stringify(updateError)}` 
+      }, { status: 500 });
     }
 
     return NextResponse.json({ 
