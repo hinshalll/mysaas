@@ -7600,6 +7600,11 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
   const [checkoutSpinner, setCheckoutSpinner] = useState(false);
   const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
+  // Upgrade confirmation states
+  const [upgradePreview, setUpgradePreview] = useState<any>(null);
+  const [loadingPreview, setLoadingPreview] = useState(false);
+  const [pendingPlan, setPendingPlan] = useState<'pro' | 'api' | null>(null);
+
   if (!open) return null;
 
   const apiPrice = pricingCohort === 'india' 
@@ -7620,6 +7625,42 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
       return;
     }
 
+    // Check if user is upgrading/downgrading from an existing plan
+    const isChangingPlan = (userPlan === 'pro' || userPlan === 'api') && !!subscriptionId;
+
+    if (isChangingPlan) {
+      setLoadingPreview(true);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        if (!token) {
+          setCheckoutError("Missing active session token. Please sign in.");
+          setLoadingPreview(false);
+          return;
+        }
+
+        const response = await fetch('/billing/upgrade/preview', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ planId: planName, token, pricingCohort }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to calculate proration preview.');
+        }
+
+        setUpgradePreview(data);
+        setPendingPlan(planName);
+      } catch (err: any) {
+        console.error("Preview calculation failed:", err);
+        setCheckoutError(err.message || 'Failed to fetch plan change details.');
+      } finally {
+        setLoadingPreview(false);
+      }
+      return;
+    }
+
     setCheckoutSpinner(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -7627,27 +7668,6 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
       if (!token) {
         setCheckoutError("Missing active session token. Please sign in.");
         setCheckoutSpinner(false);
-        return;
-      }
-
-      // Check if user is upgrading/downgrading from an existing plan
-      const isChangingPlan = (userPlan === 'pro' || userPlan === 'api') && !!subscriptionId;
-
-      if (isChangingPlan) {
-        // The backend upgrade route handles resuming scheduled_cancel automatically
-        const response = await fetch('/billing/upgrade', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ planId: planName, token }),
-        });
-
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || 'Failed to update subscription tier.');
-        }
-
-        setUserPlan(planName);
-        window.location.href = '/account?checkout=success';
         return;
       }
 
@@ -7679,6 +7699,39 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
     } catch (err: any) {
       console.error("Checkout session initiation failed:", err);
       setCheckoutError(err.message || 'Payment server connection failed. Please try again.');
+      setCheckoutSpinner(false);
+    }
+  }
+
+  async function handleConfirmUpgrade() {
+    if (!pendingPlan) return;
+    setCheckoutSpinner(true);
+    setCheckoutError(null);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) {
+        setCheckoutError("Missing active session token. Please sign in.");
+        setCheckoutSpinner(false);
+        return;
+      }
+
+      const response = await fetch('/billing/upgrade', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ planId: pendingPlan, token }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to update subscription tier.');
+      }
+
+      setUserPlan(pendingPlan);
+      window.location.href = '/account?checkout=success';
+    } catch (err: any) {
+      console.error("Upgrade failed:", err);
+      setCheckoutError(err.message || 'Failed to execute plan change.');
       setCheckoutSpinner(false);
     }
   }
@@ -7723,6 +7776,14 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
               Initializing your sandbox subscription profile. You will be redirected to the secure sandbox payment form.
             </p>
           </div>
+        ) : loadingPreview ? (
+          <div style={{ padding: '80px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 440, width: '100%' }} className="fade-in">
+            <Icon.Loader size={48} style={{ color: 'var(--accent)', marginBottom: 24, animation: 'spin 1s linear infinite' }} />
+            <h3 style={{ fontSize: 18, fontWeight: 600, color: 'white', marginBottom: 8, textAlign: 'center' }}>Calculating Proration Preview...</h3>
+            <p style={{ fontSize: 13, color: 'var(--fg-muted)', textAlign: 'center', maxWidth: 380, lineHeight: 1.5 }}>
+              Fetching accurate remaining time credits from your current subscription to apply to the new plan.
+            </p>
+          </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'row', minHeight: 460 }} className="fade-in">
             {/* Left Info bar */}
@@ -7758,77 +7819,143 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
               </div>
             </div>
 
-            {/* Right Plan grid */}
-            <div style={{ flex: '1.4', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, justifyContent: 'center' }}>
-              <div>
-                <h4 style={{ fontSize: 14, fontWeight: 600, color: 'white', margin: '0 0 4px' }}>Select Sandbox Subscription:</h4>
-                <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: 0 }}>Safe test credit cards accepted</p>
-              </div>
-
-              {checkoutError && (
-                <div style={{
-                  padding: '12px 14px', borderRadius: 8,
-                  background: 'oklch(0.20 0.05 20 / 0.3)', border: '1px solid oklch(0.50 0.15 20 / 0.4)',
-                  color: 'oklch(0.75 0.12 20)', fontSize: 12.5, display: 'flex', gap: 8, alignItems: 'flex-start'
-                }}>
-                  <Icon.AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
-                  <span>{checkoutError}</span>
+            {/* Right Side Rendering */}
+            {upgradePreview ? (
+              /* Right Plan Confirmation Grid */
+              <div style={{ flex: '1.4', padding: 36, display: 'flex', flexDirection: 'column', gap: 20, justifyContent: 'center' }} className="fade-in">
+                <div>
+                  <h4 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: '0 0 4px' }}>Confirm Subscription Change</h4>
+                  <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: 0 }}>Review the prorated adjustments before charging your card.</p>
                 </div>
-              )}
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {/* 1. Pro Subscription */}
-                <button onClick={() => handlePlanClick('pro')} className="reset plan-card" style={{
-                  textAlign: 'left', padding: '18px 20px', borderRadius: 12,
-                  background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  transition: 'border-color 0.15s, background 0.15s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
-                >
-                  <div style={{ flex: 1, marginRight: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Pro Workspace Plan</div>
-                      <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 265 / 0.3)', color: 'var(--accent)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>MOST POPULAR</span>
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Complete cockpit access with unlimited tool computing.</div>
+                {checkoutError && (
+                  <div style={{
+                    padding: '12px 14px', borderRadius: 8,
+                    background: 'oklch(0.20 0.05 20 / 0.3)', border: '1px solid oklch(0.50 0.15 20 / 0.4)',
+                    color: 'oklch(0.75 0.12 20)', fontSize: 12.5, display: 'flex', gap: 8, alignItems: 'flex-start'
+                  }}>
+                    <Icon.AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <span>{checkoutError}</span>
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{currency}{proPrice}</div>
-                    <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>/ month</div>
-                  </div>
-                </button>
+                )}
 
-                {/* 2. API Pro Subscription */}
-                <button onClick={() => handlePlanClick('api')} className="reset plan-card" style={{
-                  textAlign: 'left', padding: '18px 20px', borderRadius: 12,
-                  background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-                  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  transition: 'border-color 0.15s, background 0.15s'
-                }}
-                onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
-                >
-                  <div style={{ flex: 1, marginRight: 16 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                      <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Developer API Pro</div>
-                      <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 145 / 0.25)', color: 'oklch(0.78 0.16 145)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>POWER TIER</span>
-                    </div>
-                    <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Direct API keys, higher query limits & webhook callbacks.</div>
+                <div style={{ background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)', borderRadius: 12, padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid var(--border)', paddingBottom: 10 }}>
+                    <span style={{ color: 'var(--fg-dim)' }}>New Selected Plan:</span>
+                    <strong style={{ color: 'white' }}>{upgradePreview.newTier === 'api' ? 'Developer API Pro' : 'Pro Workspace'}</strong>
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{currency}{apiPrice}</div>
-                    <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>/ month</div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'var(--fg-dim)' }}>New Plan Monthly Price:</span>
+                    <span style={{ color: 'white', fontWeight: 500 }}>{upgradePreview.currency}{upgradePreview.newPrice.toFixed(2)}/mo</span>
                   </div>
-                </button>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
+                    <span style={{ color: 'var(--fg-dim)' }}>Unused Time Credit (Prorated):</span>
+                    <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 600 }}>-{upgradePreview.currency}{upgradePreview.unusedCredit.toFixed(2)}</span>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderTop: '1px dotted var(--border)', paddingTop: 12 }}>
+                    <span style={{ color: 'white', fontWeight: 600 }}>Due Immediately:</span>
+                    <strong style={{ color: 'var(--accent)', fontSize: 16 }}>{upgradePreview.currency}{upgradePreview.immediateCharge.toFixed(2)}</strong>
+                  </div>
+                </div>
+
+                <p style={{ fontSize: 11, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.45 }}>
+                  * Confirming will charge your card on file <strong>{upgradePreview.currency}{upgradePreview.immediateCharge.toFixed(2)}</strong> today. A new monthly billing cycle will start immediately, renewing on <strong>{upgradePreview.nextBillingDate}</strong> for <strong>{upgradePreview.currency}{upgradePreview.newPrice.toFixed(2)}/mo</strong>.
+                </p>
+
+                <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                  <button onClick={() => { setUpgradePreview(null); setPendingPlan(null); }} className="reset" style={{
+                    flex: 1, padding: '10px 14px', borderRadius: 8,
+                    background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                    color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer', textAlign: 'center'
+                  }}>Back to Plans</button>
+
+                  <button onClick={handleConfirmUpgrade} disabled={checkoutSpinner} className="reset" style={{
+                    flex: 1.5, padding: '10px 14px', borderRadius: 8,
+                    background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
+                    border: '1px solid var(--border)',
+                    color: 'white', fontWeight: 600, fontSize: 12.5, cursor: checkoutSpinner ? 'not-allowed' : 'pointer',
+                    textAlign: 'center'
+                  }}>
+                    {checkoutSpinner ? 'Processing...' : `Confirm & Pay ${upgradePreview.currency}{upgradePreview.immediateCharge.toFixed(2)}`}
+                  </button>
+                </div>
               </div>
+            ) : (
+              /* Right Plan grid */
+              <div style={{ flex: '1.4', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, justifyContent: 'center' }}>
+                <div>
+                  <h4 style={{ fontSize: 14, fontWeight: 600, color: 'white', margin: '0 0 4px' }}>Select Sandbox Subscription:</h4>
+                  <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: 0 }}>Safe test credit cards accepted</p>
+                </div>
 
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <Icon.CreditCard size={14} style={{ color: 'var(--fg-subtle)' }} />
-                <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Creem.io Sandbox Environment &bull; Test Payments Only</span>
+                {checkoutError && (
+                  <div style={{
+                    padding: '12px 14px', borderRadius: 8,
+                    background: 'oklch(0.20 0.05 20 / 0.3)', border: '1px solid oklch(0.50 0.15 20 / 0.4)',
+                    color: 'oklch(0.75 0.12 20)', fontSize: 12.5, display: 'flex', gap: 8, alignItems: 'flex-start'
+                  }}>
+                    <Icon.AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+                    <span>{checkoutError}</span>
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {/* 1. Pro Subscription */}
+                  <button onClick={() => handlePlanClick('pro')} className="reset plan-card" style={{
+                    textAlign: 'left', padding: '18px 20px', borderRadius: 12,
+                    background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    transition: 'border-color 0.15s, background 0.15s'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
+                  >
+                    <div style={{ flex: 1, marginRight: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                        <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Pro Workspace Plan</div>
+                        <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 265 / 0.3)', color: 'var(--accent)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>MOST POPULAR</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Complete cockpit access with unlimited tool computing.</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{currency}{proPrice}</div>
+                      <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>/ month</div>
+                    </div>
+                  </button>
+
+                  {/* 2. API Pro Subscription */}
+                  <button onClick={() => handlePlanClick('api')} className="reset plan-card" style={{
+                    textAlign: 'left', padding: '18px 20px', borderRadius: 12,
+                    background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
+                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    transition: 'border-color 0.15s, background 0.15s'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
+                  >
+                    <div style={{ flex: 1, marginRight: 16 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                        <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Developer API Pro</div>
+                        <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 145 / 0.25)', color: 'oklch(0.78 0.16 145)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>POWER TIER</span>
+                      </div>
+                      <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Direct API keys, higher query limits & webhook callbacks.</div>
+                    </div>
+                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                      <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{currency}{apiPrice}</div>
+                      <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>/ month</div>
+                    </div>
+                  </button>
+                </div>
+
+                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Icon.CreditCard size={14} style={{ color: 'var(--fg-subtle)' }} />
+                  <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Creem.io Sandbox Environment &bull; Test Payments Only</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         )}
       </div>
