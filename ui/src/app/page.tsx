@@ -483,6 +483,7 @@ function TopBar({
   onOpenPalette, onOpenLauncher, onHome, activeTool, scrolled, theme, onToggleTheme,
   brandName, setBrandName, sessionUser, isAnonUser, userPlan, onOpenAuthModal, onSignOut, onShowPaywall, onOpenTool
 }: TopBarProps) {
+  const isPremium = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
   const [isEditingBrand, setIsEditingBrand] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
@@ -670,7 +671,7 @@ function TopBar({
         <button onClick={onOpenAuthModal} className="reset top-link" style={{ ...topLink, color: 'var(--accent)', fontWeight: 600 }}>Sign In / Up</button>
       )}
 
-      {userPlan !== 'pro' && (
+      {!isPremium && (
         <button onClick={onShowPaywall} className="reset main-upgrade-btn" style={{
           padding: '6px 12px',
           background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
@@ -841,7 +842,7 @@ function TopBar({
               </button>
             )}
 
-            {userPlan !== 'pro' && (
+            {!isPremium && (
               <button 
                 onClick={() => {
                   onShowPaywall();
@@ -1517,6 +1518,7 @@ interface FormatterToolProps {
 }
 
 function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, onShowPaywall, supabase, checkAndLogUsage }: FormatterToolProps) {
+  const isPremium = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
   // Pro Cockpit Features
   const [removeWatermark, setRemoveWatermark] = useState(false);
   const [customHeader, setCustomHeader] = useState('');
@@ -2334,7 +2336,7 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Icon.Wand size={14} style={{ color: 'var(--pro)' }} />
                   <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Workspace & Branding Cockpit</span>
-                  {userPlan !== 'pro' && (
+                  {!isPremium && (
                     <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 5px', borderRadius: 4, fontWeight: 700 }}>PRO UPGRADE GATED</span>
                   )}
                 </div>
@@ -2371,7 +2373,7 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
                     type="checkbox"
                     checked={removeWatermark}
                     onChange={e => {
-                      if (userPlan !== 'pro') {
+                      if (!isPremium) {
                         onShowPaywall();
                       } else {
                         setRemoveWatermark(e.target.checked);
@@ -2387,8 +2389,8 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
                   <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Header</label>
                   <input
                     type="text"
-                    placeholder={userPlan === 'pro' ? "Header Text..." : "Locked for Pro"}
-                    disabled={userPlan !== 'pro'}
+                    placeholder={isPremium ? "Header Text..." : "Locked for Pro"}
+                    disabled={!isPremium}
                     value={customHeader}
                     onChange={e => setCustomHeader(e.target.value)}
                     style={{
@@ -2403,8 +2405,8 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
                   <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Footer</label>
                   <input
                     type="text"
-                    placeholder={userPlan === 'pro' ? "Footer Text..." : "Locked for Pro"}
-                    disabled={userPlan !== 'pro'}
+                    placeholder={isPremium ? "Footer Text..." : "Locked for Pro"}
+                    disabled={!isPremium}
                     value={customFooter}
                     onChange={e => setCustomFooter(e.target.value)}
                     style={{
