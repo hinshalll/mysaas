@@ -1885,8 +1885,8 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
             // Show our beautiful boomer-friendly custom overlay hint immediately
             setPdfToast(instructions);
 
-            // Wait 4.5 seconds so the user has time to read it!
-            await new Promise((resolve) => setTimeout(resolve, 4500));
+            // Wait 1.2 seconds so the user has a brief moment to see it, then launch the print dialouge instantly
+            await new Promise((resolve) => setTimeout(resolve, 1200));
 
             const iframe = document.createElement('iframe');
             iframe.style.position = 'fixed';

@@ -17,24 +17,9 @@ let idleTimeout = null;
 // Standard Linux Chromium executable paths inside Docker
 const CHROMIUM_PATH = process.env.CHROMIUM_PATH || '/usr/bin/chromium';
 
-// Reset the 30-second idle browser shutdown timer to save RAM in container
+// Reset the idle browser shutdown timer (bypassed to keep browser permanently warm in 16GB RAM container)
 function resetIdleTimeout() {
-  if (idleTimeout) {
-    clearTimeout(idleTimeout);
-  }
-  
-  idleTimeout = setTimeout(async () => {
-    if (cachedBrowser) {
-      console.log('[Idle Monitor] Closing Chromium to free 1GB+ container RAM...');
-      try {
-        await cachedBrowser.close();
-      } catch (e) {
-        console.error('Error closing idle browser:', e);
-      } finally {
-        cachedBrowser = null;
-      }
-    }
-  }, 30000); // 30 seconds of idle time
+  // Browser stays permanently booted in memory to guarantee instant sub-second downloads at all times
 }
 
 // 1. Health check endpoint (for UptimeRobot to keep container warm 24/7)

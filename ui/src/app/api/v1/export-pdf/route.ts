@@ -132,35 +132,56 @@ export async function POST(req: Request) {
         tier: isPaidOrAdmin ? 3 : 1
       });
 
-    // 7. Select Compiler Endpoint using Random Load Balancing
-    const endpoint = COMPILER_ENDPOINTS[Math.floor(Math.random() * COMPILER_ENDPOINTS.length)];
-    console.log(`[Proxy] Forwarding PDF compilation request to Hugging Face: ${endpoint}`);
-
-    // 8. Proxy request securely to Hugging Face
+    // 7. Proxy request securely to Hugging Face with Automatic Failover Retry
     const proxyHeaders: Record<string, string> = {
       'Content-Type': 'application/json',
       'X-Compiler-Token': `Bearer ${COMPILER_TOKEN}`
     };
 
-    // If HF Token is provided, use it to authorize the private space proxy request
     if (HF_TOKEN) {
       proxyHeaders['Authorization'] = `Bearer ${HF_TOKEN}`;
     } else {
-      // Fallback for public spaces
       proxyHeaders['Authorization'] = `Bearer ${COMPILER_TOKEN}`;
     }
 
-    const proxyResponse = await fetch(endpoint, {
-      method: 'POST',
-      headers: proxyHeaders,
-      body: JSON.stringify({ html, filename }),
-    });
+    const endpoints = [...COMPILER_ENDPOINTS];
+    // Shuffle the endpoints list to randomize load distribution
+    for (let i = endpoints.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [endpoints[i], endpoints[j]] = [endpoints[j], endpoints[i]];
+    }
 
-    if (!proxyResponse.ok) {
-      const errText = await proxyResponse.text();
-      console.error(`[Proxy Error] Compiler microservice returned status ${proxyResponse.status}:`, errText);
+    let proxyResponse = null;
+    let activeEndpoint = '';
+
+    // Loop through endpoints with automatic 4-second timeouts. If one fails or is cold-starting, instantly retry the next!
+    for (const endpoint of endpoints) {
+      activeEndpoint = endpoint;
+      console.log(`[Proxy] Attempting PDF compilation at node: ${endpoint}`);
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: proxyHeaders,
+          body: JSON.stringify({ html, filename }),
+          signal: AbortSignal.timeout(4000) // 4-second timeout per space node
+        });
+
+        if (response.ok) {
+          proxyResponse = response;
+          break; // Success! Break out of the failover loop
+        } else {
+          const errText = await response.text();
+          console.warn(`[Proxy Warning] Space node ${endpoint} failed with status ${response.status}:`, errText);
+        }
+      } catch (err) {
+        console.warn(`[Proxy Warning] Space node ${endpoint} timed out or experienced a network error. Retrying next node...`, err);
+      }
+    }
+
+    if (!proxyResponse) {
+      console.error(`[Proxy Error] All configured Hugging Face Spaces failed or timed out.`);
       return NextResponse.json(
-        { status: 'error', message: 'Failed to compile high-fidelity PDF via cloud microservice.' },
+        { status: 'error', message: 'All cloud PDF compilation nodes are currently offline or timed out.' },
         { status: 502 }
       );
     }
