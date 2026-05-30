@@ -369,6 +369,7 @@ export const GLOBAL_CSS = `:root {
     .featured-grid > div:last-child { justify-self: start; }
     .shelf-header h2 { display: none; }
     .mobile-menu-btn { display: inline-flex !important; }
+    .main-upgrade-btn { display: none !important; }
   }
 
   @media (max-width: 480px) {
@@ -670,7 +671,7 @@ function TopBar({
       )}
 
       {userPlan !== 'pro' && (
-        <button onClick={onShowPaywall} className="reset" style={{
+        <button onClick={onShowPaywall} className="reset main-upgrade-btn" style={{
           padding: '6px 12px',
           background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
           color: 'white',
@@ -1699,55 +1700,7 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
     let printWindow: Window | null = null;
     
     if (isPdf && isMobile) {
-      printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.open();
-        printWindow.document.write(`
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <title>Preparing PDF...</title>
-            <meta name="viewport" content="width=device-width, initial-scale=1">
-            <style>
-              body {
-                display: flex;
-                flex-direction: column;
-                justify-content: center;
-                align-items: center;
-                height: 100vh;
-                margin: 0;
-                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-                background-color: #0b0f19;
-                color: #f3f4f6;
-              }
-              .spinner {
-                border: 3px solid rgba(255, 255, 255, 0.1);
-                width: 36px;
-                height: 36px;
-                border-radius: 50%;
-                border-left-color: #6366f1;
-                animation: spin 1s linear infinite;
-                margin-bottom: 16px;
-              }
-              @keyframes spin {
-                0% { transform: rotate(0deg); }
-                100% { transform: rotate(360deg); }
-              }
-              .text {
-                font-size: 14px;
-                font-weight: 500;
-                letter-spacing: 0.05em;
-              }
-            </style>
-          </head>
-          <body>
-            <div class="spinner"></div>
-            <div class="text">Generating Document PDF...</div>
-          </body>
-          </html>
-        `);
-        printWindow.document.close();
-      }
+      printWindow = window.open('/print-preview', '_blank');
     }
 
     try {
@@ -1908,23 +1861,7 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
         if (isMobile) {
           // --- MOBILE: CLEAN SELF-CLOSING NEW TAB PRINTING ---
           if (printWindow) {
-            // Embed an automatic print-and-close controller inside the HTML
-            const mobileHtml = formattedHtml.replace('</body>', `
-              <script>
-                window.onload = function() {
-                  setTimeout(function() {
-                    window.focus();
-                    window.print();
-                    // Close the preview tab immediately after the print sheet is dismissed
-                    setTimeout(function() { window.close(); }, 300);
-                  }, 250);
-                };
-              </script>
-            </body>`);
-
-            printWindow.document.open();
-            printWindow.document.write(mobileHtml);
-            printWindow.document.close();
+            localStorage.setItem('print_html', formattedHtml);
           } else {
             // Fallback in case popup was blocked/closed
             alert("Unable to open print preview tab. Please ensure popups are allowed.");
