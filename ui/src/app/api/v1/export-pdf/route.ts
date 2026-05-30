@@ -9,6 +9,9 @@ const COMPILER_ENDPOINTS = process.env.PDF_COMPILER_URLS
 // In Docker microservice package, we set an optional secure bearer token
 const COMPILER_TOKEN = process.env.PDF_COMPILER_TOKEN || 'mysaas_secure_pdf_token_2026';
 
+// Read optional Hugging Face Access Token for private spaces
+const HF_TOKEN = process.env.HF_ACCESS_TOKEN || '';
+
 export async function POST(req: Request) {
   try {
     // 1. Authenticate Request (Bearer token is optional for free guests, but required for Pro/API accounts)
@@ -134,12 +137,22 @@ export async function POST(req: Request) {
     console.log(`[Proxy] Forwarding PDF compilation request to Hugging Face: ${endpoint}`);
 
     // 8. Proxy request securely to Hugging Face
+    const proxyHeaders: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-Compiler-Token': `Bearer ${COMPILER_TOKEN}`
+    };
+
+    // If HF Token is provided, use it to authorize the private space proxy request
+    if (HF_TOKEN) {
+      proxyHeaders['Authorization'] = `Bearer ${HF_TOKEN}`;
+    } else {
+      // Fallback for public spaces
+      proxyHeaders['Authorization'] = `Bearer ${COMPILER_TOKEN}`;
+    }
+
     const proxyResponse = await fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${COMPILER_TOKEN}`
-      },
+      headers: proxyHeaders,
       body: JSON.stringify({ html, filename }),
     });
 

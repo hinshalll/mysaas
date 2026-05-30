@@ -52,10 +52,20 @@ app.post('/generate', async (req, res) => {
   try {
     const { html, filename } = req.body;
 
-    // Optional Token Verification
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader !== `Bearer ${API_TOKEN}`) {
-      return res.status(401).json({ error: 'Unauthorized payload access' });
+    // Optional Token Verification (supporting both public spaces and private spaces)
+    const customAuth = req.headers['x-compiler-token'];
+    const standardAuth = req.headers.authorization;
+
+    if (customAuth) {
+      if (customAuth !== `Bearer ${API_TOKEN}`) {
+        return res.status(401).json({ error: 'Unauthorized payload access via custom header' });
+      }
+    } else if (standardAuth) {
+      // If the space is private, standardAuth holds the HF Proxy Token (which starts with Bearer hf_).
+      // We bypass verification if it is the HF Proxy token, otherwise check it matches our local API_TOKEN.
+      if (standardAuth !== `Bearer ${API_TOKEN}` && !standardAuth.startsWith('Bearer hf_')) {
+        return res.status(401).json({ error: 'Unauthorized payload access via standard header' });
+      }
     }
 
     if (!html) {
