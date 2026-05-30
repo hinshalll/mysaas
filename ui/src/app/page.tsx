@@ -8844,7 +8844,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
   }
 
   const checkAndLogUsage = useCallback(async (toolId: string, isTier2: boolean) => {
-    if (userPlan === 'pro') return true;
+    if (userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin') return true;
 
     // Track daily usage count inside Supabase `usage_logs`
     const today = new Date();
