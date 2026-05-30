@@ -1713,20 +1713,34 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
         return;
       }
 
-      // Track this file download inside history table if they are logged in
-      const smartName = `formatted-doc-${Date.now().toString().slice(-4)}${format.tag}`;
-      try {
-        await saveToCloudHistory(smartName);
-      } catch (err) {
-        console.error("Failed to save to cloud history", err);
-      }
-
       // Detect if we are in text/code mode or WYSIWYG mode
       const isTextMode = format.value === 'md' || format.value === 'txt';
       
       // Grab the exact edited content straight from the active editor
       let finalContent = isTextMode ? editorRef.current?.value : editorRef.current?.innerHTML;
       if (!finalContent) finalContent = text; // fallback
+
+      // Build a dynamic, brand-safe filename using websitename_first-2-3-words
+      const cleanBrand = brandName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      
+      // Extract the first 2-3 words of the text cleanly
+      const cleanText = stripMarkdown(isTextMode ? finalContent : (editorRef.current?.innerText || text));
+      const firstWords = cleanText
+        .trim()
+        .split(/\s+/)
+        .slice(0, 3)
+        .join('-')
+        .toLowerCase()
+        .replace(/[^a-z0-9-]/g, '');
+      
+      const smartName = `${cleanBrand}_${firstWords || 'doc'}${format.tag}`;
+
+      // Track this file download inside history table if they are logged in
+      try {
+        await saveToCloudHistory(smartName);
+      } catch (err) {
+        console.error("Failed to save to cloud history", err);
+      }
 
       // running headers / footers logic
       let headerHtml = "";
