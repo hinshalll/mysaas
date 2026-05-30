@@ -1858,6 +1858,14 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
         }
       `;
 
+      // Get the clean, unpolluted text content from the editor to avoid browser contentEditable HTML pollution
+      const cleanRawText = isTextMode 
+        ? finalContent 
+        : (editorRef.current?.innerText || text);
+
+      // Compile it cleanly into pristine HTML structure (matching your perfected offline engine)
+      const pristineHtmlBody = marked.parse(cleanRawText);
+
       const formattedHtml = `
         <!DOCTYPE html>
         <html>
@@ -1867,7 +1875,7 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
         </head>
         <body>
           ${headerHtml}
-          ${isTextMode ? marked.parse(finalContent) : finalContent}
+          ${pristineHtmlBody}
           ${footerHtml}
         </body>
         </html>
