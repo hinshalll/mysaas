@@ -525,36 +525,107 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
       let themeCss = "";
       if (theme.value === "academic") {
         themeCss = `
-          body { font-family: 'Georgia', serif; line-height: 1.7; color: #333; font-size: 11pt; padding: 1in; }
-          h1 { font-size: 24pt; font-weight: bold; margin-bottom: 6px; }
-          h2 { font-size: 16pt; font-style: italic; border-bottom: 1px solid #ccc; margin-top: 24px; }
-          blockquote { border-left: 3px solid #666; padding-left: 12px; font-style: italic; color: #555; }
-          table { width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 10pt; }
-          th, td { border: 1px solid #444; padding: 10px; text-align: left; }
-          th { background-color: #f4f4f4; font-weight: bold; }
+          body { 
+            font-family: 'Source Serif Pro', 'Georgia', serif; 
+            line-height: 1.7; 
+            color: #27272a;
+            color: oklch(0.20 0.005 250); 
+            background-color: #fdfdfd;
+            background-color: oklch(0.99 0.002 250);
+            font-size: 11.5pt; 
+            padding: 1.2in; 
+          }
+          h1 { font-size: 26pt; font-weight: 700; margin-bottom: 8px; color: #18181b; color: oklch(0.12 0.005 250); text-align: center; }
+          h2 { font-size: 17pt; font-style: italic; font-weight: 600; border-bottom: 1px solid #e4e4e7; border-bottom-color: oklch(0.90 0.005 250); margin-top: 28px; padding-bottom: 4px; }
+          h3 { font-size: 13pt; font-weight: 600; margin-top: 20px; }
+          p { margin: 0 0 14px; text-align: justify; }
+          blockquote { border-left: 3px solid #71717a; border-left-color: oklch(0.40 0.005 250); padding-left: 16px; font-style: italic; color: #52525b; color: oklch(0.35 0.005 250); margin: 18px 0; }
+          table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 10pt; }
+          th, td { border: 1px solid #a1a1aa; border-color: oklch(0.70 0.005 250); padding: 10px 14px; text-align: left; }
+          th { background-color: #f4f4f5; background-color: oklch(0.96 0.005 250); font-weight: bold; color: #18181b; }
+          tr:nth-child(even) { background-color: #fafafa; background-color: oklch(0.98 0.002 250); }
+          pre { background-color: #f4f4f5; background-color: oklch(0.95 0.005 250); padding: 12px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; font-size: 10pt; }
+          code { font-family: monospace; font-size: 0.9em; background-color: #f4f4f5; background-color: oklch(0.95 0.005 250); padding: 2px 4px; border-radius: 3px; }
         `;
       } else if (theme.value === "minimalist") {
         themeCss = `
-          body { font-family: 'Courier New', monospace; line-height: 1.5; color: #000; font-size: 10pt; padding: 1in; }
-          h1 { font-size: 18pt; text-transform: uppercase; border-bottom: 1px dashed #000; padding-bottom: 10px; }
-          h2 { font-size: 14pt; margin-top: 20px; }
-          blockquote { border-left: 1px dashed #000; padding-left: 10px; }
+          body { 
+            font-family: 'JetBrains Mono', 'Courier New', monospace; 
+            line-height: 1.5; 
+            color: #000000; 
+            background-color: #ffffff;
+            font-size: 10.5pt; 
+            padding: 1in; 
+          }
+          h1 { font-size: 20pt; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 16px; }
+          h2 { font-size: 15pt; font-weight: 600; margin-top: 24px; text-transform: uppercase; border-bottom: 1px dashed #000; padding-bottom: 4px; }
+          h3 { font-size: 12pt; font-weight: 600; margin-top: 18px; }
+          p { margin: 0 0 12px; }
+          blockquote { border-left: 2px dashed #000; padding-left: 14px; margin: 16px 0; }
           table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-          th, td { border: 1px dashed #000; padding: 8px; text-align: left; }
-          th { font-weight: bold; border-bottom: 2px solid #000; }
+          th, td { border: 1px dashed #000; padding: 8px 12px; text-align: left; }
+          th { font-weight: bold; border-bottom: 2px solid #000; background-color: #f8f9fa; }
+          tr:nth-child(even) { background-color: #fafafa; }
+          pre { border: 1px dashed #000; padding: 12px; font-family: inherit; white-space: pre-wrap; font-size: 9.5pt; }
+          code { background-color: #f0f0f0; padding: 1px 4px; }
         `;
       } else { // modern
         themeCss = `
-          body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; line-height: 1.6; color: #222; font-size: 11pt; padding: 1in; }
-          h1 { font-size: 28pt; font-weight: 700; letter-spacing: -0.02em; color: #111; margin-bottom: 10px; }
-          h2 { font-size: 18pt; font-weight: 600; color: #333; margin-top: 24px; }
-          blockquote { border-left: 4px solid #6366f1; padding-left: 16px; font-style: italic; background: #f8fafc; padding: 10px 16px; }
-          code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; font-family: monospace; }
-          pre { background: #1e293b; color: #fff; padding: 16px; border-radius: 8px; overflow-x: auto; }
-          table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 10.5pt; border-radius: 8px; overflow: hidden; }
-          th, td { border: 1px solid #e2e8f0; padding: 12px 16px; text-align: left; }
-          th { background-color: #f8fafc; font-weight: 600; color: #0f172a; }
-          tr:nth-child(even) { background-color: #fbfcfd; }
+          body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            line-height: 1.6; 
+            color: #1e293b;
+            color: oklch(0.16 0.008 250); 
+            background-color: #f8f9fa;
+            background-color: oklch(0.97 0.005 250);
+            font-size: 11pt; 
+            padding: 1.2in; 
+          }
+          h1 { font-size: 28pt; font-weight: 800; letter-spacing: -0.02em; color: #0f172a; color: oklch(0.12 0.015 250); margin-bottom: 12px; line-height: 1.15; }
+          h2 { font-size: 18pt; font-weight: 700; letter-spacing: -0.015em; color: #1e293b; color: oklch(0.18 0.012 250); margin-top: 28px; }
+          h3 { font-size: 14pt; font-weight: 600; color: #334155; margin-top: 20px; }
+          p { margin: 0 0 12px; }
+          blockquote { 
+            border-left: 3px solid #6366f1; 
+            border-left-color: oklch(0.62 0.18 265); 
+            padding: 8px 16px; 
+            font-style: italic; 
+            background-color: #f1f5f9; 
+            background-color: oklch(0.94 0.006 250); 
+            color: #475569;
+            color: oklch(0.35 0.010 250);
+            border-radius: 0 6px 6px 0;
+            margin: 16px 0;
+          }
+          code { 
+            background-color: #e2e8f0; 
+            background-color: oklch(0.92 0.005 250); 
+            padding: 2px 5px; 
+            border-radius: 4px; 
+            font-family: 'JetBrains Mono', 'Courier New', monospace; 
+            font-size: 0.9em;
+            color: #0f172a;
+          }
+          pre { 
+            background-color: #f1f5f9; 
+            background-color: oklch(0.93 0.005 250); 
+            color: #1e293b;
+            color: oklch(0.16 0.008 250);
+            padding: 14px 16px; 
+            border-radius: 6px; 
+            border: 1px solid #e2e8f0;
+            border-color: oklch(0.90 0.005 250);
+            overflow-x: auto; 
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 10pt;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            margin: 14px 0;
+          }
+          table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 10pt; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; border-color: oklch(0.90 0.005 250); }
+          th, td { border: 1px solid #e2e8f0; border-color: oklch(0.90 0.005 250); padding: 12px 16px; text-align: left; }
+          th { background-color: #f1f5f9; background-color: oklch(0.95 0.005 250); font-weight: 600; color: #0f172a; }
+          tr:nth-child(even) { background-color: #f8fafc; background-color: oklch(0.98 0.002 250); }
         `;
       }
 
@@ -573,14 +644,44 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
             print-color-adjust: exact !important;
           }
           pre {
-            background: #1e293b !important;
-            color: #fff !important;
+            background-color: #f1f5f9 !important;
+            background-color: oklch(0.93 0.005 250) !important;
+            color: #1e293b !important;
+            border-color: oklch(0.90 0.005 250) !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
           code {
-            background: #f1f5f9 !important;
-            color: #000 !important;
+            background-color: #e2e8f0 !important;
+            background-color: oklch(0.92 0.005 250) !important;
+            color: #0f172a !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          blockquote {
+            background-color: #f1f5f9 !important;
+            background-color: oklch(0.94 0.006 250) !important;
+            border-left-color: oklch(0.62 0.18 265) !important;
+            color: #475569 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          th {
+            background-color: #f1f5f9 !important;
+            background-color: oklch(0.95 0.005 250) !important;
+            color: #0f172a !important;
+            border-color: oklch(0.90 0.005 250) !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          td {
+            border-color: oklch(0.90 0.005 250) !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          tr:nth-child(even) {
+            background-color: #f8fafc !important;
+            background-color: oklch(0.98 0.002 250) !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
