@@ -1930,7 +1930,7 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
         setPdfToast("Generating premium one-click PDF download...");
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 2500); // 2.5-second strict timeout
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout to allow first-boot Chromium launch and Vercel warmups
 
         try {
           // Get active session token if exists
@@ -1953,7 +1953,8 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
           clearTimeout(timeoutId);
 
           if (!response.ok) {
-            throw new Error("Cloud compiler endpoint returned an error status.");
+            const errData = await response.json().catch(() => ({}));
+            throw new Error(errData.message || `Cloud compiler endpoint returned status ${response.status}`);
           }
 
           const blob = await response.blob();
@@ -1969,7 +1970,7 @@ function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, on
           setPdfToast(null);
         } catch (err: any) {
           clearTimeout(timeoutId);
-          console.warn("[PDF Failsafe Switch] Cloud compiler timed out, failed, or hit rate limits. Silently falling back to client-side system print.", err);
+          console.error("[PDF Failsafe Switch] Cloud compiler failed:", err);
           
           // Graceful fallback to client-side print (failsafe switch)
           setPdfToast("Connecting to backup generator...");
