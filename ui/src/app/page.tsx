@@ -7879,7 +7879,7 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
                     color: 'white', fontWeight: 600, fontSize: 12.5, cursor: checkoutSpinner ? 'not-allowed' : 'pointer',
                     textAlign: 'center'
                   }}>
-                    {checkoutSpinner ? 'Processing...' : `Confirm & Pay ${upgradePreview.currency}{upgradePreview.immediateCharge.toFixed(2)}`}
+                    {checkoutSpinner ? 'Processing...' : `Confirm & Pay ${upgradePreview.currency}${upgradePreview.immediateCharge.toFixed(2)}`}
                   </button>
                 </div>
               </div>
