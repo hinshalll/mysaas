@@ -279,7 +279,6 @@ interface FormatterToolProps {
 export default function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, onShowPaywall, supabase, checkAndLogUsage }: FormatterToolProps) {
   const isPremium = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
   // Pro Cockpit Features
-  const [removeWatermark, setRemoveWatermark] = useState(false);
   const [customHeader, setCustomHeader] = useState('');
   const [customFooter, setCustomFooter] = useState('');
   const [layoutMode, setLayoutMode] = useState<'standard' | 'compact' | 'zen'>('standard');
@@ -510,9 +509,9 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
         headerHtml = `<div class="pdf-header">${customHeader}</div>`;
       }
       
-      // inject watermark/footer
+      // inject watermark/footer (Mandatory on Free tier, automatically removed on Paid tier)
       let footerText = customFooter || "";
-      if (!removeWatermark) {
+      if (!isPremium) {
         if (footerText) footerText += " | ";
         footerText += `Formatted using ${brandName}`;
       }
@@ -636,12 +635,24 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
         }
         @media print {
           body {
-            margin: 0;
-            padding: 1.2in;
+            margin: 0 !important;
+            padding: 0 !important;
             background: white !important;
             color: black !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+          }
+          h1, h2, h3, h4, h5, h6 {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+          }
+          tr {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          pre, blockquote {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
           }
           pre {
             background-color: #f1f5f9 !important;
@@ -688,33 +699,36 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           .pdf-header {
             display: block !important;
             position: fixed;
-            top: 0.4in;
-            left: 1.2in;
-            right: 1.2in;
+            top: -0.65in;
+            left: 0;
+            right: 0;
             font-size: 8pt;
             color: #888;
-            text-align: right;
+            text-align: center;
             border-bottom: 1px solid #eee;
             padding-bottom: 4px;
-            font-family: sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
           }
           .pdf-footer {
             display: block !important;
             position: fixed;
-            bottom: 0.4in;
-            left: 1.2in;
-            right: 1.2in;
+            bottom: -0.65in;
+            left: 0;
+            right: 0;
             font-size: 8pt;
             color: #888;
             text-align: center;
             border-top: 1px solid #eee;
             padding-top: 4px;
-            font-family: sans-serif;
+            font-family: 'Inter', -apple-system, sans-serif;
           }
         }
         @page {
           size: A4;
-          margin: 0;
+          margin-top: 1.0in;
+          margin-bottom: 1.0in;
+          margin-left: 1.2in;
+          margin-right: 1.2in;
         }
       `;
 
@@ -1315,54 +1329,45 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
 
               {/* Collapsible settings block */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 4 }}>
-                {/* 1. White-label check */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 12.5, color: 'var(--fg-muted)' }}>
-                  <input
-                    type="checkbox"
-                    checked={removeWatermark}
-                    onChange={e => {
-                      if (!isPremium) {
-                        onShowPaywall();
-                      } else {
-                        setRemoveWatermark(e.target.checked);
-                      }
-                    }}
-                    style={{ accentColor: 'var(--accent)' }}
-                  />
-                  <span>White-label (Remove watermark)</span>
-                </label>
+                {format.value === 'pdf' ? (
+                  <>
+                    {/* 1. Custom header text input */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Header</label>
+                      <input
+                        type="text"
+                        placeholder={isPremium ? "Header Text..." : "Locked for Pro"}
+                        disabled={!isPremium}
+                        value={customHeader}
+                        onChange={e => setCustomHeader(e.target.value)}
+                        style={{
+                          width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
+                          border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
+                        }}
+                      />
+                    </div>
 
-                {/* 2. Custom header text input */}
-                <div>
-                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Header</label>
-                  <input
-                    type="text"
-                    placeholder={isPremium ? "Header Text..." : "Locked for Pro"}
-                    disabled={!isPremium}
-                    value={customHeader}
-                    onChange={e => setCustomHeader(e.target.value)}
-                    style={{
-                      width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
-                      border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
-                    }}
-                  />
-                </div>
-
-                {/* 3. Custom footer text input */}
-                <div>
-                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Footer</label>
-                  <input
-                    type="text"
-                    placeholder={isPremium ? "Footer Text..." : "Locked for Pro"}
-                    disabled={!isPremium}
-                    value={customFooter}
-                    onChange={e => setCustomFooter(e.target.value)}
-                    style={{
-                      width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
-                      border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
-                    }}
-                  />
-                </div>
+                    {/* 2. Custom footer text input */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Footer</label>
+                      <input
+                        type="text"
+                        placeholder={isPremium ? "Footer Text..." : "Locked for Pro"}
+                        disabled={!isPremium}
+                        value={customFooter}
+                        onChange={e => setCustomFooter(e.target.value)}
+                        style={{
+                          width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
+                          border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
+                        }}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', display: 'flex', alignItems: 'center', minHeight: 38 }}>
+                    <span>✨ Settings are fully optimized for {format.label} downloads.</span>
+                  </div>
+                )}
               </div>
             </div>
           )}
