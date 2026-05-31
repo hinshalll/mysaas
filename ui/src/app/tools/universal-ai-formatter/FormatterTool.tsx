@@ -472,6 +472,14 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
       let finalContent = isTextMode ? editorRef.current?.value : editorRef.current?.innerHTML;
       if (!finalContent) finalContent = text; // fallback
 
+      // Smart document size truncation logic: Free Plan allows up to ~10 pages (25,000 characters)
+      let isTruncated = false;
+      const FREE_CHAR_LIMIT = 25000;
+      if (finalContent.length > FREE_CHAR_LIMIT && !isPremium) {
+        finalContent = finalContent.substring(0, FREE_CHAR_LIMIT);
+        isTruncated = true;
+      }
+
       // Build a dynamic, brand-safe filename using websitename_first-2-3-words
       const cleanBrand = brandName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
       
@@ -727,9 +735,20 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
       `;
 
       // Get the clean, unpolluted HTML content from the editor or parse raw text if in text/markdown mode
-      const pristineHtmlBody = isTextMode 
+      let pristineHtmlBody = isTextMode 
         ? marked.parse(finalContent) 
         : (editorRef.current?.innerHTML || marked.parse(text));
+
+      if (isTruncated) {
+        pristineHtmlBody += `
+          <div style="margin-top: 40px; padding: 20px; border: 2px dashed oklch(0.58 0.16 265 / 0.4); background: oklch(0.98 0.005 250); border-radius: 12px; text-align: center; font-family: 'Inter', sans-serif; box-shadow: 0 4px 12px oklch(0 0 0 / 0.03);">
+            <div style="font-size: 11pt; font-weight: 700; color: oklch(0.62 0.20 265); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">[Document Truncated - Free Plan Limit]</div>
+            <div style="font-size: 9.5pt; color: oklch(0.35 0.010 250); line-height: 1.5; max-width: 480px; margin: 0 auto;">
+              This document has been truncated to 10 pages under the Free Plan. Upgrade to the <strong>Pro Plan</strong> or <strong>Developer Plan</strong> to export unlimited pages with custom watermarks.
+            </div>
+          </div>
+        `;
+      }
 
       const formattedHtml = `
         <!DOCTYPE html>
@@ -877,9 +896,17 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           blob = new Blob([formattedHtml], { type: 'application/msword;charset=utf-8' });
           ext = '.doc';
         } else if (format.value === 'md') {
-          blob = new Blob([finalContent], { type: 'text/markdown;charset=utf-8' });
+          let mdBody = finalContent;
+          if (isTruncated) {
+            mdBody += `\n\n--- [TRUNCATION NOTICE] This document has been truncated to 10 pages under the Free Plan. Upgrade to the Pro Plan or Developer Plan to export unlimited pages. ---`;
+          }
+          blob = new Blob([mdBody], { type: 'text/markdown;charset=utf-8' });
         } else { // txt
-          blob = new Blob([finalContent], { type: 'text/plain;charset=utf-8' });
+          let txtBody = finalContent;
+          if (isTruncated) {
+            txtBody += `\n\n--- [TRUNCATION NOTICE] This document has been truncated to 10 pages under the Free Plan. Upgrade to the Pro Plan or Developer Plan to export unlimited pages. ---`;
+          }
+          blob = new Blob([txtBody], { type: 'text/plain;charset=utf-8' });
         }
 
         const url = window.URL.createObjectURL(blob);

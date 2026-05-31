@@ -3216,18 +3216,18 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
         position: 'relative',
         zIndex: 1,
       }}>
-        {/* Tier 1 */}
+        {/* Free Plan */}
         <div className="glass-card">
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 1: Free</div>
-          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Zero-Compute</h2>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Free</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Free Plan</h2>
           <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>$0 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ forever</span></div>
           <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Perfect for quick daily copy-pastes and standard interactive tools.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
-            <Feature on={true}>20 daily runs on Free tools</Feature>
-            <Feature on={true}>2 daily high-compute OCR scans</Feature>
-            <Feature on={true}>JSON Formatter & Validator</Feature>
-            <Feature on={false}>Unlimited browser tool runs</Feature>
-            <Feature on={false}>Developer API bearer keys</Feature>
+            <Feature on={true}>20 daily browser tool runs</Feature>
+            <Feature on={true}>5 daily Sandbox API requests</Feature>
+            <Feature on={true}>Standard document themes</Feature>
+            <Feature on={true}>Mandatory brand watermarks</Feature>
+            <Feature on={false}>Production API bearer keys</Feature>
           </ul>
           <button onClick={onLaunch} className="reset" style={{
             width: '100%', padding: '12px', borderRadius: 8,
@@ -3241,7 +3241,7 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           >Get Started Free</button>
         </div>
 
-        {/* Tier 2 */}
+        {/* Pro Plan */}
         <div className="glass-card" style={{
           borderColor: 'var(--accent)',
           boxShadow: isLight 
@@ -3255,16 +3255,16 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
             fontSize: 10, fontWeight: 700, padding: '3px 8px', borderRadius: 12,
             textTransform: 'uppercase', letterSpacing: '0.05em',
           }} className="mono">Popular</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 2: Pro</div>
-          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Pro Workspace</h2>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Pro</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Pro Plan</h2>
           <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>$9 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ month</span></div>
           <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Complete interactive browser-level cockpit for heavy document workflows.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
             <Feature on={true} em={true}>Unlimited browser tool runs</Feature>
-            <Feature on={true} em={true}>1,000 high-fidelity OCR scans/mo</Feature>
+            <Feature on={true} em={true}>100 daily Production API requests</Feature>
+            <Feature on={true} em={true}>Custom watermark removal</Feature>
             <Feature on={true} em={true}>Visual PDF Diff Checker</Feature>
-            <Feature on={true} em={true}>Custom branded watermark removal</Feature>
-            <Feature on={false}>Developer API bearer keys</Feature>
+            <Feature on={false}>Developer API Plan bounds</Feature>
           </ul>
           <button onClick={onLaunch} className="reset" style={{
             width: '100%', padding: '12px', borderRadius: 8,
@@ -3275,18 +3275,18 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           }}>Unlock Pro Vault</button>
         </div>
 
-        {/* Tier 3 */}
+        {/* Developer Plan */}
         <div className="glass-card">
-          <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.16 145)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Tier 3: API</div>
-          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Developer API Pro</h2>
+          <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.16 145)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Developer</div>
+          <h2 style={{ fontSize: 24, fontWeight: 600, margin: '8px 0 16px', color: 'var(--fg)' }}>Developer Plan</h2>
           <div style={{ fontSize: 36, fontWeight: 700, marginBottom: 8, color: 'var(--fg)' }}>$29 <span style={{ fontSize: 14, fontWeight: 400, color: 'var(--fg-dim)' }}>/ month</span></div>
-          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Direct programmatic integration, massive metered query bounds, and data webhooks.</p>
+          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Direct programmatic integration, massive query capacity, and data webhooks.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
-            <Feature on={true} em={true}><strong>All Pro Workspace features included</strong></Feature>
-            <Feature on={true} em={true}><strong>30,000 monthly API bearer token runs</strong></Feature>
-            <Feature on={true} em={true}><strong>Direct Developer API keys console</strong></Feature>
-            <Feature on={true} em={true}>Custom webhooks and callbacks</Feature>
-            <Feature on={true} em={true}>Priority API server computing bounds</Feature>
+            <Feature on={true} em={true}><strong>All Pro Plan features included</strong></Feature>
+            <Feature on={true} em={true}><strong>1,000 daily Production API requests</strong></Feature>
+            <Feature on={true} em={true}><strong>Direct API keys console console</strong></Feature>
+            <Feature on={true} em={true}>Custom webhooks and status callbacks</Feature>
+            <Feature on={true} em={true}>Priority server computing resources</Feature>
           </ul>
           <button onClick={onLaunch} className="reset" style={{
             width: '100%', padding: '12px', borderRadius: 8,
@@ -3354,25 +3354,25 @@ function AboutPage({ onLaunch, brandName }: AboutPageProps) {
             Most modern websites have become bloated, filled with megabytes of tracking pixels, advertising banners, and slow server-side loops. We believe that simple, daily file operations—like scrubbing metadata, formatting JSON, synching subtitles, or converting HEIC images—should run in milliseconds right inside your browser without leaking any private details.
           </p>
 
-          <h2 style={{ fontSize: 20, color: 'var(--fg)', fontWeight: 600, margin: '24px 0 8px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Monetization Model: Metered Freemium & PPP</h2>
+          <h2 style={{ fontSize: 20, color: 'var(--fg)', fontWeight: 600, margin: '24px 0 8px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Pricing Plans & Access Levels</h2>
           <p>
-            Flat-rate pricing is simple and transparent:
+            Our billing is designed to be simple, predictable, and highly transparent:
           </p>
           <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
-              <strong style={{ color: 'var(--fg)' }}>Tier 1 (Free)</strong>: Unlimited daily usage on low-compute developer tools. 100% free forever, supported by clean ad networks.
+              <strong style={{ color: 'var(--fg)' }}>Free Plan</strong>: Standard daily usage on all essential browser utility tools. 100% free, no credit card required. Includes 5 daily sandbox API key test runs.
             </li>
             <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
-              <strong style={{ color: 'var(--fg)' }}>Tier 2 (Metered)</strong>: 2 free daily runs on heavier operations (OCR, PDF bank statements, scanned extraction).
+              <strong style={{ color: 'var(--fg)' }}>Pro Plan</strong>: Advanced rendering features, custom watermark removal, unlimited daily interactive browser execution, and 100 daily production API requests for $9/month.
             </li>
             <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
-              <strong style={{ color: 'var(--fg)' }}>Tier 3 (Pro)</strong>: High-fidelity B2C utilities, saved history database, and batch processing up to 500 files at once for $9/month globally.
+              <strong style={{ color: 'var(--fg)' }}>Developer Plan</strong>: Premium high-volume programmatic API access with dedicated console endpoints, custom webhooks, and 1,000 daily production key requests for $29/month.
             </li>
           </ul>
 
-          <h2 style={{ fontSize: 20, color: 'var(--fg)', fontWeight: 600, margin: '24px 0 8px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>Secure Infrastructure: The Digital Bouncer</h2>
+          <h2 style={{ fontSize: 20, color: 'var(--fg)', fontWeight: 600, margin: '24px 0 8px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>High-Performance Serverless Architecture</h2>
           <p>
-            Our backend engine utilizes a custom-built **Digital Bouncer (threading.Lock)** protecting Render's 512MB memory limits. This ensures that heavy serverless tasks queue safely without blowing out server costs or causing memory leakage crashes, keeping the hosting extremely light, cheap, and robust.
+            Our backend services are built for secure, low-latency, and highly concurrent execution. We employ safe sandboxing, automated resource allocation, and advanced memory queues to ensure complex operations—such as multi-page PDF generation or large dataset parsing—are processed reliably with high uptime and optimal speed.
           </p>
           
           <div style={{ marginTop: 24, display: 'flex', justifyContent: 'center' }}>
@@ -3510,7 +3510,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   const cleanBrandDomain = brandName.toLowerCase().replace(/[^a-z0-9]/g, '');
   const displayDomain = cleanBrandDomain ? `${cleanBrandDomain}.com` : 'mysaas.com';
 
-  const isProOrAdmin = userPlan === 'pro' || userPlan === 'admin';
+  const isPaidOrAdmin = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
   const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
 
   // Active Key selection
@@ -3542,14 +3542,14 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
                 localStorage.setItem(storageKey, data.api_key);
               }
             } else {
-              // Auto-generate their key right away (Sandbox for Free, Production for Pro) so they have one instantly!
+              // Auto-generate their key right away (Sandbox for Free, Production for Pro/Developer) so they have one instantly!
               const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
               let randomString = '';
               for (let i = 0; i < 24; i++) {
                 randomString += chars[Math.floor(Math.random() * chars.length)];
               }
-              const isProOrAdminUser = userPlan === 'pro' || userPlan === 'admin';
-              const keyPrefix = isProOrAdminUser ? 'ms_live_prod_' : 'ms_sandbox_';
+              const isPaidUser = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
+              const keyPrefix = isPaidUser ? 'ms_live_prod_' : 'ms_sandbox_';
               const newKey = `${keyPrefix}${randomString}`;
 
               const { error: updateError } = await supabase
@@ -3580,8 +3580,8 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
     for (let i = 0; i < 24; i++) {
       randomString += chars[Math.floor(Math.random() * chars.length)];
     }
-    const isProOrAdminUser = userPlan === 'pro' || userPlan === 'admin';
-    const keyPrefix = isProOrAdminUser ? 'ms_live_prod_' : 'ms_sandbox_';
+    const isPaidUser = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
+    const keyPrefix = isPaidUser ? 'ms_live_prod_' : 'ms_sandbox_';
     const newKey = `${keyPrefix}${randomString}`;
 
     // Write real API key into online Postgres profiles database row!
@@ -3763,7 +3763,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
                 boxShadow: '0 2px 8px oklch(0.50 0.20 195 / 0.2)',
               }}>Sign In / Sign Up</button>
             </div>
-          ) : !isProOrAdmin ? (
+          ) : !isPaidOrAdmin ? (
             /* Free User UI - sandbox key available, prod key locked */
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
               <div style={{ marginBottom: 24 }}>
@@ -3836,7 +3836,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
                   <span style={{ fontSize: 12.5, fontWeight: 600 }} className="mono">PRODUCTION API ACCESS</span>
                 </div>
                 <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
-                  Upgrade to **Pro** to immediately generate production keys with unlimited requests and premium bot rate-limits.
+                  Upgrade to the **Pro Plan** or **Developer Plan** to immediately generate production keys with higher requests limits.
                 </p>
                 <button onClick={onShowPaywall} className="reset" style={{
                   width: '100%', padding: '10px 14px', borderRadius: 8,
@@ -3844,11 +3844,11 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
                   color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer',
                   boxShadow: '0 4px 12px oklch(0.50 0.20 265 / 0.25)',
                   marginTop: 4,
-                }}>Upgrade to Pro Key</button>
+                }}>Upgrade to Production API</button>
               </div>
             </div>
           ) : (
-            /* Pro User UI - production keys fully operational */
+            /* Paid User UI - production keys fully operational */
             <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
               {apiKey ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
@@ -3857,7 +3857,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
                       <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-dim)' }}>PRODUCTION KEY</span>
                       <span style={{ fontSize: 10, fontWeight: 600, color: 'oklch(0.78 0.16 145)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                         <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }}></span>
-                        LIVE ACTIVE
+                        {userPlan === 'admin' ? 'SYSTEM ADMIN' : userPlan === 'api' ? 'DEVELOPER PLAN' : 'PRO PLAN'}
                       </span>
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
@@ -3925,7 +3925,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
                       </div>
                       <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 6px' }}>No Active API Keys</h3>
                       <p style={{ fontSize: 12, color: 'var(--fg-subtle)', maxWidth: 260, margin: '0 0 20px', lineHeight: 1.4 }}>
-                        You are on a Pro account. Click the button below to generate a production API key.
+                        You are on a paid account. Click the button below to generate a production API key.
                       </p>
                       <button onClick={handleGenerateKey} className="reset" style={{
                         padding: '10px 20px', borderRadius: 8,
@@ -3935,6 +3935,46 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
                       }}>Generate Live Key</button>
                     </>
                   )}
+                </div>
+              )}
+
+              {/* Bottom Card depending on plan */}
+              {userPlan === 'pro' ? (
+                <div style={{
+                  background: 'oklch(0.18 0.005 250 / 0.4)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '18px 20px',
+                  marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 12,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'oklch(0.72 0.18 265)' }}>
+                    <Icon.Shield size={14} />
+                    <span style={{ fontSize: 12.5, fontWeight: 600 }} className="mono">HIGH-VOLUME API ACCESS</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
+                    You currently have **100 daily production runs**. Upgrade to the **Developer Plan** for priority compute resources, status webhooks, and 1,000 daily requests.
+                  </p>
+                  <button onClick={onShowPaywall} className="reset" style={{
+                    width: '100%', padding: '10px 14px', borderRadius: 8,
+                    background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+                    color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                    boxShadow: '0 4px 12px oklch(0.50 0.20 265 / 0.25)',
+                    marginTop: 4,
+                  }}>Upgrade to Developer Plan</button>
+                </div>
+              ) : (
+                <div style={{
+                  background: 'oklch(0.18 0.005 250 / 0.4)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 12, padding: '18px 20px',
+                  marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 12,
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'oklch(0.78 0.16 145)' }}>
+                    <Icon.Check size={14} />
+                    <span style={{ fontSize: 12.5, fontWeight: 600 }} className="mono">DEVELOPER SERVICE ACTIVE</span>
+                  </div>
+                  <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
+                    Your Developer Plan key is active with up to **1,000 daily production requests** secured. Enjoy custom status webhooks and prioritized queue computation.
+                  </p>
                 </div>
               )}
             </div>
@@ -4156,6 +4196,28 @@ function AccountPage({
 }: AccountPageProps) {
   const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
   const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
+
+  const [apiKey, setApiKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadKey() {
+      if (supabase && sessionUser?.id && isLoggedIn) {
+        try {
+          const { data } = await supabase
+            .from('profiles')
+            .select('api_key')
+            .eq('id', sessionUser.id)
+            .single();
+          if (data?.api_key) {
+            setApiKey(data.api_key);
+          }
+        } catch (err) {
+          console.error('Failed to load key inside AccountPage:', err);
+        }
+      }
+    }
+    loadKey();
+  }, [sessionUser, isLoggedIn]);
 
   // Profile Information States (B2C Focus - strictly stripped B2B)
   const [profileName, setProfileName] = useState(() => {
@@ -4437,7 +4499,7 @@ function AccountPage({
   };
 
   const handleCopyUUID = () => {
-    navigator.clipboard.writeText(sessionUser?.id || '');
+    navigator.clipboard.writeText(apiKey || '');
     setUuidCopied(true);
     setTimeout(() => setUuidCopied(false), 3000);
   };
@@ -4562,7 +4624,7 @@ function AccountPage({
   const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   const nextStr = formatter.format(nextDate);
 
-  const planName = userPlan === 'api' ? 'Developer API Pro' : userPlan === 'pro' ? 'Pro Workspace' : userPlan === 'admin' ? 'System Administrator' : 'Free Tier';
+  const planName = userPlan === 'api' ? 'Developer API' : userPlan === 'pro' ? 'Pro Plan' : userPlan === 'admin' ? 'System Administrator' : 'Free Plan';
   const planPrice = userPlan === 'api' ? '$29.00' : userPlan === 'pro' ? '$9.00' : '$0.00';
   const planPeriod = userPlan === 'free' ? 'forever' : 'month';
   const planLimits = userPlan === 'api' 
@@ -5031,7 +5093,7 @@ function AccountPage({
                       <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">Payment Partner</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--fg-muted)' }}>
                         <Icon.CreditCard size={14} style={{ color: 'var(--accent)' }} />
-                        <span>Creem.io Sandbox</span>
+                        <span>Creem Payment Hub</span>
                       </div>
                     </div>
                   )}
@@ -5253,9 +5315,11 @@ function AccountPage({
 
             <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between' }}>
               <div>
-                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">Developer Sandbox Key</div>
+                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">
+                  {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? 'Developer Production Key' : 'Developer Sandbox Key'}
+                </div>
                 <code style={{ fontSize: 11, background: 'var(--bg-elev-1)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: 6, display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {sessionUser?.id ? `ms_live_${sessionUser.id}` : 'Login to unlock token'}
+                  {apiKey || 'No key generated'}
                 </code>
               </div>
               <button type="button" onClick={handleCopyUUID} className="reset" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', background: 'var(--bg-elev-2)' }}>
@@ -6266,7 +6330,7 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
   async function handlePlanClick(planName: 'pro' | 'api') {
     setCheckoutError(null);
     if (userPlan === planName) {
-      setCheckoutError(`You are already subscribed to the ${planName === 'api' ? 'Developer API Pro' : 'Pro Workspace'} plan.`);
+      setCheckoutError(`You are already subscribed to the ${planName === 'api' ? 'Developer Plan' : 'Pro Plan'} plan.`);
       return;
     }
 
@@ -6444,18 +6508,18 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
               </div>
               
               <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-                {/* 1. Pro Workspace Block */}
+                {/* 1. Pro Plan Block */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <span style={{ fontSize: 11.5, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.70 0.18 265)' }} />
-                    Pro Workspace Tier ($9/mo)
+                    Pro Plan ($9/mo)
                   </span>
                   <ul style={{ ...listStyle, display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 12 }}>
                     <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> Unlimited browser tool computing
                     </li>
                     <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> 1,000 PDF document OCR scans/mo
+                      <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> 100 daily Production API requests
                     </li>
                     <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> PDF Diff tool & watermark removal
@@ -6463,18 +6527,18 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
                   </ul>
                 </div>
 
-                {/* 2. Developer API Pro Block */}
+                {/* 2. Developer Plan Block */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
                   <span style={{ fontSize: 11.5, fontWeight: 700, color: 'oklch(0.78 0.16 145)', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }} />
-                    Developer API Pro Tier ($29/mo)
+                    Developer Plan ($29/mo)
                   </span>
                   <ul style={{ ...listStyle, display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 12 }}>
                     <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>All Pro Workspace features included</strong>
+                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>All Pro Plan features included</strong>
                     </li>
                     <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>30,000 monthly API bearer token runs</strong>
+                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>1,000 daily Production API requests</strong>
                     </li>
                     <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
                       <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>Direct Developer API keys console</strong>
@@ -6520,7 +6584,7 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
                 <div style={{ background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)', borderRadius: 12, padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid var(--border)', paddingBottom: 10 }}>
                     <span style={{ color: 'var(--fg-dim)' }}>New Selected Plan:</span>
-                    <strong style={{ color: 'white' }}>{upgradePreview.newTier === 'api' ? 'Developer API Pro' : 'Pro Workspace'}</strong>
+                    <strong style={{ color: 'white' }}>{upgradePreview.newTier === 'api' ? 'Developer Plan' : 'Pro Plan'}</strong>
                   </div>
 
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
@@ -6593,7 +6657,7 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
                   >
                     <div style={{ flex: 1, marginRight: 16 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                        <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Pro Workspace Plan</div>
+                        <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Pro Plan</div>
                         <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 265 / 0.3)', color: 'var(--accent)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>MOST POPULAR</span>
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Complete cockpit access with unlimited tool computing.</div>
@@ -6616,7 +6680,7 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
                   >
                     <div style={{ flex: 1, marginRight: 16 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                        <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Developer API Pro</div>
+                        <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Developer Plan</div>
                         <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 145 / 0.25)', color: 'oklch(0.78 0.16 145)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>POWER TIER</span>
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Direct API keys, higher query limits & webhook callbacks.</div>
@@ -6630,7 +6694,7 @@ function PaywallModal({ open, onClose, brandName, pricingData, sessionUser, supa
 
                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Icon.CreditCard size={14} style={{ color: 'var(--fg-subtle)' }} />
-                  <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Creem.io Sandbox Environment &bull; Test Payments Only</span>
+                  <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Secured by Creem &bull; PCI-DSS Compliant SSL Checkout</span>
                 </div>
               </div>
             )}
@@ -7325,9 +7389,9 @@ export function App({ initialSlug }: { initialSlug?: string }) {
               <Icon.Check size={20} strokeWidth={2.5} />
             </div>
             <div style={{ flex: 1 }}>
-              <h4 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'white' }}>Sandbox Subscription Verified!</h4>
+              <h4 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'white' }}>Subscription Activated Successfully!</h4>
               <p style={{ margin: 0, fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.4 }}>
-                Congratulations! Your Creem sandbox payment succeeded. Welcome to the Pro tier.
+                Thank you for upgrading! Your subscription status has been verified and your new benefits are active.
               </p>
             </div>
             <button onClick={() => setShowSuccessBanner(false)} className="reset" style={{
@@ -7489,9 +7553,9 @@ export function App({ initialSlug }: { initialSlug?: string }) {
             <Icon.Check size={20} strokeWidth={2.5} />
           </div>
           <div style={{ flex: 1 }}>
-            <h4 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'white' }}>Sandbox Subscription Verified!</h4>
+            <h4 style={{ margin: '0 0 4px', fontSize: 14, fontWeight: 600, color: 'white' }}>Subscription Activated Successfully!</h4>
             <p style={{ margin: 0, fontSize: 12.5, color: 'var(--fg-muted)', lineHeight: 1.4 }}>
-              Congratulations! Your Creem sandbox payment succeeded. Welcome to the Pro tier.
+              Thank you for upgrading! Your subscription status has been verified and your new benefits are active.
             </p>
           </div>
           <button onClick={() => setShowSuccessBanner(false)} className="reset" style={{

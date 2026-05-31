@@ -3,7 +3,7 @@ import { App } from "../page";
 
 export const metadata: Metadata = {
   title: "Our Vision & Core Philosophy - Premium SaaS Tools Hub",
-  description: "Learn about the metered freemium monetization model, total privacy features, and secure digital bouncer serverless architecture.",
+  description: "Learn about our vision, secure cloud architecture, privacy-first design, and transparent pricing behind our high-performance utility tools.",
 };
 
 export default function AboutPage() {

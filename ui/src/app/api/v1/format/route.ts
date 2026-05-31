@@ -200,25 +200,39 @@ export async function POST(req: Request) {
     }
 
     const currentCount = dailyCount || 0;
-    const isProOrAdmin = profile.tier === 'pro' || profile.tier === 'admin';
+    const isPro = profile.tier === 'pro';
+    const isApi = profile.tier === 'api';
+    const isAdmin = profile.tier === 'admin';
+    const isPaidOrAdmin = isPro || isApi || isAdmin;
 
     // Sandbox Free Tier Limit: 5 requests/day
-    if (!isProOrAdmin && currentCount >= 5) {
+    if (!isPaidOrAdmin && currentCount >= 5) {
       return NextResponse.json(
         { 
           status: 'error', 
-          message: `Sandbox API rate limit exhausted (${currentCount}/5 requests today). Please upgrade to Pro to unlock unlimited live B2B production API capacity.` 
+          message: `Sandbox API daily limit exhausted (${currentCount}/5 requests today). Please upgrade to the Pro Plan or Developer Plan for higher programmatic capacity.` 
         },
         { status: 429 }
       );
     }
 
-    // Pro Tier Soft Limit: 200 requests/day to prevent scraper bots
-    if (isProOrAdmin && currentCount >= 200) {
+    // Pro Plan Limit: 100 requests/day
+    if (isPro && currentCount >= 100) {
       return NextResponse.json(
         { 
           status: 'error', 
-          message: `Production API high-use soft limit activated (${currentCount}/200 requests today). If your company requires high-compute custom enterprise volumes, please contact support.` 
+          message: `Pro Plan API daily limit reached (${currentCount}/100 requests today). Please upgrade to the Developer Plan to unlock higher volumes (1,000/day).` 
+        },
+        { status: 429 }
+      );
+    }
+
+    // Developer Plan Limit: 1,000 requests/day
+    if (isApi && currentCount >= 1000) {
+      return NextResponse.json(
+        { 
+          status: 'error', 
+          message: `Developer Plan API daily limit reached (${currentCount}/1,000 requests today). If your systems require custom high-compute enterprise volume, please contact support.` 
         },
         { status: 429 }
       );
@@ -234,7 +248,7 @@ export async function POST(req: Request) {
         user_id: profile.id,
         tool_id: tool,
         ip_hash: ipHash,
-        tier: isProOrAdmin ? 3 : 1
+        tier: isApi ? 3 : (isPro ? 2 : 1)
       });
 
     if (logError) {

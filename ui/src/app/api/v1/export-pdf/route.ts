@@ -83,8 +83,11 @@ export async function POST(req: Request) {
     }
 
     // 4. Verify Authorization Tier & Usage Limits
-    const isPaidOrAdmin = profile && (profile.tier === 'pro' || profile.tier === 'api' || profile.tier === 'admin');
-    const rateLimitMax = isPaidOrAdmin ? 200 : 5;
+    const isPro = profile && profile.tier === 'pro';
+    const isApi = profile && profile.tier === 'api';
+    const isAdmin = profile && profile.tier === 'admin';
+    const isPaidOrAdmin = isPro || isApi || isAdmin;
+    const rateLimitMax = isAdmin ? 999999 : (isApi ? 1000 : (isPro ? 100 : 5));
 
     // 5. Enforce Daily Usage Quota Limits to prevent API rate limit abuse
     const today = new Date();
@@ -112,11 +115,11 @@ export async function POST(req: Request) {
       dailyCount = count || 0;
     }
 
-    if (dailyCount >= rateLimitMax && (!profile || profile.tier !== 'admin')) {
+    if (dailyCount >= rateLimitMax && !isAdmin) {
       return NextResponse.json(
         { 
           status: 'error', 
-          message: `Cloud PDF generation limit exhausted (${dailyCount}/${rateLimitMax} compiles today). Upgrade to Pro for unlimited high-speed downloads, or use standard local system printing.` 
+          message: `Cloud PDF generation limit reached (${dailyCount}/${rateLimitMax} compiles today). Please upgrade to the Pro Plan or Developer Plan for higher capacity.` 
         },
         { status: 429 }
       );
@@ -169,7 +172,7 @@ export async function POST(req: Request) {
             customFooter,
             isPremium
           }),
-          signal: AbortSignal.timeout(4000) // 4-second timeout per space node
+          signal: AbortSignal.timeout(20000) // 20-second timeout per space node to allow compiling massive documents
         });
 
         if (response.ok) {
