@@ -31,7 +31,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const { html, filename } = body;
+    const { html, filename, customHeader, customFooter, isPremium } = body;
     if (!html) {
       return NextResponse.json(
         { status: 'error', message: 'Missing "html" content parameter.' },
@@ -162,7 +162,13 @@ export async function POST(req: Request) {
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: proxyHeaders,
-          body: JSON.stringify({ html, filename }),
+          body: JSON.stringify({ 
+            html, 
+            filename,
+            customHeader,
+            customFooter,
+            isPremium
+          }),
           signal: AbortSignal.timeout(4000) // 4-second timeout per space node
         });
 

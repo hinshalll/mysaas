@@ -455,18 +455,12 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
     if (downloading) return;
     setDownloading(true);
 
-    const isMobile = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const isPdf = format.value === 'pdf';
-    let printWindow: Window | null = null;
-    
-    if (isPdf && isMobile) {
-      printWindow = window.open('/print-preview', '_blank');
-    }
+    const isMobile = typeof window !== 'undefined' && /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    let printWin: any = null;
 
     try {
       const allowed = await checkAndLogUsage(tool.id, false);
       if (!allowed) {
-        if (printWindow) printWindow.close();
         setDownloading(false);
         return;
       }
@@ -758,7 +752,8 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
         const triggerLocalPrint = async () => {
           if (isMobile) {
             // --- MOBILE: CLEAN SELF-CLOSING NEW TAB PRINTING ---
-            if (printWindow) {
+            printWin = window.open('/print-preview', '_blank');
+            if (printWin) {
               localStorage.setItem('print_html', formattedHtml);
             } else {
               // Fallback in case popup was blocked/closed
@@ -814,12 +809,6 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           }
         };
 
-        // Try direct premium 1-click cloud generation for both free and paid users
-        if (printWindow && isPaid) {
-          // If they are a paid user, close the mobile popup immediately since they don't need print dialogues
-          try { printWindow.close(); } catch (_) {}
-        }
-
         setPdfToast("Generating premium one-click PDF download...");
 
         const controller = new AbortController();
@@ -838,7 +827,10 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
             },
             body: JSON.stringify({
               html: formattedHtml,
-              filename: smartName
+              filename: smartName,
+              customHeader: customHeader,
+              customFooter: customFooter,
+              isPremium: isPremium
             }),
             signal: controller.signal
           });
@@ -869,13 +861,6 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           setPdfToast("Connecting to backup generator...");
           await new Promise((resolve) => setTimeout(resolve, 800));
           setPdfToast(null);
-
-          // Re-open mobile preview window if it was closed
-          if (isMobile && isPaid && !printWindow) {
-            try {
-              printWindow = window.open('/print-preview', '_blank');
-            } catch (_) {}
-          }
 
           await triggerLocalPrint();
         }
@@ -908,8 +893,8 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
       }
 
     } catch (error: any) {
-      if (printWindow) {
-        try { printWindow.close(); } catch (_) {}
+      if (printWin) {
+        try { printWin.close(); } catch (_) {}
       }
       alert("Error generating document locally:\n" + error.message);
     } finally {
@@ -1331,33 +1316,67 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
               {format.value === 'pdf' && (
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 4 }}>
                   {/* 1. Custom header text input */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Header</label>
+                  <div 
+                    onClick={() => !isPremium && onShowPaywall()}
+                    style={{ cursor: !isPremium ? 'pointer' : 'default' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <label style={{ fontSize: 10, color: 'var(--fg-dim)', margin: 0 }} className="mono">PDF Running Header</label>
+                      {!isPremium && (
+                        <span className="mono" style={{
+                          fontSize: 8.5,
+                          background: 'linear-gradient(90deg, oklch(0.70 0.20 30), oklch(0.85 0.15 80))',
+                          color: 'black',
+                          padding: '1px 5px',
+                          borderRadius: 4,
+                          fontWeight: 800,
+                          letterSpacing: '0.05em'
+                        }}>PRO</span>
+                      )}
+                    </div>
                     <input
                       type="text"
-                      placeholder={isPremium ? "Header Text..." : "Locked for Pro"}
-                      disabled={!isPremium}
+                      placeholder={isPremium ? "Header Text..." : "e.g., Company Confidential"}
+                      readOnly={!isPremium}
                       value={customHeader}
                       onChange={e => setCustomHeader(e.target.value)}
                       style={{
                         width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
-                        border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
+                        border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none',
+                        cursor: !isPremium ? 'pointer' : 'text'
                       }}
                     />
                   </div>
 
                   {/* 2. Custom footer text input */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Footer</label>
+                  <div 
+                    onClick={() => !isPremium && onShowPaywall()}
+                    style={{ cursor: !isPremium ? 'pointer' : 'default' }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <label style={{ fontSize: 10, color: 'var(--fg-dim)', margin: 0 }} className="mono">PDF Running Footer</label>
+                      {!isPremium && (
+                        <span className="mono" style={{
+                          fontSize: 8.5,
+                          background: 'linear-gradient(90deg, oklch(0.70 0.20 30), oklch(0.85 0.15 80))',
+                          color: 'black',
+                          padding: '1px 5px',
+                          borderRadius: 4,
+                          fontWeight: 800,
+                          letterSpacing: '0.05em'
+                        }}>PRO</span>
+                      )}
+                    </div>
                     <input
                       type="text"
-                      placeholder={isPremium ? "Footer Text..." : "Locked for Pro"}
-                      disabled={!isPremium}
+                      placeholder={isPremium ? "Footer Text..." : "e.g., Copyright © 2026"}
+                      readOnly={!isPremium}
                       value={customFooter}
                       onChange={e => setCustomFooter(e.target.value)}
                       style={{
                         width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
-                        border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
+                        border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none',
+                        cursor: !isPremium ? 'pointer' : 'text'
                       }}
                     />
                   </div>

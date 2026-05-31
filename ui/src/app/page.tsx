@@ -1387,7 +1387,7 @@ interface FeaturedToolProps {
 }
 
 function FeaturedTool({ onPick }: FeaturedToolProps) {
-  const featured = ALL_TOOLS.find(t => t.id === 'uaf');
+  const featured = ALL_TOOLS.find(t => t.id === 'universal-ai-formatter');
   if (!featured) return null;
   const Ico = Icon[featured.icon];
 
@@ -6759,7 +6759,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     } else {
       const parts = initialSlug.split('-to-');
       if (parts.length === 2) {
-        initialView = 'uaf';
+        initialView = 'universal-ai-formatter';
       } else {
         const matched = ALL_TOOLS.find(t => t.id === initialSlug);
         if (matched) initialView = initialSlug;
@@ -7373,7 +7373,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
             <CategoryHub categoryId={view.replace('category_', '')} onOpenTool={openTool} />
           )}
           {!isDashboard && activeTool && (
-            activeTool.id === 'uaf'
+            activeTool.id === 'universal-ai-formatter'
               ? <FormatterTool
                   tool={activeTool}
                   initialSlug={initialSlug}

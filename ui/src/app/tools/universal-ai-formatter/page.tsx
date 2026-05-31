@@ -3,7 +3,7 @@ import { App } from "../../page";
 import { ALL_TOOLS } from "../../config";
 
 export async function generateMetadata(): Promise<Metadata> {
-  const matchedTool = ALL_TOOLS.find(t => t.id === "uaf");
+  const matchedTool = ALL_TOOLS.find(t => t.id === "universal-ai-formatter");
   const toolName = matchedTool ? matchedTool.name : "Universal AI Formatter";
   const tagline = matchedTool ? matchedTool.tagline : "Lightweight online developer and creator tool.";
   
@@ -14,5 +14,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
-  return <App initialSlug="uaf" />;
+  return <App initialSlug="universal-ai-formatter" />;
 }

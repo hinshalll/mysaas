@@ -1,4 +1,5 @@
 import { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { App } from "../../page";
 import { ALL_TOOLS } from "../../config";
 
@@ -12,6 +13,13 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   
+  if (slug === 'uaf') {
+    return {
+      title: "Universal AI Formatter - Premium Online Utility Tool",
+      description: "Raw AI output → premium themed documents. Safe, browser-local data processing, no account required.",
+    };
+  }
+  
   const matchedTool = ALL_TOOLS.find(t => t.id === slug);
   const toolName = matchedTool ? matchedTool.name : "Premium SaaS Utility";
   const tagline = matchedTool ? matchedTool.tagline : "Lightweight online developer and creator tool.";
@@ -24,6 +32,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function DynamicToolStubPage({ params }: Props) {
   const { slug } = await params;
+  
+  if (slug === 'uaf') {
+    redirect('/tools/universal-ai-formatter');
+  }
   
   return <App initialSlug={slug} />;
 }

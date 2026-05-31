@@ -35,7 +35,7 @@ app.get('/', (req, res) => {
 // 2. Headless Chrome PDF compilation endpoint
 app.post('/generate', async (req, res) => {
   try {
-    const { html, filename } = req.body;
+    const { html, filename, customHeader, customFooter, isPremium } = req.body;
 
     // Optional Token Verification (supporting both public spaces and private spaces)
     const customAuth = req.headers['x-compiler-token'];
@@ -87,18 +87,53 @@ app.post('/generate', async (req, res) => {
     // Set standard A4 viewport dimensions
     await page.setViewport({ width: 794, height: 1123, deviceScaleFactor: 2 });
 
-    // Load styled HTML into Chrome page and wait for fonts/images to resolve
-    await page.setContent(html, { waitUntil: 'networkidle0', timeout: 10000 });
+    // Inject a CSS rule to hide the HTML-based fixed print headers/footers to avoid double-rendering
+    const injectedHtml = html.replace('</head>', '<style>body .pdf-header, body .pdf-footer { display: none !important; }</style></head>');
 
-    // Compile high-fidelity vector PDF
+    // Load styled HTML into Chrome page and wait for fonts/images to resolve
+    await page.setContent(injectedHtml, { waitUntil: 'networkidle0', timeout: 10000 });
+
+    // Build native Chromium header and footer templates
+    const hasHeader = !!customHeader;
+    
+    // Watermark/Footer: mandatory on Free tier, automatically removed on Paid tier
+    let footerText = customFooter || "";
+    const isPaid = isPremium === true || isPremium === 'true'; // handle boolean or string safely
+    if (!isPaid) {
+      if (footerText) footerText += " | ";
+      footerText += "Formatted using MySaaS";
+    }
+
+    let headerTemplate = '<div></div>';
+    if (hasHeader) {
+      headerTemplate = `
+        <div style="font-size: 8.5pt; color: #888; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; width: 100%; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 6px; margin: 0 1.2in;">
+          ${customHeader}
+        </div>
+      `;
+    }
+
+    let footerTemplate = `
+      <div style="font-size: 8.5pt; color: #888; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; width: 100%; text-align: center; border-top: 1px solid #eee; padding-top: 6px; margin: 0 1.2in; display: flex; justify-content: space-between;">
+        <span style="font-style: italic;">${footerText}</span>
+        <div>
+          <span class="pageNumber"></span> / <span class="totalPages"></span>
+        </div>
+      </div>
+    `;
+
+    // Compile high-fidelity vector PDF with exact margin constraints
     const pdfBuffer = await page.pdf({
       format: 'A4',
       printBackground: true,
+      displayHeaderFooter: true,
+      headerTemplate: headerTemplate,
+      footerTemplate: footerTemplate,
       margin: {
-        top: '0px',
-        bottom: '0px',
-        left: '0px',
-        right: '0px'
+        top: '1.0in',
+        bottom: '1.0in',
+        left: '1.2in',
+        right: '1.2in'
       }
     });
 

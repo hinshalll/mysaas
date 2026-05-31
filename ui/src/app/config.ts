@@ -29,7 +29,7 @@ export const CATEGORIES = [
     tagline: 'Tame raw AI output. Polish transcripts. Make text readable.',
     hue: 265, /* indigo */
     tools: [
-      { id: 'uaf',   name: 'Universal AI Formatter',           icon: 'Sparkles',      tagline: 'Raw AI output → premium themed documents', featured: true, hot: true },
+      { id: 'universal-ai-formatter',   name: 'Universal AI Formatter',           icon: 'Sparkles',      tagline: 'Raw AI output → premium themed documents', featured: true, hot: true },
       { id: 'conv',  name: 'Entire AI Conversation Formatter', icon: 'MessageSquare', tagline: 'Export full chats with code blocks intact' },
       { id: 'tran',  name: 'Transcript Cleaner',               icon: 'Mic',           tagline: 'Strip filler, re-punctuate, identify speakers' },
       { id: 'slug',  name: 'Smart URL Slug Maker',             icon: 'Link2',         tagline: 'Unicode-safe, SEO-friendly slugs at scale' },

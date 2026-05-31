@@ -1,5 +1,127 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { marked } from 'marked';
+
+function compileThemeHtml(rawText: string, theme: string): string {
+  const htmlBody = marked.parse(rawText);
+  let themeCss = "";
+  if (theme === 'academic') {
+    themeCss = `
+      body { 
+        font-family: 'Source Serif Pro', 'Georgia', serif; 
+        line-height: 1.7; 
+        color: oklch(0.20 0.005 250); 
+        background-color: oklch(0.99 0.002 250);
+        font-size: 11.5pt; 
+        padding: 1.2in; 
+      }
+      h1 { font-size: 26pt; font-weight: 700; margin-bottom: 8px; color: oklch(0.12 0.005 250); text-align: center; }
+      h2 { font-size: 17pt; font-style: italic; font-weight: 600; border-bottom: 1px solid oklch(0.90 0.005 250); margin-top: 28px; padding-bottom: 4px; }
+      h3 { font-size: 13pt; font-weight: 600; margin-top: 20px; }
+      p { margin: 0 0 14px; text-align: justify; }
+      blockquote { border-left: 3px solid oklch(0.40 0.005 250); padding-left: 16px; font-style: italic; color: oklch(0.35 0.005 250); margin: 18px 0; }
+      table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 10pt; }
+      th, td { border: 1px solid oklch(0.70 0.005 250); padding: 10px 14px; text-align: left; }
+      th { background-color: oklch(0.96 0.005 250); font-weight: bold; color: #18181b; }
+      tr:nth-child(even) { background-color: oklch(0.98 0.002 250); }
+      pre { background-color: oklch(0.95 0.005 250); padding: 12px; border-radius: 4px; font-family: monospace; white-space: pre-wrap; font-size: 10pt; }
+      code { font-family: monospace; font-size: 0.9em; background-color: oklch(0.95 0.005 250); padding: 2px 4px; border-radius: 3px; }
+    `;
+  } else if (theme === 'minimalist') {
+    themeCss = `
+      body { 
+        font-family: 'JetBrains Mono', 'Courier New', monospace; 
+        line-height: 1.5; 
+        color: #000000; 
+        background-color: #ffffff;
+        font-size: 10.5pt; 
+        padding: 1in; 
+      }
+      h1 { font-size: 20pt; font-weight: 700; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 16px; }
+      h2 { font-size: 15pt; font-weight: 600; margin-top: 24px; text-transform: uppercase; border-bottom: 1px dashed #000; padding-bottom: 4px; }
+      h3 { font-size: 12pt; font-weight: 600; margin-top: 18px; }
+      p { margin: 0 0 12px; }
+      blockquote { border-left: 2px dashed #000; padding-left: 14px; margin: 16px 0; }
+      table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+      th, td { border: 1px dashed #000; padding: 8px 12px; text-align: left; }
+      th { font-weight: bold; border-bottom: 2px solid #000; background-color: #f8f9fa; }
+      tr:nth-child(even) { background-color: #fafafa; }
+      pre { border: 1px dashed #000; padding: 12px; font-family: inherit; white-space: pre-wrap; font-size: 9.5pt; }
+      code { background-color: #f0f0f0; padding: 1px 4px; }
+    `;
+  } else { // modern
+    themeCss = `
+      body { 
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+        line-height: 1.6; 
+        color: oklch(0.16 0.008 250); 
+        background-color: oklch(0.97 0.005 250);
+        font-size: 11pt; 
+        padding: 1.2in; 
+      }
+      h1 { font-size: 28pt; font-weight: 800; letter-spacing: -0.02em; color: oklch(0.12 0.015 250); margin-bottom: 12px; line-height: 1.15; }
+      h2 { font-size: 18pt; font-weight: 700; letter-spacing: -0.015em; color: oklch(0.18 0.012 250); margin-top: 28px; }
+      h3 { font-size: 14pt; font-weight: 600; color: #334155; margin-top: 20px; }
+      p { margin: 0 0 12px; }
+      blockquote { 
+        border-left: 3px solid oklch(0.62 0.18 265); 
+        padding: 8px 16px; 
+        font-style: italic; 
+        background-color: oklch(0.94 0.006 250); 
+        color: oklch(0.35 0.010 250);
+        border-radius: 0 6px 6px 0;
+        margin: 16px 0;
+      }
+      code { 
+        background-color: oklch(0.92 0.005 250); 
+        padding: 2px 5px; 
+        border-radius: 4px; 
+        font-family: 'JetBrains Mono', 'Courier New', monospace; 
+        font-size: 0.9em;
+        color: #0f172a;
+      }
+      pre { 
+        background-color: oklch(0.93 0.005 250); 
+        color: oklch(0.16 0.008 250);
+        padding: 14px 16px; 
+        border-radius: 6px; 
+        border: 1px solid oklch(0.90 0.005 250);
+        overflow-x: auto; 
+        font-family: 'JetBrains Mono', 'Courier New', monospace;
+        font-size: 10pt;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        margin: 14px 0;
+      }
+      table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 10pt; border-radius: 8px; overflow: hidden; border: 1px solid oklch(0.90 0.005 250); }
+      th, td { border: 1px solid oklch(0.90 0.005 250); padding: 12px 16px; text-align: left; }
+      th { background-color: oklch(0.95 0.005 250); font-weight: 600; color: #0f172a; }
+      tr:nth-child(even) { background-color: oklch(0.98 0.002 250); }
+    `;
+  }
+
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    ${themeCss}
+  </style>
+</head>
+<body>
+  ${htmlBody}
+</body>
+</html>`;
+}
+
+function stripMarkdown(md: string) {
+  return md
+    .replace(/[#_*~`>]/g, '')
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .replace(/^- /gm, '• ')
+    .trim();
+}
+
 
 export async function POST(req: Request) {
   try {
@@ -47,9 +169,22 @@ export async function POST(req: Request) {
     // 3.5. Handle Sandbox Simulator Bypass (Strategy B)
     if (token === 'ms_sandbox_free_7a2f8d1c9b3e') {
       const isJson = tool === 'json' || tool === 'json-formatter';
-      const mockResult = isJson 
-        ? "{\n  \"status\": \"success\",\n  \"data\": {\n    \"name\": \"John Doe\",\n    \"role\": \"Lead B2B Developer\",\n    \"company\": \"Acme Corp\",\n    \"hobbies\": [\n      \"coding\",\n      \"debugging\"\n    ]\n  }\n}"
-        : `# Formatted Document Report\n\n${content.trim()}\n\n---\n*Formatted programmatically in Sandbox mode via MySaaS API.*`;
+      let mockResult = "";
+      let mockHtml = "";
+      let mockMarkdown = "";
+      let mockText = "";
+
+      if (isJson) {
+        mockResult = "{\n  \"status\": \"success\",\n  \"data\": {\n    \"name\": \"John Doe\",\n    \"role\": \"Lead B2B Developer\",\n    \"company\": \"Acme Corp\",\n    \"hobbies\": [\n      \"coding\",\n      \"debugging\"\n    ]\n  }\n}";
+        mockHtml = `<pre>${mockResult}</pre>`;
+        mockMarkdown = "```json\n" + mockResult + "\n```";
+        mockText = mockResult;
+      } else {
+        mockMarkdown = `# Formatted Document Report\n\n${content.trim()}\n\n---\n*Formatted programmatically in Sandbox mode via MySaaS API.*`;
+        mockHtml = compileThemeHtml(mockMarkdown, style);
+        mockText = stripMarkdown(mockMarkdown);
+        mockResult = mockHtml; // fallback for backward compatibility
+      }
 
       return NextResponse.json({
         status: 'success',
@@ -57,6 +192,9 @@ export async function POST(req: Request) {
         notice: 'Upgrade to Pro to process real documents programmatically with live production keys.',
         data: {
           formatted: mockResult,
+          html: mockHtml,
+          markdown: mockMarkdown,
+          text: mockText,
           metadata: {
             chars_processed: content.length,
             words_count: content.split(/\s+/).filter(Boolean).length,
@@ -194,22 +332,18 @@ export async function POST(req: Request) {
     }
 
     // Default: AI / Document formatting tool
-    let formattedText = rawText;
-
-    if (style === 'academic') {
-      formattedText = `==================================================\n             ACADEMIC DOCUMENT REPORT\n==================================================\n\n${rawText}\n\n--------------------------------------------------\nDocument parsed programmatically via API Service.`;
-    } else if (style === 'minimalist') {
-      formattedText = `${rawText}\n\n---\napi-formatted`;
-    } else {
-      // 'modern' style
-      formattedText = `# Formatted Document Report\n\n${rawText}\n\n---\n*Formatted programmatically via Developer API.*`;
-    }
+    const formattedMarkdown = `# Formatted Document Report\n\n${rawText}\n\n---\n*Formatted programmatically via Developer API.*`;
+    const formattedHtml = compileThemeHtml(formattedMarkdown, style);
+    const formattedText = stripMarkdown(formattedMarkdown);
 
     // 8. Return JSON payload response
     return NextResponse.json({
       status: 'success',
       data: {
-        formatted: formattedText,
+        formatted: formattedHtml,
+        html: formattedHtml,
+        markdown: formattedMarkdown,
+        text: formattedText,
         metadata: {
           chars_processed: rawText.length,
           words_count: rawText.split(/\s+/).filter(Boolean).length,
