@@ -472,14 +472,14 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
       let finalContent = isTextMode ? editorRef.current?.value : editorRef.current?.innerHTML;
       if (!finalContent) finalContent = text; // fallback
 
-      // Smart document size truncation logic: 5 pages for guests, 10 pages for signed-in free members
+      // Smart document size truncation logic: 5 pages for guests, 20 pages for signed-in free members
       let isTruncated = false;
       const isAnonUser = !sessionUser || !!sessionUser.is_anonymous;
-      let limitPages = 10;
-      let maxCharBudget = 22000; // default 10 pages for signed-in free members (10 * 2200 = 22000 chars)
+      let limitPages = 20;
+      let maxCharBudget = 44000; // default 20 pages for signed-in free members (20 * 2200 = 44000 chars)
 
       if (!isPremium) {
-        limitPages = isAnonUser ? 5 : 10;
+        limitPages = isAnonUser ? 5 : 20;
         maxCharBudget = limitPages * 2200;
         if (finalContent.length > maxCharBudget) {
           finalContent = finalContent.substring(0, maxCharBudget);
@@ -773,23 +773,23 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
             pristineHtmlBody = slicedHtml;
 
             if (isAnonUser) {
-              // Guest Callout: 5 Pages limit, conversion to Signup (unlocks 10) or Pro (unlocks unlimited)
+              // Guest Callout: 5 Pages limit, conversion to Signup (unlocks 20) or Pro (unlocks unlimited)
               pristineHtmlBody += `
                 <div style="margin-top: 40px; padding: 24px; border: 2px dashed oklch(0.72 0.18 195 / 0.4); background: oklch(0.98 0.005 195 / 0.03); border-radius: 12px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 4px 12px oklch(0 0 0 / 0.03);">
-                  <div style="font-size: 11pt; font-weight: 700; color: oklch(0.65 0.18 195); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace;">[Guest Trial - 5 Page Limit Reached]</div>
+                  <div style="font-size: 11pt; font-weight: 700; color: oklch(0.65 0.18 195); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace;">[Guest Trial - 5 Page Limit Reached]</div>
                   <div style="font-size: 9.5pt; color: #475569; line-height: 1.5; max-width: 500px; margin: 0 auto 16px;">
-                    You are downloading this document as a guest. Guest PDF compilations are limited to <strong>5 pages</strong>. Sign up for a free account to unlock <strong>10 pages</strong>, or upgrade to a premium plan for unlimited documents.
+                    You are downloading this document as a guest. Guest PDF compilations are limited to <strong>5 pages</strong>. Sign up for a free account to unlock <strong>20 pages</strong>, or upgrade to a premium plan for unlimited documents.
                   </div>
                   <button style="display: inline-block; padding: 8px 18px; border-radius: 6px; background: linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195)); color: white; text-decoration: none; font-weight: 600; font-size: 12.5px; border: none; cursor: pointer;" onclick="window.parent?.postMessage?.('open-auth-modal', '*')">Create Free Account</button>
                 </div>
               `;
             } else {
-              // Free Member Callout: 10 Pages limit, conversion to Pro/Developer (unlocks unlimited)
+              // Free Member Callout: 20 Pages limit, conversion to Pro/Developer (unlocks unlimited)
               pristineHtmlBody += `
                 <div style="margin-top: 40px; padding: 24px; border: 2px dashed oklch(0.70 0.18 265 / 0.4); background: oklch(0.98 0.005 265 / 0.03); border-radius: 12px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 4px 12px oklch(0 0 0 / 0.03);">
-                  <div style="font-size: 11pt; font-weight: 700; color: oklch(0.62 0.20 265); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace;">[Free Account - 10 Page Limit Reached]</div>
+                  <div style="font-size: 11pt; font-weight: 700; color: oklch(0.62 0.20 265); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace;">[Free Account - 20 Page Limit Reached]</div>
                   <div style="font-size: 9.5pt; color: #475569; line-height: 1.5; max-width: 500px; margin: 0 auto 16px;">
-                    As a Free member, cloud PDF compilations are metered to <strong>10 pages</strong>. Upgrade to the <strong>Pro Plan</strong> or <strong>Developer Plan</strong> to export unlimited pages with high-fidelity styles and remove watermarks.
+                    As a Free member, cloud PDF compilations are metered to <strong>20 pages</strong>. Upgrade to the <strong>Pro Plan</strong> or <strong>Developer Plan</strong> to export unlimited pages with high-fidelity styles and remove watermarks.
                   </div>
                   <button style="display: inline-block; padding: 8px 18px; border-radius: 6px; background: linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265)); color: white; border: none; font-weight: 600; font-size: 12.5px; cursor: pointer;" onclick="window.parent?.postMessage?.('show-paywall-modal', '*')">Upgrade to Premium</button>
                 </div>
