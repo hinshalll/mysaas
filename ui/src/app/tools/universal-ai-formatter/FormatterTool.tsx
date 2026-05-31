@@ -278,11 +278,13 @@ interface FormatterToolProps {
 
 export default function FormatterTool({ tool, initialSlug, brandName, userPlan, sessionUser, onShowPaywall, supabase, checkAndLogUsage }: FormatterToolProps) {
   const isPremium = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
+  const isAnonUser = !sessionUser || !!sessionUser.is_anonymous || !sessionUser.email;
   // Pro Cockpit Features
   const [customHeader, setCustomHeader] = useState('');
   const [customFooter, setCustomFooter] = useState('');
   const [layoutMode, setLayoutMode] = useState<'standard' | 'compact' | 'zen'>('standard');
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [truncationModal, setTruncationModal] = useState<{ open: boolean; limit: number; totalPages: number } | null>(null);
   const [historyLogs, setHistoryLogs] = useState<any[]>([]);
 
   async function saveToCloudHistory(fileName: string) {
@@ -474,17 +476,16 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
 
       // Smart document size truncation logic: 5 pages for guests, 20 pages for signed-in free members
       let isTruncated = false;
-      const isAnonUser = !sessionUser || !!sessionUser.is_anonymous;
-      let limitPages = 20;
-      let maxCharBudget = 44000; // default 20 pages for signed-in free members (20 * 2200 = 44000 chars)
+      let estimatedTotalPages = 1;
+      const limitPages = isAnonUser ? 5 : 20;
 
-      if (!isPremium) {
-        limitPages = isAnonUser ? 5 : 20;
-        maxCharBudget = limitPages * 2200;
+      if (isTextMode && !isPremium) {
+        const maxCharBudget = limitPages * 2200;
         if (finalContent.length > maxCharBudget) {
           finalContent = finalContent.substring(0, maxCharBudget);
           isTruncated = true;
         }
+        estimatedTotalPages = Math.ceil(text.length / 2200);
       }
 
       // Build a dynamic, brand-safe filename using websitename_first-2-3-words
@@ -746,55 +747,53 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
         ? marked.parse(finalContent) 
         : (editorRef.current?.innerHTML || marked.parse(text));
 
-      // High-precision DOM Slicing: enforce accurate guest (5 pages) vs free member (10 pages) bounds
+      // High-precision A4 DOM Height Slicing: enforce 100% accurate guest (5 pages) vs free member (20 pages) budgets
       if (!isPremium) {
         if (typeof document !== 'undefined') {
+          // Create an invisible, sandboxed A4 measuring container to get 100% computed height accuracy
+          const measureContainer = document.createElement('div');
+          measureContainer.style.position = 'absolute';
+          measureContainer.style.visibility = 'hidden';
+          measureContainer.style.width = '760px'; // Standard layout width matching editor exactly
+          measureContainer.style.boxSizing = 'border-box';
+          measureContainer.style.fontFamily = theme.value === 'minimalist' ? 'monospace' : theme.value === 'academic' ? 'serif' : 'sans-serif';
+          measureContainer.style.fontSize = theme.value === 'minimalist' ? '13.5px' : '15px';
+          measureContainer.style.lineHeight = theme.value === 'academic' ? '1.7' : '1.6';
+          
+          document.body.appendChild(measureContainer);
+
           const tempDiv = document.createElement('div');
           tempDiv.innerHTML = pristineHtmlBody;
 
-          let cumulativeChars = 0;
           let slicedHtml = '';
-          const maxCharBudget = limitPages * 2200; // ~2,200 characters per A4 page budget
-          let hasSlices = false;
+          // 1 standard A4 printable height budget at 96 DPI (content only, clearing 1.0in margins) is ~930px.
+          // Total height budget for limitPages: limitPages * 930px
+          const pageHeightBudget = limitPages * 930;
+
+          // Estimate total untruncated pages in layout
+          measureContainer.innerHTML = pristineHtmlBody;
+          const untruncatedHeight = measureContainer.scrollHeight;
+          estimatedTotalPages = Math.ceil(untruncatedHeight / 930) || 1;
+          measureContainer.innerHTML = ''; // reset for slicing
 
           const children = Array.from(tempDiv.children);
           for (const child of children) {
-            const childTextLength = child.textContent?.length || 0;
-            if (cumulativeChars + childTextLength > maxCharBudget) {
-              hasSlices = true;
+            const clone = child.cloneNode(true) as HTMLElement;
+            measureContainer.appendChild(clone);
+
+            if (measureContainer.scrollHeight > pageHeightBudget) {
+              isTruncated = true;
               break;
             }
             slicedHtml += child.outerHTML;
-            cumulativeChars += childTextLength;
           }
 
-          if (hasSlices) {
-            isTruncated = true;
-            pristineHtmlBody = slicedHtml;
+          measureContainer.remove(); // Clean up from document body
 
-            if (isAnonUser) {
-              // Guest Callout: 5 Pages limit, conversion to Signup (unlocks 20) or Pro (unlocks unlimited)
-              pristineHtmlBody += `
-                <div style="margin-top: 40px; padding: 24px; border: 2px dashed oklch(0.72 0.18 195 / 0.4); background: oklch(0.98 0.005 195 / 0.03); border-radius: 12px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 4px 12px oklch(0 0 0 / 0.03);">
-                  <div style="font-size: 11pt; font-weight: 700; color: oklch(0.65 0.18 195); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace;">[Guest Trial - 5 Page Limit Reached]</div>
-                  <div style="font-size: 9.5pt; color: #475569; line-height: 1.5; max-width: 500px; margin: 0 auto 16px;">
-                    You are downloading this document as a guest. Guest PDF compilations are limited to <strong>5 pages</strong>. Sign up for a free account to unlock <strong>20 pages</strong>, or upgrade to a premium plan for unlimited documents.
-                  </div>
-                  <button style="display: inline-block; padding: 8px 18px; border-radius: 6px; background: linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195)); color: white; text-decoration: none; font-weight: 600; font-size: 12.5px; border: none; cursor: pointer;" onclick="window.parent?.postMessage?.('open-auth-modal', '*')">Create Free Account</button>
-                </div>
-              `;
-            } else {
-              // Free Member Callout: 20 Pages limit, conversion to Pro/Developer (unlocks unlimited)
-              pristineHtmlBody += `
-                <div style="margin-top: 40px; padding: 24px; border: 2px dashed oklch(0.70 0.18 265 / 0.4); background: oklch(0.98 0.005 265 / 0.03); border-radius: 12px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 4px 12px oklch(0 0 0 / 0.03);">
-                  <div style="font-size: 11pt; font-weight: 700; color: oklch(0.62 0.20 265); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace;">[Free Account - 20 Page Limit Reached]</div>
-                  <div style="font-size: 9.5pt; color: #475569; line-height: 1.5; max-width: 500px; margin: 0 auto 16px;">
-                    As a Free member, cloud PDF compilations are metered to <strong>20 pages</strong>. Upgrade to the <strong>Pro Plan</strong> or <strong>Developer Plan</strong> to export unlimited pages with high-fidelity styles and remove watermarks.
-                  </div>
-                  <button style="display: inline-block; padding: 8px 18px; border-radius: 6px; background: linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265)); color: white; border: none; font-weight: 600; font-size: 12.5px; cursor: pointer;" onclick="window.parent?.postMessage?.('show-paywall-modal', '*')">Upgrade to Premium</button>
-                </div>
-              `;
-            }
+          if (isTruncated) {
+            pristineHtmlBody = slicedHtml;
+            // PDF stays 100% clean and pristine! We do NOT append any watermark/upsell alerts inside the file.
+            // Upsell alerts are rendered exclusively on the website screen upon successful compile!
           }
         }
       }
@@ -920,11 +919,10 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           window.URL.revokeObjectURL(url);
           a.remove();
 
-          if (isTruncated) {
-            setPdfToast(`Free Tier Limit: Compiled to exactly ${limitPages} pages. Upgrade for unlimited length!`);
-            await new Promise((resolve) => setTimeout(resolve, 3000));
-          }
           setPdfToast(null);
+          if (isTruncated) {
+            setTruncationModal({ open: true, limit: limitPages, totalPages: estimatedTotalPages });
+          }
         } catch (err: any) {
           clearTimeout(timeoutId);
           console.error("[PDF Failsafe Switch] Cloud compiler failed:", err);
@@ -1633,6 +1631,122 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
             document.body
           )}
         </div>
+      )}
+
+      {/* Smart Truncation Paywall Modal (100% Client-Side Screen only - clean PDF) */}
+      {truncationModal && typeof window !== 'undefined' && createPortal(
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'oklch(0 0 0 / 0.75)', backdropFilter: 'blur(8px)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 999999, animation: 'fadeIn 0.25s ease'
+        }}>
+          <div style={{
+            background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+            borderRadius: 16, padding: 32, maxWidth: 460, width: '90%',
+            boxShadow: '0 24px 60px oklch(0 0 0 / 0.5)', display: 'flex', flexDirection: 'column', gap: 20,
+            position: 'relative'
+          }} className="fade-in-up">
+            <button 
+              onClick={() => setTruncationModal(null)} 
+              className="reset" 
+              style={{ position: 'absolute', top: 20, right: 20, cursor: 'pointer', color: 'var(--fg-dim)', transition: 'color 0.15s', border: 'none', background: 'transparent' }}
+              onMouseEnter={e => e.currentTarget.style.color = 'white'}
+              onMouseLeave={e => e.currentTarget.style.color = 'var(--fg-dim)'}
+            >
+              <Icon.X size={18} />
+            </button>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center', marginTop: 10 }}>
+              <div style={{
+                width: 56, height: 56, borderRadius: '50%',
+                background: isAnonUser ? 'oklch(0.20 0.010 195 / 0.8)' : 'oklch(0.20 0.010 265 / 0.8)',
+                color: isAnonUser ? 'oklch(0.72 0.18 195)' : 'oklch(0.70 0.18 265)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
+                boxShadow: isAnonUser ? '0 0 20px oklch(0.72 0.18 195 / 0.15)' : '0 0 20px oklch(0.70 0.18 265 / 0.15)'
+              }}>
+                <Icon.Layers3 size={24} />
+              </div>
+              <h3 style={{ fontSize: 20, fontWeight: 600, color: 'white', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                {isAnonUser ? 'Guest Page Limit Reached' : 'Free Page Limit Reached'}
+              </h3>
+              <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5, fontFamily: 'Inter, system-ui, sans-serif' }}>
+                {isAnonUser 
+                  ? `You successfully compiled your first ${truncationModal.limit} pages! Guest exports are capped at 5 pages. Create a free account to instantly unlock 20 pages.`
+                  : `You successfully compiled your first ${truncationModal.limit} pages! Your full document is approximately ${truncationModal.totalPages} pages. Upgrade to a premium plan to export all pages instantly.`
+                }
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+              {isAnonUser ? (
+                <>
+                  <button 
+                    onClick={() => {
+                      setTruncationModal(null);
+                      // Trigger auth modal via parent window postMessage
+                      window.parent?.postMessage?.('open-auth-modal', '*');
+                    }}
+                    className="reset"
+                    style={{
+                      width: '100%', padding: '12px', borderRadius: 8,
+                      background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
+                      color: 'white', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', textAlign: 'center', border: 'none',
+                      boxShadow: '0 4px 12px oklch(0.72 0.18 195 / 0.2)'
+                    }}
+                  >
+                    Create Free Account
+                  </button>
+                  <button 
+                    onClick={() => {
+                      setTruncationModal(null);
+                      window.parent?.postMessage?.('show-paywall-modal', '*');
+                    }}
+                    className="reset"
+                    style={{
+                      width: '100%', padding: '11px', borderRadius: 8,
+                      background: 'transparent', border: '1px solid var(--border)',
+                      color: 'white', fontWeight: 500, fontSize: 13, cursor: 'pointer', textAlign: 'center',
+                      transition: 'background 0.15s'
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                  >
+                    Upgrade to Premium
+                  </button>
+                </>
+              ) : (
+                <button 
+                  onClick={() => {
+                    setTruncationModal(null);
+                    window.parent?.postMessage?.('show-paywall-modal', '*');
+                  }}
+                  className="reset"
+                  style={{
+                    width: '100%', padding: '12px', borderRadius: 8,
+                    background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
+                    color: 'white', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', textAlign: 'center', border: 'none',
+                    boxShadow: '0 4px 12px oklch(0.70 0.18 265 / 0.2)'
+                  }}
+                >
+                  Upgrade to Export All {truncationModal.totalPages} Pages
+                </button>
+              )}
+              
+              <button 
+                onClick={() => setTruncationModal(null)} 
+                className="reset" 
+                style={{
+                  width: '100%', padding: '10px', color: 'var(--fg-dim)', fontWeight: 500,
+                  fontSize: 12.5, cursor: 'pointer', textAlign: 'center', border: 'none', background: 'transparent'
+                }}
+              >
+                Keep Truncated PDF
+              </button>
+            </div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Cloud History Drawer Component */}
