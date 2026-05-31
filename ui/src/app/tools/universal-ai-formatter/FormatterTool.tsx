@@ -1328,47 +1328,41 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
               </div>
 
               {/* Collapsible settings block */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 4 }}>
-                {format.value === 'pdf' ? (
-                  <>
-                    {/* 1. Custom header text input */}
-                    <div>
-                      <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Header</label>
-                      <input
-                        type="text"
-                        placeholder={isPremium ? "Header Text..." : "Locked for Pro"}
-                        disabled={!isPremium}
-                        value={customHeader}
-                        onChange={e => setCustomHeader(e.target.value)}
-                        style={{
-                          width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
-                          border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
-                        }}
-                      />
-                    </div>
-
-                    {/* 2. Custom footer text input */}
-                    <div>
-                      <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Footer</label>
-                      <input
-                        type="text"
-                        placeholder={isPremium ? "Footer Text..." : "Locked for Pro"}
-                        disabled={!isPremium}
-                        value={customFooter}
-                        onChange={e => setCustomFooter(e.target.value)}
-                        style={{
-                          width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
-                          border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
-                        }}
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ fontSize: 12.5, color: 'var(--fg-muted)', display: 'flex', alignItems: 'center', minHeight: 38 }}>
-                    <span>✨ Settings are fully optimized for {format.label} downloads.</span>
+              {format.value === 'pdf' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 4 }}>
+                  {/* 1. Custom header text input */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Header</label>
+                    <input
+                      type="text"
+                      placeholder={isPremium ? "Header Text..." : "Locked for Pro"}
+                      disabled={!isPremium}
+                      value={customHeader}
+                      onChange={e => setCustomHeader(e.target.value)}
+                      style={{
+                        width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
+                        border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
+                      }}
+                    />
                   </div>
-                )}
-              </div>
+
+                  {/* 2. Custom footer text input */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', marginBottom: 4 }} className="mono">PDF Running Footer</label>
+                    <input
+                      type="text"
+                      placeholder={isPremium ? "Footer Text..." : "Locked for Pro"}
+                      disabled={!isPremium}
+                      value={customFooter}
+                      onChange={e => setCustomFooter(e.target.value)}
+                      style={{
+                        width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
+                        border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
