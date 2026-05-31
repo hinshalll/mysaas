@@ -166,45 +166,7 @@ export async function POST(req: Request) {
 
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // 3.5. Handle Sandbox Simulator Bypass (Strategy B)
-    if (token === 'ms_sandbox_free_7a2f8d1c9b3e') {
-      const isJson = tool === 'json' || tool === 'json-formatter';
-      let mockResult = "";
-      let mockHtml = "";
-      let mockMarkdown = "";
-      let mockText = "";
 
-      if (isJson) {
-        mockResult = "{\n  \"status\": \"success\",\n  \"data\": {\n    \"name\": \"John Doe\",\n    \"role\": \"Lead B2B Developer\",\n    \"company\": \"Acme Corp\",\n    \"hobbies\": [\n      \"coding\",\n      \"debugging\"\n    ]\n  }\n}";
-        mockHtml = `<pre>${mockResult}</pre>`;
-        mockMarkdown = "```json\n" + mockResult + "\n```";
-        mockText = mockResult;
-      } else {
-        mockMarkdown = `# Formatted Document Report\n\n${content.trim()}\n\n---\n*Formatted programmatically in Sandbox mode via MySaaS API.*`;
-        mockHtml = compileThemeHtml(mockMarkdown, style);
-        mockText = stripMarkdown(mockMarkdown);
-        mockResult = mockHtml; // fallback for backward compatibility
-      }
-
-      return NextResponse.json({
-        status: 'success',
-        mode: 'sandbox_simulator',
-        notice: 'Upgrade to Pro to process real documents programmatically with live production keys.',
-        data: {
-          formatted: mockResult,
-          html: mockHtml,
-          markdown: mockMarkdown,
-          text: mockText,
-          metadata: {
-            chars_processed: content.length,
-            words_count: content.split(/\s+/).filter(Boolean).length,
-            tier: 'free_sandbox',
-            api_requests_today: 1,
-            timestamp: new Date().toISOString()
-          }
-        }
-      });
-    }
 
     // 4. Query profile by active API key
     const { data: profile, error: profileError } = await supabase

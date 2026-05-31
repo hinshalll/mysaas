@@ -3514,9 +3514,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
 
   // Active Key selection
-  const activeKey = isProOrAdmin
-    ? (apiKey || 'ms_live_prod_active_key_not_generated_yet')
-    : (isLoggedIn ? 'ms_sandbox_free_7a2f8d1c9b3e' : 'ms_guest_unauthorized_locked');
+  const activeKey = apiKey || (isLoggedIn ? 'ms_sandbox_unassigned_key' : 'ms_guest_unauthorized_locked');
 
   const curlCommand = `curl -X POST https://api.${displayDomain}/v1/format \\
   -H "Authorization: Bearer ${activeKey}" \\
@@ -3537,10 +3535,34 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
             .select('api_key')
             .eq('id', sessionUser.id)
             .single();
-          if (data && data.api_key) {
-            setApiKey(data.api_key);
-            if (typeof window !== 'undefined') {
-              localStorage.setItem(storageKey, data.api_key);
+          if (data) {
+            if (data.api_key) {
+              setApiKey(data.api_key);
+              if (typeof window !== 'undefined') {
+                localStorage.setItem(storageKey, data.api_key);
+              }
+            } else {
+              // Auto-generate their key right away (Sandbox for Free, Production for Pro) so they have one instantly!
+              const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+              let randomString = '';
+              for (let i = 0; i < 24; i++) {
+                randomString += chars[Math.floor(Math.random() * chars.length)];
+              }
+              const isProOrAdminUser = userPlan === 'pro' || userPlan === 'admin';
+              const keyPrefix = isProOrAdminUser ? 'ms_live_prod_' : 'ms_sandbox_';
+              const newKey = `${keyPrefix}${randomString}`;
+
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update({ api_key: newKey })
+                .eq('id', sessionUser.id);
+
+              if (!updateError) {
+                setApiKey(newKey);
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem(storageKey, newKey);
+                }
+              }
             }
           }
         } catch (err) {
@@ -3549,7 +3571,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
       }
     }
     syncKey();
-  }, [sessionUser, isLoggedIn]);
+  }, [sessionUser, isLoggedIn, userPlan]);
 
   const handleGenerateKey = async () => {
     setIsGenerating(true);
@@ -3558,7 +3580,9 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
     for (let i = 0; i < 24; i++) {
       randomString += chars[Math.floor(Math.random() * chars.length)];
     }
-    const newKey = `ms_live_prod_${randomString}`;
+    const isProOrAdminUser = userPlan === 'pro' || userPlan === 'admin';
+    const keyPrefix = isProOrAdminUser ? 'ms_live_prod_' : 'ms_sandbox_';
+    const newKey = `${keyPrefix}${randomString}`;
 
     // Write real API key into online Postgres profiles database row!
     if (supabase && sessionUser?.id) {
@@ -3750,25 +3774,52 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
                     FREE PLAN
                   </span>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  <input
-                    type="text"
-                    readOnly
-                    value="ms_sandbox_free_7a2f8d1c9b3e"
-                    style={{
-                      flex: 1, padding: '10px 12px', background: 'var(--bg-elev-1)',
-                      border: '1px solid var(--border)', borderRadius: 8,
-                      color: 'var(--fg-muted)', fontSize: 12, outline: 'none', fontFamily: 'monospace',
-                    }}
-                  />
-                  <button onClick={handleCopyKey} className="reset" style={{
-                    padding: '8px 12px', borderRadius: 8,
-                    background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                    color: 'var(--fg)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                {apiKey ? (
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    <input
+                      type="text"
+                      readOnly
+                      value={apiKey}
+                      style={{
+                        flex: 1, padding: '10px 12px', background: 'var(--bg-elev-1)',
+                        border: '1px solid var(--border)', borderRadius: 8,
+                        color: 'var(--fg)', fontSize: 12, outline: 'none', fontFamily: 'monospace',
+                      }}
+                    />
+                    <button onClick={handleCopyKey} className="reset" style={{
+                      padding: '8px 12px', borderRadius: 8,
+                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                      color: 'var(--fg)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                    }}>
+                      {copiedKey ? <Icon.Check size={14} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={14} />}
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                    border: '1px dashed var(--border)', borderRadius: 12, padding: '30px 20px',
+                    textAlign: 'center', background: 'var(--bg-elev-1)',
                   }}>
-                    {copiedKey ? <Icon.Check size={14} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={14} />}
-                  </button>
-                </div>
+                    {isGenerating ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                        <Icon.Loader size={24} className="spinning" style={{ color: 'var(--accent)' }} />
+                        <div style={{ fontSize: 12, color: 'var(--fg-dim)' }} className="mono">Generating Sandbox Key...</div>
+                      </div>
+                    ) : (
+                      <>
+                        <p style={{ fontSize: 12.5, color: 'var(--fg-muted)', margin: '0 0 16px', lineHeight: 1.4 }}>
+                          You don't have an active API key yet. Generate your unique sandbox key to start integrating.
+                        </p>
+                        <button onClick={handleGenerateKey} className="reset" style={{
+                          padding: '8px 16px', borderRadius: 8,
+                          background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
+                          color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                          boxShadow: '0 2px 8px oklch(0.50 0.20 195 / 0.2)',
+                        }}>Generate Sandbox Key</button>
+                      </>
+                    )}
+                  </div>
+                )}
                 <div style={{ fontSize: 11, color: 'var(--fg-dim)', marginTop: 6 }}>
                   Free sandbox keys are metered to 5 daily runs.
                 </div>
