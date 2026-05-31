@@ -7169,6 +7169,19 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     };
   }, []);
 
+  // Listen for custom postMessage events sent from nested print preview iframes to trigger auth or paywall modals
+  useEffect(() => {
+    function handleIframeMessage(e: MessageEvent) {
+      if (e.data === 'open-auth-modal') {
+        setAuthOpen(true);
+      } else if (e.data === 'show-paywall-modal') {
+        handleShowPaywall();
+      }
+    }
+    window.addEventListener('message', handleIframeMessage);
+    return () => window.removeEventListener('message', handleIframeMessage);
+  }, []);
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);

@@ -331,7 +331,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
     }
   }
 
-  const [text, setText] = useState(SAMPLE);
+  const [text, setText] = useState("");
   const [aiSource, setAiSource] = useState(defaultAi);
   const [theme, setTheme] = useState(THEMES[0]);
   const [format, setFormat] = useState(defaultFormat);
@@ -472,12 +472,19 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
       let finalContent = isTextMode ? editorRef.current?.value : editorRef.current?.innerHTML;
       if (!finalContent) finalContent = text; // fallback
 
-      // Smart document size truncation logic: Free Plan allows up to ~10 pages (25,000 characters)
+      // Smart document size truncation logic: 5 pages for guests, 10 pages for signed-in free members
       let isTruncated = false;
-      const FREE_CHAR_LIMIT = 25000;
-      if (finalContent.length > FREE_CHAR_LIMIT && !isPremium) {
-        finalContent = finalContent.substring(0, FREE_CHAR_LIMIT);
-        isTruncated = true;
+      const isAnonUser = !sessionUser || !!sessionUser.is_anonymous;
+      let limitPages = 10;
+      let maxCharBudget = 22000; // default 10 pages for signed-in free members (10 * 2200 = 22000 chars)
+
+      if (!isPremium) {
+        limitPages = isAnonUser ? 5 : 10;
+        maxCharBudget = limitPages * 2200;
+        if (finalContent.length > maxCharBudget) {
+          finalContent = finalContent.substring(0, maxCharBudget);
+          isTruncated = true;
+        }
       }
 
       // Build a dynamic, brand-safe filename using websitename_first-2-3-words
@@ -739,15 +746,57 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
         ? marked.parse(finalContent) 
         : (editorRef.current?.innerHTML || marked.parse(text));
 
-      if (isTruncated) {
-        pristineHtmlBody += `
-          <div style="margin-top: 40px; padding: 20px; border: 2px dashed oklch(0.58 0.16 265 / 0.4); background: oklch(0.98 0.005 250); border-radius: 12px; text-align: center; font-family: 'Inter', sans-serif; box-shadow: 0 4px 12px oklch(0 0 0 / 0.03);">
-            <div style="font-size: 11pt; font-weight: 700; color: oklch(0.62 0.20 265); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em;">[Document Truncated - Free Plan Limit]</div>
-            <div style="font-size: 9.5pt; color: oklch(0.35 0.010 250); line-height: 1.5; max-width: 480px; margin: 0 auto;">
-              This document has been truncated to 10 pages under the Free Plan. Upgrade to the <strong>Pro Plan</strong> or <strong>Developer Plan</strong> to export unlimited pages with custom watermarks.
-            </div>
-          </div>
-        `;
+      // High-precision DOM Slicing: enforce accurate guest (5 pages) vs free member (10 pages) bounds
+      if (!isPremium) {
+        if (typeof document !== 'undefined') {
+          const tempDiv = document.createElement('div');
+          tempDiv.innerHTML = pristineHtmlBody;
+
+          let cumulativeChars = 0;
+          let slicedHtml = '';
+          const maxCharBudget = limitPages * 2200; // ~2,200 characters per A4 page budget
+          let hasSlices = false;
+
+          const children = Array.from(tempDiv.children);
+          for (const child of children) {
+            const childTextLength = child.textContent?.length || 0;
+            if (cumulativeChars + childTextLength > maxCharBudget) {
+              hasSlices = true;
+              break;
+            }
+            slicedHtml += child.outerHTML;
+            cumulativeChars += childTextLength;
+          }
+
+          if (hasSlices) {
+            isTruncated = true;
+            pristineHtmlBody = slicedHtml;
+
+            if (isAnonUser) {
+              // Guest Callout: 5 Pages limit, conversion to Signup (unlocks 10) or Pro (unlocks unlimited)
+              pristineHtmlBody += `
+                <div style="margin-top: 40px; padding: 24px; border: 2px dashed oklch(0.72 0.18 195 / 0.4); background: oklch(0.98 0.005 195 / 0.03); border-radius: 12px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 4px 12px oklch(0 0 0 / 0.03);">
+                  <div style="font-size: 11pt; font-weight: 700; color: oklch(0.65 0.18 195); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace;">[Guest Trial - 5 Page Limit Reached]</div>
+                  <div style="font-size: 9.5pt; color: #475569; line-height: 1.5; max-width: 500px; margin: 0 auto 16px;">
+                    You are downloading this document as a guest. Guest PDF compilations are limited to <strong>5 pages</strong>. Sign up for a free account to unlock <strong>10 pages</strong>, or upgrade to a premium plan for unlimited documents.
+                  </div>
+                  <button style="display: inline-block; padding: 8px 18px; border-radius: 6px; background: linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195)); color: white; text-decoration: none; font-weight: 600; font-size: 12.5px; border: none; cursor: pointer;" onclick="window.parent?.postMessage?.('open-auth-modal', '*')">Create Free Account</button>
+                </div>
+              `;
+            } else {
+              // Free Member Callout: 10 Pages limit, conversion to Pro/Developer (unlocks unlimited)
+              pristineHtmlBody += `
+                <div style="margin-top: 40px; padding: 24px; border: 2px dashed oklch(0.70 0.18 265 / 0.4); background: oklch(0.98 0.005 265 / 0.03); border-radius: 12px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-shadow: 0 4px 12px oklch(0 0 0 / 0.03);">
+                  <div style="font-size: 11pt; font-weight: 700; color: oklch(0.62 0.20 265); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.05em; font-family: monospace;">[Free Account - 10 Page Limit Reached]</div>
+                  <div style="font-size: 9.5pt; color: #475569; line-height: 1.5; max-width: 500px; margin: 0 auto 16px;">
+                    As a Free member, cloud PDF compilations are metered to <strong>10 pages</strong>. Upgrade to the <strong>Pro Plan</strong> or <strong>Developer Plan</strong> to export unlimited pages with high-fidelity styles and remove watermarks.
+                  </div>
+                  <button style="display: inline-block; padding: 8px 18px; border-radius: 6px; background: linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265)); color: white; border: none; font-weight: 600; font-size: 12.5px; cursor: pointer;" onclick="window.parent?.postMessage?.('show-paywall-modal', '*')">Upgrade to Premium</button>
+                </div>
+              `;
+            }
+          }
+        }
       }
 
       const formattedHtml = `
@@ -828,7 +877,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           }
         };
 
-        setPdfToast("Generating premium one-click PDF download...");
+        setPdfToast(isTruncated ? `Free Tier limit: compiling first ${limitPages} pages...` : "Generating premium one-click PDF download...");
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout to allow first-boot Chromium launch and Vercel warmups
@@ -871,6 +920,10 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           window.URL.revokeObjectURL(url);
           a.remove();
 
+          if (isTruncated) {
+            setPdfToast(`Free Tier Limit: Compiled to exactly ${limitPages} pages. Upgrade for unlimited length!`);
+            await new Promise((resolve) => setTimeout(resolve, 3000));
+          }
           setPdfToast(null);
         } catch (err: any) {
           clearTimeout(timeoutId);
@@ -1585,9 +1638,9 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
       {/* Cloud History Drawer Component */}
       {historyOpen && (
         <div style={{
-          position: 'fixed', top: 0, right: 0, bottom: 0, width: 320, zIndex: 1000,
+          position: 'fixed', top: 0, right: 0, bottom: 0, width: 320, zIndex: 99999,
           background: 'var(--bg-elev-1)', borderLeft: '1px solid var(--border)',
-          boxShadow: '-10px 0 30px oklch(0 0 0 / 0.4)', padding: 24, display: 'flex', flexDirection: 'column'
+          boxShadow: '-10px 0 30px oklch(0 0 0 / 0.4)', padding: '80px 24px 24px', display: 'flex', flexDirection: 'column'
         }} className="fade-in">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <h4 style={{ fontSize: 16, fontWeight: 600, color: 'white', margin: 0 }}>Cloud History (30 Days)</h4>
