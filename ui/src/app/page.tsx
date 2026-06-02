@@ -639,6 +639,7 @@ function TopBar({
 
       <Link href="/pricing" className="reset top-link" style={topLink}>Pricing</Link>
       <Link href="/docs" className="reset top-link" style={topLink}>Docs</Link>
+      <Link href="/api" className="reset top-link" style={topLink}>APIs</Link>
       <Link href="/developer" className="reset top-link" style={topLink}>Developer API</Link>
 
       {/* Auth State */}
@@ -764,6 +765,13 @@ function TopBar({
               style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
             >
               Docs
+            </Link>
+            <Link 
+              href="/api" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+            >
+              APIs
             </Link>
             <Link 
               href="/developer" 
@@ -1706,6 +1714,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
           { label: 'Pricing', path: '/pricing' },
           { label: 'Changelog', path: '/changelog' },
           { label: 'Docs', path: '/docs' },
+          { label: 'APIs', path: '/api' },
           { label: 'Developer API', path: '/developer' },
         ].map(item => (
           <Link key={item.label} href={item.path} className="reset top-link" style={{
@@ -1840,6 +1849,13 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
               style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
             >
               Docs
+            </Link>
+            <Link 
+              href="/api" 
+              onClick={() => setMobileMenuOpen(false)}
+              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+            >
+              APIs
             </Link>
             <Link 
               href="/developer" 
@@ -2909,6 +2925,7 @@ function Footer({ onBackToLanding, brandName }: FooterProps) {
         <FooterCol title="Product" links={[
           { label: 'Pricing', path: '/pricing' },
           { label: 'Changelog', path: '/changelog' },
+          { label: 'APIs', path: '/api' },
           { label: 'Developer API', path: '/developer' },
           { label: 'Status', path: '/dashboard' },
           { label: 'Privacy', path: '/privacy' }
