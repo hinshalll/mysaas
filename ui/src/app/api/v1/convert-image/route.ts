@@ -6,7 +6,7 @@ const COMPILER_ENDPOINTS = process.env.IMAGE_COMPILER_URLS
   ? process.env.IMAGE_COMPILER_URLS.split(',').map(url => url.trim())
   : ['https://hinshalll-hf-image-converter.hf.space/convert'];
 
-const COMPILER_TOKEN = process.env.PDF_COMPILER_TOKEN || 'mysaas_secure_pdf_token_2026';
+const CONVERTER_TOKEN = process.env.IMAGE_CONVERTER_TOKEN || 'mysaas_secure_image_token_2026';
 
 export async function POST(req: Request) {
   try {
@@ -197,7 +197,7 @@ export async function POST(req: Request) {
         const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
-            'X-Compiler-Token': `Bearer ${COMPILER_TOKEN}`
+            'X-Compiler-Token': `Bearer ${CONVERTER_TOKEN}`
           },
           body: proxyForm,
           signal: AbortSignal.timeout(20000) // 20s timeout
