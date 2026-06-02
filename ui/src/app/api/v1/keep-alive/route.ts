@@ -12,9 +12,16 @@ export async function GET(req: Request) {
     for (const key in process.env) {
       const val = process.env[key];
       if (val && typeof val === 'string' && val.includes('.hf.space')) {
+        // Skip keys that are clearly not variables holding space URLs (like commit messages)
+        if (key.includes('COMMIT') || key.includes('MESSAGE') || key.startsWith('VERCEL_GIT_')) {
+          continue;
+        }
+        
         val.split(',').forEach(url => {
           const clean = url.trim();
-          if (clean) endpoints.push(clean);
+          if (clean && (clean.startsWith('http://') || clean.startsWith('https://'))) {
+            endpoints.push(clean);
+          }
         });
       }
     }
@@ -26,14 +33,18 @@ export async function GET(req: Request) {
     }
     
     // 2. Parse origins (we want to check the base URL / root of each Space)
-    const origins = Array.from(new Set(endpoints.map(url => {
-      try {
-        const parsed = new URL(url);
-        return `${parsed.protocol}//${parsed.host}`;
-      } catch (e) {
-        return url;
-      }
-    })));
+    const origins = Array.from(new Set(
+      endpoints
+        .map(url => {
+          try {
+            const parsed = new URL(url);
+            return `${parsed.protocol}//${parsed.host}`;
+          } catch (e) {
+            return null;
+          }
+        })
+        .filter((val): val is string => val !== null)
+    ));
     
     // 3. Ping all origins concurrently
     const results = await Promise.all(origins.map(async (origin) => {
