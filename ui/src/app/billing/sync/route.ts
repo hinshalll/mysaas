@@ -8,6 +8,18 @@ export async function POST(req: Request) {
   try {
     const { token } = await req.json();
     const user = await authenticateRequest(token);
+
+    // Retrieve the profile's current tier to ensure admin status is preserved
+    const { data: profile } = await supabaseAdmin
+      .from('profiles')
+      .select('tier')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.tier === 'admin') {
+      return NextResponse.json({ success: true, tier: 'admin', message: 'Admin profile preserved. Bypass billing sync.' });
+    }
+
     const creem = getCreemClient();
 
     let customer: any;

@@ -640,7 +640,6 @@ function TopBar({
       <Link href="/pricing" className="reset top-link" style={topLink}>Pricing</Link>
       <Link href="/docs" className="reset top-link" style={topLink}>Docs</Link>
       <Link href="/api" className="reset top-link" style={topLink}>APIs</Link>
-      <Link href="/developer" className="reset top-link" style={topLink}>Developer API</Link>
 
       {/* Auth State */}
       {sessionUser && !isAnonUser ? (
@@ -772,13 +771,6 @@ function TopBar({
               style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
             >
               APIs
-            </Link>
-            <Link 
-              href="/developer" 
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
-            >
-              Developer API
             </Link>
           </div>
 
@@ -1715,7 +1707,6 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
           { label: 'Changelog', path: '/changelog' },
           { label: 'Docs', path: '/docs' },
           { label: 'APIs', path: '/api' },
-          { label: 'Developer API', path: '/developer' },
         ].map(item => (
           <Link key={item.label} href={item.path} className="reset top-link" style={{
             fontSize: 13, color: 'var(--fg-muted)',
@@ -1856,13 +1847,6 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
               style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
             >
               APIs
-            </Link>
-            <Link 
-              href="/developer" 
-              onClick={() => setMobileMenuOpen(false)}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
-            >
-              Developer API
             </Link>
           </div>
 
@@ -2747,7 +2731,7 @@ function ApiShowcase({ onLaunch, brandName }: { onLaunch: () => void; brandName:
             Integrate {brandName}'s enterprise-grade JSON, text, and data parser engines directly into your applications, scripts, and workflows. Generate secure keys, test endpoints instantly, and scale.
           </p>
           <div style={{ display: 'flex', gap: 12 }}>
-            <Link href="/developer" className="reset" style={{
+            <Link href="/account" className="reset" style={{
               padding: '10px 18px', borderRadius: 8,
               background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
               color: 'white', fontWeight: 600, fontSize: 13, textDecoration: 'none', cursor: 'pointer',
@@ -2926,7 +2910,6 @@ function Footer({ onBackToLanding, brandName }: FooterProps) {
           { label: 'Pricing', path: '/pricing' },
           { label: 'Changelog', path: '/changelog' },
           { label: 'APIs', path: '/api' },
-          { label: 'Developer API', path: '/developer' },
           { label: 'Status', path: '/dashboard' },
           { label: 'Privacy', path: '/privacy' }
         ]} />
@@ -7644,8 +7627,8 @@ export function App({ initialSlug }: { initialSlug?: string }) {
       path = '/dashboard';
     } else if (id === 'landing') {
       path = '/';
-    } else if (['pricing', 'about', 'docs', 'developer', 'account', 'changelog', 'roadmap', 'contact', 'privacy', 'blog'].includes(id)) {
-      path = id === 'roadmap' ? '/developer' : `/${id}`;
+    } else if (['pricing', 'about', 'docs', 'api', 'account', 'changelog', 'roadmap', 'contact', 'privacy', 'blog'].includes(id)) {
+      path = id === 'roadmap' ? '/api' : `/${id}`;
     } else if (id.includes('-to-')) {
       path = `/tools/format/${id}`;
     } else if (id.startsWith('category_')) {

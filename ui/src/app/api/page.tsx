@@ -6,6 +6,8 @@ import {
   Terminal, Image as ImageIcon, FileText, Globe, 
   ArrowRight, Loader, Check, Zap, Server, Code, ShieldCheck 
 } from 'lucide-react';
+import { supabase } from '../supabase';
+import SpaceStatusDashboard from '../developer/SpaceStatusDashboard';
 
 interface Monitor {
   url: string;
@@ -23,8 +25,28 @@ interface KeepAliveResponse {
 export default function ApiHubPage() {
   const [statusData, setStatusData] = useState<KeepAliveResponse | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    async function checkAdminStatus() {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data, error } = await supabase
+            .from('profiles')
+            .select('tier')
+            .eq('id', session.user.id)
+            .single();
+          if (!error && data?.tier === 'admin') {
+            setIsAdmin(true);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load user profile in API portal:', err);
+      }
+    }
+    checkAdminStatus();
+
     async function fetchStatus() {
       try {
         const res = await fetch('/api/v1/keep-alive', { cache: 'no-store' });
@@ -88,7 +110,7 @@ export default function ApiHubPage() {
             <span style={{ color: 'white' }}>DEVELOPER API</span>
           </div>
 
-          <Link href="/developer" style={{
+          <Link href="/account" style={{
             fontSize: 12.5,
             fontWeight: 600,
             color: 'white',
@@ -102,7 +124,7 @@ export default function ApiHubPage() {
           onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.25 0.01 250)'}
           onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.20 0.01 250)'}
           >
-            Dashboard Console →
+            Manage API Keys →
           </Link>
         </div>
 
@@ -322,6 +344,28 @@ export default function ApiHubPage() {
             </p>
           </div>
         </div>
+
+        {/* System Admin Dashboard Section */}
+        {isAdmin && (
+          <div style={{
+            marginTop: 16,
+            paddingTop: 36,
+            borderTop: '1px solid oklch(0.20 0.008 250)',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 20
+          }}>
+            <div>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>
+                System Status Console (Administrator)
+              </h2>
+              <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'oklch(0.70 0.01 250)' }}>
+                Directly monitor engine wake times, latency, response codes, and wake state triggers.
+              </p>
+            </div>
+            <SpaceStatusDashboard />
+          </div>
+        )}
 
       </div>
 
