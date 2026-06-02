@@ -71,7 +71,7 @@ export const CATEGORIES = [
     tagline: 'Convert, scrub, sync, and grab — without uploading.',
     hue: 25, /* warm orange */
     tools: [
-      { id: 'heic',  name: 'HEIC → JPG Converter',       icon: 'Image',     tagline: 'Batch convert with EXIF preserved' },
+      { id: 'heic-to-jpg-converter',  name: 'HEIC → JPG Converter',       icon: 'Image',     tagline: 'Batch convert with EXIF preserved' },
       { id: 'meta',  name: 'Metadata Scrubber',          icon: 'Eraser',    tagline: 'Strip EXIF, GPS, author from any file' },
       { id: 'thumb', name: 'Ultimate Thumbnail Grabber', icon: 'Film',      tagline: 'YouTube, Vimeo, TikTok · max-res variants' },
       { id: 'dup',   name: 'Duplicate Image Finder',     icon: 'Copy',      tagline: 'Perceptual hashing, not byte-identical' },

@@ -3504,7 +3504,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   const [showProdKey, setShowProdKey] = useState(false);
   
   // API Console selection
-  const [devTab, setDevTab] = useState<'format' | 'heic'>('format');
+  const [devTab, setDevTab] = useState<'format' | 'heic-to-jpg-converter'>('format');
 
   // Document Sandbox Interactive states
   const [sandboxInput, setSandboxInput] = useState('Clean this messy transcription up and format it nicely into a report.');
@@ -3820,18 +3820,18 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
           Document Formatter API
         </button>
         <button
-          onClick={() => setDevTab('heic')}
+          onClick={() => setDevTab('heic-to-jpg-converter')}
           className="reset mono"
           style={{
             padding: '10px 20px', fontSize: 13, fontWeight: 600, borderRadius: 8,
-            border: devTab === 'heic' ? '1px solid oklch(0.78 0.16 25 / 0.3)' : '1px solid var(--border)',
-            background: devTab === 'heic' ? 'oklch(0.18 0.010 25 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
-            color: devTab === 'heic' ? 'white' : 'var(--fg-muted)',
+            border: devTab === 'heic-to-jpg-converter' ? '1px solid oklch(0.78 0.16 25 / 0.3)' : '1px solid var(--border)',
+            background: devTab === 'heic-to-jpg-converter' ? 'oklch(0.18 0.010 25 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
+            color: devTab === 'heic-to-jpg-converter' ? 'white' : 'var(--fg-muted)',
             cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
             transition: 'all 0.15s',
           }}
         >
-          <Icon.Image size={14} style={{ color: devTab === 'heic' ? 'oklch(0.78 0.16 25)' : 'var(--fg-dim)' }} />
+          <Icon.Image size={14} style={{ color: devTab === 'heic-to-jpg-converter' ? 'oklch(0.78 0.16 25)' : 'var(--fg-dim)' }} />
           HEIC to JPG/PNG Converter API
         </button>
       </div>
@@ -7164,12 +7164,12 @@ export function App({ initialSlug }: { initialSlug?: string }) {
       const parts = initialSlug.split('-to-');
       if (parts.length === 2) {
         if (parts[0] === 'heic') {
-          initialView = 'heic';
+          initialView = 'heic-to-jpg-converter';
         } else {
           initialView = 'universal-ai-formatter';
         }
       } else if (initialSlug === 'heic-to-jpg-converter' || initialSlug === 'heic') {
-        initialView = 'heic';
+        initialView = 'heic-to-jpg-converter';
       } else {
         const matched = ALL_TOOLS.find(t => t.id === initialSlug);
         if (matched) initialView = initialSlug;
@@ -7816,7 +7816,7 @@ export function App({ initialSlug }: { initialSlug?: string }) {
                     onShowPaywall={handleShowPaywall}
                     supabase={supabase}
                   />
-                : activeTool.id === 'heic'
+                : activeTool.id === 'heic-to-jpg-converter'
                   ? <HeicTool
                       tool={activeTool}
                       initialSlug={initialSlug}

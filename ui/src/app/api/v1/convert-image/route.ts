@@ -83,7 +83,7 @@ export async function POST(req: Request) {
       .from('usage_logs')
       .select('*', { count: 'exact', head: true })
       .eq('user_id', profile.id)
-      .eq('tool_id', 'heic')
+      .eq('tool_id', 'heic-to-jpg-converter')
       .gte('created_at', today.toISOString());
 
     if (countError) {
@@ -110,7 +110,7 @@ export async function POST(req: Request) {
     
     await supabase.from('usage_logs').insert({
       user_id: profile.id,
-      tool_id: 'heic',
+      tool_id: 'heic-to-jpg-converter',
       ip_hash: ipHash,
       tier: isApi ? 3 : (isPro ? 2 : 1)
     });

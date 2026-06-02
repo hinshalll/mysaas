@@ -65,6 +65,7 @@ export default function HeicTool({
   const [isDragOver, setIsDragOver] = useState(false);
   const [zipping, setZipping] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
+  const [isZipUploaded, setIsZipUploaded] = useState(false);
   
   // Collapsible FAQ state
   const [faqOpen, setFaqOpen] = useState<Record<number, boolean>>({
@@ -120,16 +121,53 @@ export default function HeicTool({
     };
   }, [files]);
 
-  const handleFilesSelected = (selectedFiles: FileList) => {
+  const handleFilesSelected = async (selectedFiles: FileList) => {
     if (!selectedFiles.length) return;
 
-    let incoming = Array.from(selectedFiles).filter(file => {
+    const fileList = Array.from(selectedFiles);
+    
+    // Check if any file is a ZIP
+    const zipFiles = fileList.filter(file => file.name.toLowerCase().endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed');
+    const directHeicFiles = fileList.filter(file => {
       const lowerName = file.name.toLowerCase();
       return lowerName.endsWith('.heic') || lowerName.endsWith('.heif') || file.type === 'image/heic' || file.type === 'image/heif';
     });
 
+    let incoming: File[] = [...directHeicFiles];
+
+    if (zipFiles.length > 0) {
+      setIsZipUploaded(true);
+      try {
+        const JSZip = (await import('jszip')).default;
+        
+        for (const zipFile of zipFiles) {
+          const zip = new JSZip();
+          const contents = await zip.loadAsync(zipFile);
+          
+          const zipPromises: Promise<File>[] = [];
+          contents.forEach((relativePath, zipEntry) => {
+            const lowerName = zipEntry.name.toLowerCase();
+            if (!zipEntry.dir && (lowerName.endsWith('.heic') || lowerName.endsWith('.heif'))) {
+              zipPromises.push(
+                zipEntry.async('blob').then(blob => {
+                  const baseName = zipEntry.name.split('/').pop() || zipEntry.name;
+                  return new File([blob], baseName, { type: 'image/heic' });
+                })
+              );
+            }
+          });
+          
+          const extracted = await Promise.all(zipPromises);
+          incoming.push(...extracted);
+        }
+      } catch (zipErr) {
+        console.error("Failed to extract zip file:", zipErr);
+        alert("Failed to read the ZIP file. Please ensure it is not corrupted.");
+      }
+    }
+
     if (incoming.length === 0) {
-      alert("Only HEIC or HEIF images are supported.");
+      alert("No HEIC or HEIF images found to convert.");
       return;
     }
 
@@ -164,6 +202,7 @@ export default function HeicTool({
     });
     setFiles([]);
     setCustomName('');
+    setIsZipUploaded(false);
     setConvertingActive(false);
   };
 
@@ -173,7 +212,11 @@ export default function HeicTool({
       if (fileToRm?.convertedUrl) {
         URL.revokeObjectURL(fileToRm.convertedUrl);
       }
-      return prev.filter(f => f.id !== id);
+      const filtered = prev.filter(f => f.id !== id);
+      if (filtered.length <= 1) {
+        setIsZipUploaded(false);
+      }
+      return filtered;
     });
   };
 
@@ -254,7 +297,7 @@ export default function HeicTool({
     const validPendingFiles = files.filter(f => f.status === 'pending');
     if (validPendingFiles.length === 0) return;
 
-    const usagePassed = await checkAndLogUsage('heic', false);
+    const usagePassed = await checkAndLogUsage('heic-to-jpg-converter', false);
     if (!usagePassed) {
       return; 
     }
@@ -429,7 +472,7 @@ export default function HeicTool({
       }} className="mono">
         <span style={{ color: tintFg(activeHue, lightMode), fontWeight: 500 }}>{tool.categoryLabel}</span>
         <span style={{ opacity: 0.5 }}>/</span>
-        <span style={{ color: 'var(--foreground)', opacity: 0.8 }}>{tool.id}</span>
+        <span style={{ color: 'var(--fg)', opacity: 0.8 }}>{tool.id}</span>
       </div>
 
       {/* Hero Header */}
@@ -449,22 +492,22 @@ export default function HeicTool({
             <ImageIcon size={24} strokeWidth={2} />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: 'var(--foreground)', letterSpacing: '-0.02em' }}>{tool.name}</h1>
-            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--muted-foreground)' }}>{tool.tagline}</p>
+            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: 'var(--fg)', letterSpacing: '-0.02em' }}>{tool.name}</h1>
+            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--fg-muted)' }}>{tool.tagline}</p>
           </div>
         </div>
         
         {/* Tier Indicator Tag */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          background: 'var(--card)',
+          background: 'var(--bg-elev-1)',
           border: '1px solid var(--border)',
           padding: '6px 14px', borderRadius: 9,
           boxShadow: '0 2px 8px var(--shadow-sm)',
         }}>
           <span style={{ width: 6, height: 6, borderRadius: '50%', background: isPaid ? 'oklch(0.65 0.22 145)' : 'oklch(0.70 0.16 145)' }} />
-          <span className="mono" style={{ fontSize: 11.5, color: 'var(--muted-foreground)' }}>
-            Tier: <strong style={{ color: 'var(--foreground)' }}>{isPaid ? 'PRO' : (isGuest ? 'GUEST' : 'FREE')}</strong>
+          <span className="mono" style={{ fontSize: 11.5, color: 'var(--fg-muted)' }}>
+            Tier: <strong style={{ color: 'var(--fg)' }}>{isPaid ? 'PRO' : (isGuest ? 'GUEST' : 'FREE')}</strong>
           </span>
         </div>
       </div>
@@ -502,7 +545,7 @@ export default function HeicTool({
         >
           <input
             type="file"
-            accept=".heic,.heif"
+            accept=".heic,.heif,.zip"
             multiple
             ref={fileInputRef}
             onChange={e => handleFilesSelected(e.target.files!)}
@@ -511,19 +554,19 @@ export default function HeicTool({
           <FileDown 
             size={files.length > 0 ? 24 : 36} 
             style={{ 
-              color: isDragOver ? tintFg(activeHue, lightMode) : 'var(--muted-foreground)', 
+              color: isDragOver ? tintFg(activeHue, lightMode) : 'var(--fg-muted)', 
               marginBottom: files.length > 0 ? 6 : 14,
               transition: 'transform 0.2s ease',
             }} 
             className="file-down-icon"
           />
-          <span style={{ fontSize: files.length > 0 ? 14 : 16, fontWeight: 600, color: 'var(--foreground)', display: 'block', marginBottom: files.length > 0 ? 2 : 6 }}>
-            {files.length > 0 ? `Selected ${files.length} Photo${files.length > 1 ? 's' : ''}` : 'Drag & drop HEIC / HEIF files here'}
+          <span style={{ fontSize: files.length > 0 ? 14 : 16, fontWeight: 600, color: 'var(--fg)', display: 'block', marginBottom: files.length > 0 ? 2 : 6 }}>
+            {files.length > 0 ? `Selected ${files.length} Photo${files.length > 1 ? 's' : ''}` : 'Drag & drop HEIC / HEIF / ZIP files here'}
           </span>
-          <span style={{ fontSize: files.length > 0 ? 12 : 13, color: 'var(--muted-foreground)', maxWidth: 480 }}>
+          <span style={{ fontSize: files.length > 0 ? 12 : 13, color: 'var(--fg-muted)', maxWidth: 480 }}>
             {files.length > 0 
               ? 'Click or drag more files to add to the batch' 
-              : `Safe browser-local WASM decoding. Zero server load. Limits: ${maxBatchCount} photos, max ${maxFileSizeMb}MB per file.`}
+              : `100% private, on-device conversion. Photos never leave your browser. Max file size: ${maxFileSizeMb}MB.`}
           </span>
         </div>
 
@@ -531,7 +574,7 @@ export default function HeicTool({
         {files.length > 0 && (
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gridTemplateColumns: (files.length > 1 || isZipUploaded) ? 'repeat(auto-fit, minmax(260px, 1fr))' : '1fr',
             gap: 24,
             borderBottom: '1px solid var(--border)',
             paddingBottom: 28,
@@ -539,8 +582,8 @@ export default function HeicTool({
           }}>
             
             {/* Target Output Format Selection */}
-            <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted-foreground)', marginBottom: 10, letterSpacing: '0.08em' }} className="mono uppercase">Target Format</label>
+            <div style={{ maxWidth: (files.length > 1 || isZipUploaded) ? undefined : 320, margin: (files.length > 1 || isZipUploaded) ? undefined : '0 auto', width: '100%' }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--fg-muted)', marginBottom: 10, letterSpacing: '0.08em', textAlign: (files.length > 1 || isZipUploaded) ? 'left' : 'center' }} className="mono uppercase">Target Format</label>
               <div style={{ 
                 display: 'flex', 
                 gap: 4, 
@@ -556,7 +599,7 @@ export default function HeicTool({
                   style={{
                     flex: 1, padding: '10px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8,
                     background: targetFormat === 'jpg' ? (lightMode ? 'white' : tint(activeHue, lightMode, 0.8, 0.08, 0.95)) : 'transparent',
-                    color: targetFormat === 'jpg' ? tintFg(activeHue, lightMode) : 'var(--muted-foreground)',
+                    color: targetFormat === 'jpg' ? tintFg(activeHue, lightMode) : 'var(--fg-muted)',
                     cursor: (convertingActive || isAllConverted) ? 'not-allowed' : 'pointer',
                     textAlign: 'center',
                     boxShadow: targetFormat === 'jpg' ? '0 2px 8px var(--shadow-sm)' : 'none',
@@ -572,7 +615,7 @@ export default function HeicTool({
                   style={{
                     flex: 1, padding: '10px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8,
                     background: targetFormat === 'png' ? (lightMode ? 'white' : tint(activeHue, lightMode, 0.8, 0.08, 0.95)) : 'transparent',
-                    color: targetFormat === 'png' ? tintFg(activeHue, lightMode) : 'var(--muted-foreground)',
+                    color: targetFormat === 'png' ? tintFg(activeHue, lightMode) : 'var(--fg-muted)',
                     cursor: (convertingActive || isAllConverted) ? 'not-allowed' : 'pointer',
                     textAlign: 'center',
                     boxShadow: targetFormat === 'png' ? '0 2px 8px var(--shadow-sm)' : 'none',
@@ -584,28 +627,30 @@ export default function HeicTool({
               </div>
             </div>
 
-            {/* Custom Renaming configuration */}
-            <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted-foreground)', marginBottom: 10, letterSpacing: '0.08em' }} className="mono uppercase">Batch Rename Template (Optional)</label>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <input
-                  type="text"
-                  placeholder="Keep original filenames..."
-                  value={customName}
-                  onChange={e => setCustomName(e.target.value)}
-                  disabled={convertingActive}
-                  style={{
-                    width: '100%', padding: '11px 14px 11px 36px', 
-                    background: lightMode ? 'white' : 'oklch(0.12 0.004 250 / 0.6)',
-                    border: '1px solid var(--border)', borderRadius: 10,
-                    color: 'var(--foreground)', fontSize: 13, outline: 'none',
-                    boxSizing: 'border-box', transition: 'all 0.2s',
-                  }}
-                  className="rename-input"
-                />
-                <Edit2 size={13} style={{ position: 'absolute', left: 14, color: 'var(--muted-foreground)', opacity: 0.7 }} />
+            {/* Custom Renaming configuration - only visible for multiple uploads or zip file uploads */}
+            {(files.length > 1 || isZipUploaded) && (
+              <div>
+                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--fg-muted)', marginBottom: 10, letterSpacing: '0.08em' }} className="mono uppercase">Batch Rename Template (Optional)</label>
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                  <input
+                    type="text"
+                    placeholder="Keep original filenames..."
+                    value={customName}
+                    onChange={e => setCustomName(e.target.value)}
+                    disabled={convertingActive}
+                    style={{
+                      width: '100%', padding: '11px 14px 11px 36px', 
+                      background: lightMode ? 'white' : 'oklch(0.12 0.004 250 / 0.6)',
+                      border: '1px solid var(--border)', borderRadius: 10,
+                      color: 'var(--fg)', fontSize: 13, outline: 'none',
+                      boxSizing: 'border-box', transition: 'all 0.2s',
+                    }}
+                    className="rename-input"
+                  />
+                  <Edit2 size={13} style={{ position: 'absolute', left: 14, color: 'var(--fg-muted)', opacity: 0.7 }} />
+                </div>
               </div>
-            </div>
+            )}
 
           </div>
         )}
@@ -616,8 +661,8 @@ export default function HeicTool({
             
             {/* Header controls with list layout toggle controls */}
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: 13, color: 'var(--muted-foreground)' }} className="mono">
-                Selected: <span style={{ color: 'var(--foreground)', fontWeight: 600 }}>{files.length}</span> / {maxBatchCount} photos
+              <div style={{ fontSize: 13, color: 'var(--fg-muted)' }} className="mono">
+                Selected: <span style={{ color: 'var(--fg)', fontWeight: 600 }}>{files.length}</span> / {maxBatchCount} photos
               </div>
               
               <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -641,7 +686,7 @@ export default function HeicTool({
                     style={{
                       padding: 6, borderRadius: 4,
                       background: viewMode === 'grid' ? (lightMode ? 'white' : 'var(--bg-elev-2)') : 'transparent',
-                      color: viewMode === 'grid' ? 'var(--foreground)' : 'var(--muted-foreground)',
+                      color: viewMode === 'grid' ? 'var(--fg)' : 'var(--fg-muted)',
                       cursor: 'pointer', display: 'flex', alignItems: 'center',
                       boxShadow: (viewMode === 'grid' && lightMode) ? '0 1px 4px var(--shadow-sm)' : 'none'
                     }}
@@ -655,7 +700,7 @@ export default function HeicTool({
                     style={{
                       padding: 6, borderRadius: 4,
                       background: viewMode === 'list' ? (lightMode ? 'white' : 'var(--bg-elev-2)') : 'transparent',
-                      color: viewMode === 'list' ? 'var(--foreground)' : 'var(--muted-foreground)',
+                      color: viewMode === 'list' ? 'var(--fg)' : 'var(--fg-muted)',
                       cursor: 'pointer', display: 'flex', alignItems: 'center',
                       boxShadow: (viewMode === 'list' && lightMode) ? '0 1px 4px var(--shadow-sm)' : 'none'
                     }}
@@ -733,14 +778,14 @@ export default function HeicTool({
                         ) : isConverting ? (
                           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                             <Loader size={18} className="spin" style={{ color: tintFg(activeHue, lightMode) }} />
-                            <span style={{ fontSize: 9.5, color: 'var(--muted-foreground)' }} className="mono">Converting...</span>
+                            <span style={{ fontSize: 9.5, color: 'var(--fg-muted)' }} className="mono">Converting...</span>
                           </div>
                         ) : item.status === 'size_exceeded' ? (
                           <LockIcon size={16} style={{ color: 'oklch(0.80 0.10 15)' }} />
                         ) : item.status === 'error' ? (
                           <XCircle size={16} style={{ color: 'oklch(0.80 0.10 15)' }} />
                         ) : (
-                          <ImageIcon size={22} style={{ color: 'var(--muted-foreground)', opacity: 0.6 }} />
+                          <ImageIcon size={22} style={{ color: 'var(--fg-muted)', opacity: 0.6 }} />
                         )}
                         
                         {/* Engine Badge */}
@@ -786,7 +831,7 @@ export default function HeicTool({
                               width: '100%', padding: '3px 6px', 
                               background: lightMode ? 'white' : 'var(--bg-elev-2)',
                               border: `1px solid ${tintFg(activeHue, lightMode)}`, borderRadius: 6,
-                              color: 'var(--foreground)', fontSize: 12, outline: 'none',
+                              color: 'var(--fg)', fontSize: 12, outline: 'none',
                               boxShadow: `0 0 0 2px ${tint(activeHue, lightMode, 0.4, 0.1, 0.25)}`
                             }}
                           />
@@ -795,7 +840,7 @@ export default function HeicTool({
                             <div 
                               onClick={() => { if (!convertingActive) toggleRenameMode(item.id, true); }}
                               style={{
-                                fontSize: 12, fontWeight: 600, color: 'var(--foreground)',
+                                fontSize: 12, fontWeight: 600, color: 'var(--fg)',
                                 whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
                                 flex: 1, cursor: convertingActive ? 'default' : 'pointer',
                               }} 
@@ -806,7 +851,7 @@ export default function HeicTool({
                             {!convertingActive && (
                               <Edit2 
                                 size={10} 
-                                style={{ color: 'var(--muted-foreground)', cursor: 'pointer', opacity: 0.6 }} 
+                                style={{ color: 'var(--fg-muted)', cursor: 'pointer', opacity: 0.6 }} 
                                 onClick={() => toggleRenameMode(item.id, true)} 
                               />
                             )}
@@ -814,9 +859,9 @@ export default function HeicTool({
                         )}
                         
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, fontSize: 10.5 }}>
-                          <span style={{ color: 'var(--muted-foreground)' }} className="mono">{formatSize(item.originalSize)}</span>
+                          <span style={{ color: 'var(--fg-muted)' }} className="mono">{formatSize(item.originalSize)}</span>
                           {item.status === 'success' && item.convertedSize && (
-                            <span style={{ color: 'var(--foreground)', fontWeight: 600 }} className="mono">➔ {formatSize(item.convertedSize)}</span>
+                            <span style={{ color: 'var(--fg)', fontWeight: 600 }} className="mono">➔ {formatSize(item.convertedSize)}</span>
                           )}
                         </div>
                         
@@ -869,11 +914,11 @@ export default function HeicTool({
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid var(--border)', background: lightMode ? 'oklch(0.97 0 0)' : 'oklch(0.14 0.005 250 / 0.5)' }}>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)' }} className="mono uppercase">Name</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)' }} className="mono uppercase">Original</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)' }} className="mono uppercase">Converted</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)' }} className="mono uppercase">Savings</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)', textAlign: 'right' }} className="mono uppercase">Actions</th>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)' }} className="mono uppercase">Name</th>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)' }} className="mono uppercase">Original</th>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)' }} className="mono uppercase">Converted</th>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)' }} className="mono uppercase">Savings</th>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)', textAlign: 'right' }} className="mono uppercase">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -899,7 +944,7 @@ export default function HeicTool({
                                 {item.status === 'success' && item.convertedUrl ? (
                                   <img src={item.convertedUrl} alt="Mini preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
-                                  <ImageIcon size={14} style={{ color: 'var(--muted-foreground)', opacity: 0.6 }} />
+                                  <ImageIcon size={14} style={{ color: 'var(--fg-muted)', opacity: 0.6 }} />
                                 )}
                               </div>
                               
@@ -914,21 +959,21 @@ export default function HeicTool({
                                   style={{
                                     padding: '2px 6px', background: lightMode ? 'white' : 'var(--bg-elev-2)',
                                     border: `1px solid ${tintFg(activeHue, lightMode)}`, borderRadius: 6,
-                                    color: 'var(--foreground)', fontSize: 12.5, outline: 'none'
+                                    color: 'var(--fg)', fontSize: 12.5, outline: 'none'
                                   }}
                                 />
                               ) : (
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                                   <span 
                                     onClick={() => { if (!convertingActive) toggleRenameMode(item.id, true); }}
-                                    style={{ color: 'var(--foreground)', fontWeight: 500, cursor: convertingActive ? 'default' : 'pointer' }}
+                                    style={{ color: 'var(--fg)', fontWeight: 500, cursor: convertingActive ? 'default' : 'pointer' }}
                                   >
                                     {item.name}
                                   </span>
                                   {!convertingActive && (
                                     <Edit2 
                                       size={10} 
-                                      style={{ color: 'var(--muted-foreground)', cursor: 'pointer', opacity: 0.6 }} 
+                                      style={{ color: 'var(--fg-muted)', cursor: 'pointer', opacity: 0.6 }} 
                                       onClick={() => toggleRenameMode(item.id, true)} 
                                     />
                                   )}
@@ -937,13 +982,13 @@ export default function HeicTool({
                             </div>
                           </td>
                           
-                          <td style={{ padding: '12px 16px', color: 'var(--muted-foreground)' }} className="mono">
+                          <td style={{ padding: '12px 16px', color: 'var(--fg-muted)' }} className="mono">
                             {formatSize(item.originalSize)}
                           </td>
                           
                           <td style={{ padding: '12px 16px' }}>
                             {item.status === 'success' && item.convertedSize ? (
-                              <span style={{ color: 'var(--foreground)', fontWeight: 600 }} className="mono">{formatSize(item.convertedSize)}</span>
+                              <span style={{ color: 'var(--fg)', fontWeight: 600 }} className="mono">{formatSize(item.convertedSize)}</span>
                             ) : item.status === 'converting' ? (
                               <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: tintFg(activeHue, lightMode) }}>
                                 <Loader size={12} className="spin" />
@@ -952,7 +997,7 @@ export default function HeicTool({
                             ) : item.status === 'error' ? (
                               <span style={{ color: 'oklch(0.80 0.10 15)' }} className="mono">Failed</span>
                             ) : (
-                              <span style={{ color: 'var(--muted-foreground)', opacity: 0.5 }} className="mono">-</span>
+                              <span style={{ color: 'var(--fg-muted)', opacity: 0.5 }} className="mono">-</span>
                             )}
                           </td>
                           
@@ -969,7 +1014,7 @@ export default function HeicTool({
                                 {savings.isSmaller ? `-${savings.percentage}%` : `+${Math.abs(Number(savings.percentage))}%`}
                               </span>
                             ) : (
-                              <span style={{ color: 'var(--muted-foreground)', opacity: 0.5 }}>-</span>
+                              <span style={{ color: 'var(--fg-muted)', opacity: 0.5 }}>-</span>
                             )}
                           </td>
                           
@@ -1031,8 +1076,8 @@ export default function HeicTool({
             }}>
               <div>
                 {pendingCount > 0 ? (
-                  <span style={{ fontSize: 13, color: 'var(--muted-foreground)' }}>
-                    🚀 Ready to convert <strong style={{ color: 'var(--foreground)' }}>{pendingCount}</strong> pending image{pendingCount > 1 ? 's' : ''}.
+                  <span style={{ fontSize: 13, color: 'var(--fg-muted)' }}>
+                    🚀 Ready to convert <strong style={{ color: 'var(--fg)' }}>{pendingCount}</strong> pending image{pendingCount > 1 ? 's' : ''}.
                   </span>
                 ) : (
                   <span style={{ fontSize: 13, color: 'oklch(0.70 0.16 145)', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
@@ -1110,33 +1155,33 @@ export default function HeicTool({
       {/* FAQ Block Accordion */}
       <div style={{
         marginTop: 48,
-        background: lightMode ? 'white' : 'oklch(0.16 0.006 250 / 0.4)',
+        background: 'var(--bg-elev-1)',
         border: '1px solid var(--border)',
         borderRadius: 18,
         padding: '28px 32px',
         boxShadow: '0 8px 24px var(--shadow-sm)',
       }}>
-        <h2 style={{ fontSize: 19, fontWeight: 700, color: 'var(--foreground)', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+        <h2 style={{ fontSize: 19, fontWeight: 700, color: 'var(--fg)', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
           <HelpCircle size={19} style={{ color: tintFg(activeHue, lightMode) }} /> Frequently Asked Questions
         </h2>
         
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {[
             {
-              q: "How does the client-side WebAssembly conversion work?",
-              a: "When you drag and drop HEIC photos, this page dynamically loads a high-performance WebAssembly compilation of libheif (heic-to) directly inside your web browser. This parses and decodes the image data locally on your device without transmitting any data over the internet."
+              q: "Is it safe to upload my personal photos here?",
+              a: "Absolutely. Your files never leave your device. All image conversion happens directly inside your web browser. This means your personal photos are never uploaded to our servers, keeping them 100% private."
             },
             {
-              q: "Are my photos uploaded to any servers?",
-              a: "No! All image conversions in the web tool run 100% locally inside your web browser. No private photo data ever leaves your device. This keeps your processing entirely secure and maintains a $0.00 hosting footprint for our system."
+              q: "Will my photos lose quality during conversion?",
+              a: "No. Our converter extracts the maximum original resolution and color depth from your HEIC files. When converting to JPG, we apply a high-quality compression algorithm that keeps the image looking sharp while significantly reducing file size."
             },
             {
-              q: "What is the difference between converting to JPG and PNG?",
-              a: "JPG uses lossy compression (visually lossless at our 95% quality rating) which produces much smaller file sizes. PNG is a lossless format that preserves transparency and original details but results in larger file sizes. Choose JPG for typical photos and PNG for graphics or designs requiring lossless precision."
+              q: "Should I choose JPG or PNG?",
+              a: "We recommend JPG for regular photos and camera shots because it provides a much smaller file size. Choose PNG if you need lossless quality or transparency (like for logos or illustrations)."
             },
             {
-              q: "Do you offer a developer API for programmatic conversion?",
-              a: "Yes! Developer plans include credentials to access our high-speed, load-balanced API route /api/v1/convert-image. This route runs C-compiled image processing pipelines inside secure sandboxed CPU containers to convert large volumes of images in milliseconds."
+              q: "Can I convert multiple images at once?",
+              a: "Yes! You can select multiple files or drop a ZIP archive. Free users can batch convert up to 10 images at once, while PRO users enjoy unlimited batch processing up to 100 images per batch with larger file size support."
             }
           ].map((faq, idx) => (
             <div 
@@ -1152,17 +1197,17 @@ export default function HeicTool({
                 className="reset"
                 style={{
                   width: '100%', display: 'flex', justifySelf: 'space-between', alignItems: 'center',
-                  padding: '6px 0', cursor: 'pointer', textAlign: 'left', color: 'var(--foreground)', fontWeight: 600,
+                  padding: '6px 0', cursor: 'pointer', textAlign: 'left', color: 'var(--fg)', fontWeight: 600,
                   fontSize: 14.5
                 }}
               >
                 <span style={{ flex: 1 }}>{faq.q}</span>
-                {faqOpen[idx] ? <ChevronUp size={16} style={{ color: 'var(--muted-foreground)' }} /> : <ChevronDown size={16} style={{ color: 'var(--muted-foreground)' }} />}
+                {faqOpen[idx] ? <ChevronUp size={16} style={{ color: 'var(--fg-muted)' }} /> : <ChevronDown size={16} style={{ color: 'var(--fg-muted)' }} />}
               </button>
               
               {faqOpen[idx] && (
                 <div style={{ 
-                  marginTop: 8, fontSize: 13.5, color: 'var(--muted-foreground)', lineHeight: 1.6,
+                  marginTop: 8, fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.6,
                   animation: 'slideDownFaq 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}>
                   <style>{`

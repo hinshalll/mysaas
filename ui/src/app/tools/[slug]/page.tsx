@@ -51,5 +51,9 @@ export default async function DynamicToolStubPage({ params }: Props) {
     redirect('/tools/universal-ai-formatter');
   }
   
+  if (slug === 'heic') {
+    redirect('/tools/heic-to-jpg-converter');
+  }
+  
   return <App initialSlug={slug} />;
 }
