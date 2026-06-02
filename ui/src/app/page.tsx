@@ -33,6 +33,7 @@ import React, {
 import FormatterTool from './tools/universal-ai-formatter/FormatterTool';
 import JsonTool from './tools/json-formatter-validator/JsonTool';
 import HeicTool from './tools/heic-to-jpg-converter/HeicTool';
+import SpaceStatusDashboard from './developer/SpaceStatusDashboard';
 import {
   Sparkles, MessageSquare, Mic, Link2, Diff,
   Braces, Binary, Database, Layers, Table, Terminal,
@@ -3504,7 +3505,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   const [showProdKey, setShowProdKey] = useState(false);
   
   // API Console selection
-  const [devTab, setDevTab] = useState<'format' | 'heic-to-jpg-converter'>('format');
+  const [devTab, setDevTab] = useState<'format' | 'heic-to-jpg-converter' | 'status'>('format');
 
   // Document Sandbox Interactive states
   const [sandboxInput, setSandboxInput] = useState('Clean this messy transcription up and format it nicely into a report.');
@@ -3802,7 +3803,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
       {/* Dynamic API Tab Selector */}
       <div style={{
         display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32,
-        position: 'relative', zIndex: 1
+        position: 'relative', zIndex: 1, flexWrap: 'wrap'
       }}>
         <button
           onClick={() => setDevTab('format')}
@@ -3834,16 +3835,35 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
           <Icon.Image size={14} style={{ color: devTab === 'heic-to-jpg-converter' ? 'oklch(0.78 0.16 25)' : 'var(--fg-dim)' }} />
           HEIC to JPG/PNG Converter API
         </button>
+        <button
+          onClick={() => setDevTab('status')}
+          className="reset mono"
+          style={{
+            padding: '10px 20px', fontSize: 13, fontWeight: 600, borderRadius: 8,
+            border: devTab === 'status' ? '1px solid oklch(0.78 0.16 145 / 0.3)' : '1px solid var(--border)',
+            background: devTab === 'status' ? 'oklch(0.18 0.010 145 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
+            color: devTab === 'status' ? 'white' : 'var(--fg-muted)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+            transition: 'all 0.15s',
+          }}
+        >
+          <Icon.Globe size={14} style={{ color: devTab === 'status' ? 'oklch(0.78 0.16 145)' : 'var(--fg-dim)' }} />
+          Space Engines Monitor
+        </button>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-        gap: 24,
-        alignItems: 'stretch',
-        position: 'relative',
-        zIndex: 1,
-      }}>
+      {devTab === 'status' ? (
+        <SpaceStatusDashboard />
+      ) : (
+        <>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+            gap: 24,
+            alignItems: 'stretch',
+            position: 'relative',
+            zIndex: 1,
+          }}>
         {/* API Keys Card */}
         <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 28 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
@@ -4441,6 +4461,8 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
           </div>
         </div>
       </div>
+        </>
+      )}
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
         <button onClick={onLaunch} className="reset" style={{
