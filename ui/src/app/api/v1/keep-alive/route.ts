@@ -6,24 +6,22 @@ export async function GET(req: Request) {
   try {
     const hfToken = process.env.HF_ACCESS_TOKEN || '';
     
-    // 1. Gather all Hugging Face space endpoints from environments
+    // 1. Automatically scan all process.env variables for Hugging Face space URLs
     const endpoints: string[] = [];
     
-    if (process.env.IMAGE_COMPILER_URLS) {
-      process.env.IMAGE_COMPILER_URLS.split(',').forEach(url => {
-        const clean = url.trim();
-        if (clean) endpoints.push(clean);
-      });
-    } else {
-      endpoints.push('https://hinshalll-hf-image-converter.hf.space/convert');
+    for (const key in process.env) {
+      const val = process.env[key];
+      if (val && typeof val === 'string' && val.includes('.hf.space')) {
+        val.split(',').forEach(url => {
+          const clean = url.trim();
+          if (clean) endpoints.push(clean);
+        });
+      }
     }
     
-    if (process.env.PDF_COMPILER_URLS) {
-      process.env.PDF_COMPILER_URLS.split(',').forEach(url => {
-        const clean = url.trim();
-        if (clean) endpoints.push(clean);
-      });
-    } else {
+    // Fallback defaults if no environment variables are loaded
+    if (endpoints.length === 0) {
+      endpoints.push('https://hinshalll-hf-image-converter.hf.space/convert');
       endpoints.push('https://hinshalll-hf-pdf-compiler.hf.space/generate');
     }
     
