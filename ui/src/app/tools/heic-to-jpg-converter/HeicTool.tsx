@@ -3,26 +3,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   Download, Loader, LayoutGrid, Plus, CheckCircle, XCircle, RefreshCw, Trash2,
-  List, HelpCircle, ChevronDown, ChevronUp, Image as ImageIcon, X, Edit2, FileDown,
-  Lock as LockIcon
+  List, HelpCircle, ChevronDown, ChevronUp, Image as ImageIcon, X, Edit2, FileDown, Lock as LockIcon
 } from 'lucide-react';
 
-const isLightMode = () => typeof document !== 'undefined' && document.documentElement.classList.contains('light');
-
-const tint = (hue: number, l?: number, c?: number, alpha?: number) => {
-  const light = isLightMode();
-  const finalL = l !== undefined ? (light ? 1 - l * 0.7 : l) : (light ? 0.94 : 0.30);
-  const finalC = c !== undefined ? (light ? c * 0.7 : c) : (light ? 0.04 : 0.06);
+const tint = (hue: number, light: boolean, l?: number, c?: number, alpha?: number) => {
+  const finalL = l !== undefined ? (light ? 1 - l * 0.75 : l) : (light ? 0.96 : 0.22);
+  const finalC = c !== undefined ? (light ? c * 0.6 : c) : (light ? 0.03 : 0.06);
   const finalA = alpha !== undefined ? alpha : 0.55;
   return `oklch(${finalL} ${finalC} ${hue} / ${finalA})`;
 };
 
-const tintFg = (hue: number) => {
-  return isLightMode() ? `oklch(0.50 0.18 ${hue})` : `oklch(0.82 0.13 ${hue})`;
+const tintFg = (hue: number, light: boolean) => {
+  return light ? `oklch(0.42 0.17 ${hue})` : `oklch(0.82 0.13 ${hue})`;
 };
 
-const tintBorder = (hue: number) => {
-  return isLightMode() ? `oklch(0.75 0.08 ${hue} / 0.35)` : `oklch(0.45 0.10 ${hue} / 0.45)`;
+const tintBorder = (hue: number, light: boolean) => {
+  return light ? `oklch(0.75 0.08 ${hue} / 0.35)` : `oklch(0.45 0.10 ${hue} / 0.45)`;
 };
 
 interface FileState {
@@ -74,6 +70,20 @@ export default function HeicTool({
   const [faqOpen, setFaqOpen] = useState<Record<number, boolean>>({
     0: true
   });
+
+  // Dynamic theme support
+  const [lightMode, setLightMode] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    setLightMode(document.documentElement.classList.contains('light'));
+    
+    const observer = new MutationObserver(() => {
+      setLightMode(document.documentElement.classList.contains('light'));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const activeHue = tool.hue ?? 25; // Warm orange/coral (25)
@@ -383,8 +393,6 @@ export default function HeicTool({
   const pendingCount = files.filter(f => f.status === 'pending').length;
   const isAllConverted = files.length > 0 && files.every(f => f.status === 'success' || f.status === 'error' || f.status === 'size_exceeded');
   const successFiles = files.filter(f => f.status === 'success');
-  
-  // FIX: remainingCount counts pending + currently converting files to show correct "X left" count
   const remainingCount = files.filter(f => f.status === 'pending' || f.status === 'converting').length;
 
   const toggleFaq = (index: number) => {
@@ -393,140 +401,166 @@ export default function HeicTool({
 
   return (
     <div style={{
-      maxWidth: 1240, margin: '0 auto',
+      maxWidth: 800, margin: '0 auto', // Centered 800px width for a focused, clean dashboard
       padding: '40px 24px 80px',
       position: 'relative',
+      zIndex: 1,
     }} className="fade-in">
       
+      {/* Background glow shadow matching tool active hue */}
+      <div style={{
+        position: 'absolute',
+        top: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '80%',
+        height: '400px',
+        background: `radial-gradient(ellipse at center, ${tint(activeHue, lightMode, 0.4, 0.15, 0.15)} 0%, transparent 70%)`,
+        zIndex: -1,
+        pointerEvents: 'none',
+        filter: 'blur(80px)',
+      }} />
+
       {/* Breadcrumbs */}
       <div style={{
         display: 'inline-flex', alignItems: 'center', gap: 8,
         fontSize: 11.5, color: 'var(--fg-dim)',
         marginBottom: 14,
       }} className="mono">
-        <span style={{ color: tintFg(activeHue) }}>{tool.categoryLabel}</span>
-        <span>/</span>
-        <span style={{ color: 'var(--fg-muted)' }}>{tool.id}</span>
+        <span style={{ color: tintFg(activeHue, lightMode), fontWeight: 500 }}>{tool.categoryLabel}</span>
+        <span style={{ opacity: 0.5 }}>/</span>
+        <span style={{ color: 'var(--foreground)', opacity: 0.8 }}>{tool.id}</span>
       </div>
 
       {/* Hero Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <div style={{
-            width: 52, height: 52, borderRadius: 12,
-            background: tint(activeHue),
-            border: `1px solid ${tintBorder(activeHue)}`,
-            color: tintFg(activeHue),
+            width: 54, height: 54, borderRadius: 14,
+            background: tint(activeHue, lightMode, 0.9, 0.08, 0.9),
+            border: `1px solid ${tintBorder(activeHue, lightMode)}`,
+            color: tintFg(activeHue, lightMode),
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 0 24px ${tint(activeHue, 0.4, 0.1, 0.1)}`,
-          }}>
+            boxShadow: `0 8px 24px ${tint(activeHue, lightMode, 0.4, 0.1, 0.2)}`,
+            transition: 'transform 0.3s ease',
+          }}
+          className="tool-icon-wrapper"
+          >
             <ImageIcon size={24} strokeWidth={2} />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: 'white', letterSpacing: '-0.02em' }}>{tool.name}</h1>
-            <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--fg-muted)' }}>{tool.tagline}</p>
+            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: 'var(--foreground)', letterSpacing: '-0.02em' }}>{tool.name}</h1>
+            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--muted-foreground)' }}>{tool.tagline}</p>
           </div>
         </div>
         
         {/* Tier Indicator Tag */}
         <div style={{
           display: 'flex', alignItems: 'center', gap: 8,
-          background: 'oklch(0.16 0.006 250 / 0.6)',
+          background: 'var(--card)',
           border: '1px solid var(--border)',
-          padding: '6px 12px', borderRadius: 8,
+          padding: '6px 14px', borderRadius: 9,
+          boxShadow: '0 2px 8px var(--shadow-sm)',
         }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isPaid ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
-          <span className="mono" style={{ fontSize: 11.5, color: 'var(--fg-muted)' }}>
-            Tier: <strong style={{ color: isPaid ? 'var(--pro)' : 'white' }}>{isPaid ? 'PRO' : (isGuest ? 'GUEST' : 'FREE')}</strong>
+          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isPaid ? 'oklch(0.65 0.22 145)' : 'oklch(0.70 0.16 145)' }} />
+          <span className="mono" style={{ fontSize: 11.5, color: 'var(--muted-foreground)' }}>
+            Tier: <strong style={{ color: 'var(--foreground)' }}>{isPaid ? 'PRO' : (isGuest ? 'GUEST' : 'FREE')}</strong>
           </span>
         </div>
       </div>
 
-      {/* Two Column Layout Panel - Perfectly Consistent with SaaS style */}
+      {/* Main Glass Dashboard - Focused Single Column layout */}
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))',
-        gap: 24,
-        alignItems: 'start',
-      }} className="tools-split-layout">
+        background: lightMode ? 'oklch(1 0 0 / 0.75)' : 'oklch(0.18 0.005 250 / 0.75)',
+        border: '1px solid var(--border)',
+        borderRadius: 20,
+        padding: '32px',
+        display: 'flex', flexDirection: 'column', gap: 28,
+        boxShadow: '0 20px 40px var(--shadow-lg)',
+        backdropFilter: 'blur(20px)',
+        transition: 'all 0.3s ease',
+      }}>
         
-        {/* Left Side: Upload & Configurations */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          
-          {/* Upload card */}
+        {/* Drag & Drop Uploader */}
+        <div
+          onDragOver={onDragOver}
+          onDragLeave={onDragLeave}
+          onDrop={onDrop}
+          onClick={() => fileInputRef.current?.click()}
+          style={{
+            width: '100%', height: files.length > 0 ? 120 : 240, borderRadius: 14,
+            border: `2px dashed ${isDragOver ? tintFg(activeHue, lightMode) : 'var(--border)'}`,
+            background: isDragOver 
+              ? tint(activeHue, lightMode, 0.12, 0.05, 0.08) 
+              : (lightMode ? 'oklch(0.98 0.002 250 / 0.4)' : 'oklch(0.12 0.004 250 / 0.3)'),
+            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+            boxSizing: 'border-box', padding: 20, textAlign: 'center',
+            position: 'relative', overflow: 'hidden',
+          }}
+          className="uploader-zone"
+        >
+          <input
+            type="file"
+            accept=".heic,.heif"
+            multiple
+            ref={fileInputRef}
+            onChange={e => handleFilesSelected(e.target.files!)}
+            style={{ display: 'none' }}
+          />
+          <FileDown 
+            size={files.length > 0 ? 24 : 36} 
+            style={{ 
+              color: isDragOver ? tintFg(activeHue, lightMode) : 'var(--muted-foreground)', 
+              marginBottom: files.length > 0 ? 6 : 14,
+              transition: 'transform 0.2s ease',
+            }} 
+            className="file-down-icon"
+          />
+          <span style={{ fontSize: files.length > 0 ? 14 : 16, fontWeight: 600, color: 'var(--foreground)', display: 'block', marginBottom: files.length > 0 ? 2 : 6 }}>
+            {files.length > 0 ? `Selected ${files.length} Photo${files.length > 1 ? 's' : ''}` : 'Drag & drop HEIC / HEIF files here'}
+          </span>
+          <span style={{ fontSize: files.length > 0 ? 12 : 13, color: 'var(--muted-foreground)', maxWidth: 480 }}>
+            {files.length > 0 
+              ? 'Click or drag more files to add to the batch' 
+              : `Safe browser-local WASM decoding. Zero server load. Limits: ${maxBatchCount} photos, max ${maxFileSizeMb}MB per file.`}
+          </span>
+        </div>
+
+        {/* Configurations Header Settings */}
+        {files.length > 0 && (
           <div style={{
-            background: 'oklch(0.16 0.006 250 / 0.7)',
-            border: '1px solid var(--border)',
-            borderRadius: 14,
-            padding: '20px 24px',
-            display: 'flex', flexDirection: 'column', gap: 16,
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: 24,
+            borderBottom: '1px solid var(--border)',
+            paddingBottom: 28,
+            alignItems: 'end',
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-dim)' }} className="mono uppercase">Upload Photos</span>
-              {files.length > 0 && (
-                <span className="mono" style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>
-                  Total batch size: {formatSize(files.reduce((acc, f) => acc + f.originalSize, 0))}
-                </span>
-              )}
-            </div>
-
-            <div
-              onDragOver={onDragOver}
-              onDragLeave={onDragLeave}
-              onDrop={onDrop}
-              onClick={() => fileInputRef.current?.click()}
-              style={{
-                width: '100%', height: 160, borderRadius: 10,
-                border: `2px dashed ${isDragOver ? tintFg(activeHue) : 'var(--border)'}`,
-                background: isDragOver ? tint(activeHue, 0.18, 0.04, 0.06) : 'oklch(0.12 0.004 250)',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', transition: 'background 0.2s, border-color 0.2s',
-                boxSizing: 'border-box', padding: 16, textAlign: 'center',
-              }}
-            >
-              <input
-                type="file"
-                accept=".heic,.heif"
-                multiple
-                ref={fileInputRef}
-                onChange={e => handleFilesSelected(e.target.files!)}
-                style={{ display: 'none' }}
-              />
-              <FileDown size={30} style={{ color: isDragOver ? tintFg(activeHue) : 'var(--fg-dim)', marginBottom: 10 }} />
-              <span style={{ fontSize: 13.5, fontWeight: 500, color: 'white', display: 'block', marginBottom: 4 }}>
-                {files.length > 0 ? `📄 ${files.length} Photo(s) Loaded` : 'Drag & drop HEIC / HEIF photos here'}
-              </span>
-              <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>
-                {files.length > 0 ? 'Click here to add more photos' : 'or click to browse local files'}
-              </span>
-            </div>
-          </div>
-
-          {/* Settings card */}
-          <div style={{
-            background: 'oklch(0.16 0.006 250 / 0.7)',
-            border: '1px solid var(--border)',
-            borderRadius: 14,
-            padding: '20px 24px',
-            display: 'flex', flexDirection: 'column', gap: 16,
-          }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-dim)' }} className="mono uppercase">Configuration</span>
-
+            
             {/* Target Output Format Selection */}
             <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-subtle)', marginBottom: 8 }} className="mono uppercase">Target Format</label>
-              <div style={{ display: 'flex', gap: 6, background: 'oklch(0.12 0.004 250)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted-foreground)', marginBottom: 10, letterSpacing: '0.08em' }} className="mono uppercase">Target Format</label>
+              <div style={{ 
+                display: 'flex', 
+                gap: 4, 
+                background: lightMode ? 'oklch(0.96 0.002 250)' : 'oklch(0.12 0.004 250 / 0.6)', 
+                padding: 4, 
+                borderRadius: 10, 
+                border: '1px solid var(--border)' 
+              }}>
                 <button
                   onClick={() => setTargetFormat('jpg')}
                   disabled={convertingActive || isAllConverted}
                   className="reset mono"
                   style={{
-                    flex: 1, padding: '8px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6,
-                    background: targetFormat === 'jpg' ? tint(activeHue) : 'transparent',
-                    color: targetFormat === 'jpg' ? tintFg(activeHue) : 'var(--fg-muted)',
+                    flex: 1, padding: '10px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8,
+                    background: targetFormat === 'jpg' ? (lightMode ? 'white' : tint(activeHue, lightMode, 0.8, 0.08, 0.95)) : 'transparent',
+                    color: targetFormat === 'jpg' ? tintFg(activeHue, lightMode) : 'var(--muted-foreground)',
                     cursor: (convertingActive || isAllConverted) ? 'not-allowed' : 'pointer',
                     textAlign: 'center',
-                    transition: 'all 0.2s',
+                    boxShadow: targetFormat === 'jpg' ? '0 2px 8px var(--shadow-sm)' : 'none',
+                    transition: 'all 0.25s ease',
                   }}
                 >
                   Convert to JPG
@@ -536,12 +570,13 @@ export default function HeicTool({
                   disabled={convertingActive || isAllConverted}
                   className="reset mono"
                   style={{
-                    flex: 1, padding: '8px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6,
-                    background: targetFormat === 'png' ? tint(activeHue) : 'transparent',
-                    color: targetFormat === 'png' ? tintFg(activeHue) : 'var(--fg-muted)',
+                    flex: 1, padding: '10px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8,
+                    background: targetFormat === 'png' ? (lightMode ? 'white' : tint(activeHue, lightMode, 0.8, 0.08, 0.95)) : 'transparent',
+                    color: targetFormat === 'png' ? tintFg(activeHue, lightMode) : 'var(--muted-foreground)',
                     cursor: (convertingActive || isAllConverted) ? 'not-allowed' : 'pointer',
                     textAlign: 'center',
-                    transition: 'all 0.2s',
+                    boxShadow: targetFormat === 'png' ? '0 2px 8px var(--shadow-sm)' : 'none',
+                    transition: 'all 0.25s ease',
                   }}
                 >
                   Convert to PNG
@@ -549,88 +584,66 @@ export default function HeicTool({
               </div>
             </div>
 
-            {/* Batch Renaming configuration */}
+            {/* Custom Renaming configuration */}
             <div>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-subtle)', marginBottom: 8 }} className="mono uppercase">Batch Rename Template (Optional)</label>
-              <input
-                type="text"
-                placeholder="Leave blank to keep original file names..."
-                value={customName}
-                onChange={e => setCustomName(e.target.value)}
-                disabled={convertingActive}
-                style={{
-                  width: '100%', padding: '10px 14px', background: 'oklch(0.12 0.004 250)',
-                  border: '1px solid var(--border)', borderRadius: 8,
-                  color: 'white', fontSize: 12.5, outline: 'none',
-                  boxSizing: 'border-box', transition: 'border-color 0.2s',
-                }}
-                onFocus={e => e.currentTarget.style.borderColor = tintFg(activeHue)}
-                onBlur={e => e.currentTarget.style.borderColor = 'var(--border)'}
-              />
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--muted-foreground)', marginBottom: 10, letterSpacing: '0.08em' }} className="mono uppercase">Batch Rename Template (Optional)</label>
+              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <input
+                  type="text"
+                  placeholder="Keep original filenames..."
+                  value={customName}
+                  onChange={e => setCustomName(e.target.value)}
+                  disabled={convertingActive}
+                  style={{
+                    width: '100%', padding: '11px 14px 11px 36px', 
+                    background: lightMode ? 'white' : 'oklch(0.12 0.004 250 / 0.6)',
+                    border: '1px solid var(--border)', borderRadius: 10,
+                    color: 'var(--foreground)', fontSize: 13, outline: 'none',
+                    boxSizing: 'border-box', transition: 'all 0.2s',
+                  }}
+                  className="rename-input"
+                />
+                <Edit2 size={13} style={{ position: 'absolute', left: 14, color: 'var(--muted-foreground)', opacity: 0.7 }} />
+              </div>
             </div>
+
           </div>
+        )}
 
-          {/* Action buttons under config */}
-          {pendingCount > 0 && (
-            <button
-              onClick={handleConvertAll}
-              disabled={convertingActive}
-              className="reset"
-              style={{
-                width: '100%', padding: '14px', borderRadius: 10,
-                background: tint(activeHue),
-                border: `1px solid ${tintBorder(activeHue)}`,
-                color: tintFg(activeHue),
-                fontWeight: 600, fontSize: 14,
-                cursor: convertingActive ? 'not-allowed' : 'pointer',
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                transition: 'transform 0.15s',
-              }}
-              onMouseEnter={e => { if (!convertingActive) e.currentTarget.style.transform = 'translateY(-1px)'; }}
-              onMouseLeave={e => { if (!convertingActive) e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              {convertingActive ? (
-                <>
-                  <Loader size={15} className="spin" />
-                  Converting ({remainingCount} left)...
-                </>
-              ) : (
-                <>
-                  <RefreshCw size={15} /> Convert Images
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Right Side: Output Queue & Visual Listing */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          
-          {/* Main card wrapper for files output list */}
-          <div style={{
-            background: 'oklch(0.16 0.006 250 / 0.7)',
-            border: '1px solid var(--border)',
-            borderRadius: 14,
-            padding: '20px 24px',
-            minHeight: 280,
-            display: 'flex',
-            flexDirection: 'column',
-          }}>
+        {/* Dashboard Panels */}
+        {files.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             
-            {/* Header with list layout toggle controls */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-dim)' }} className="mono uppercase">CONVERSION QUEUE</span>
+            {/* Header controls with list layout toggle controls */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontSize: 13, color: 'var(--muted-foreground)' }} className="mono">
+                Selected: <span style={{ color: 'var(--foreground)', fontWeight: 600 }}>{files.length}</span> / {maxBatchCount} photos
+              </div>
               
-              {files.length > 0 && (
-                <div style={{ display: 'inline-flex', gap: 4, background: 'oklch(0.12 0.004 250)', padding: 3, borderRadius: 6, border: '1px solid var(--border)' }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <button
+                  onClick={handleClear}
+                  disabled={convertingActive}
+                  className="reset mono"
+                  style={{
+                    padding: '6px 12px', fontSize: 11, fontWeight: 500, borderRadius: 6,
+                    color: 'oklch(0.70 0.12 15)', border: '1px solid oklch(0.70 0.12 15 / 0.15)',
+                    cursor: convertingActive ? 'not-allowed' : 'pointer',
+                    background: 'oklch(0.12 0.004 250 / 0.2)',
+                  }}
+                >
+                  Clear All
+                </button>
+                <div style={{ display: 'inline-flex', gap: 4, background: lightMode ? 'oklch(0.96 0.002 250)' : 'oklch(0.12 0.004 250)', padding: 3, borderRadius: 6, border: '1px solid var(--border)' }}>
                   <button
                     onClick={() => setViewMode('grid')}
                     className="reset"
                     style={{
                       padding: 6, borderRadius: 4,
-                      background: viewMode === 'grid' ? 'var(--bg-elev-2)' : 'transparent',
-                      color: viewMode === 'grid' ? 'white' : 'var(--fg-muted)',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center'
+                      background: viewMode === 'grid' ? (lightMode ? 'white' : 'var(--bg-elev-2)') : 'transparent',
+                      color: viewMode === 'grid' ? 'var(--foreground)' : 'var(--muted-foreground)',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      boxShadow: (viewMode === 'grid' && lightMode) ? '0 1px 4px var(--shadow-sm)' : 'none'
                     }}
                     title="Grid View"
                   >
@@ -641,375 +654,473 @@ export default function HeicTool({
                     className="reset"
                     style={{
                       padding: 6, borderRadius: 4,
-                      background: viewMode === 'list' ? 'var(--bg-elev-2)' : 'transparent',
-                      color: viewMode === 'list' ? 'white' : 'var(--fg-muted)',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center'
+                      background: viewMode === 'list' ? (lightMode ? 'white' : 'var(--bg-elev-2)') : 'transparent',
+                      color: viewMode === 'list' ? 'var(--foreground)' : 'var(--muted-foreground)',
+                      cursor: 'pointer', display: 'flex', alignItems: 'center',
+                      boxShadow: (viewMode === 'list' && lightMode) ? '0 1px 4px var(--shadow-sm)' : 'none'
                     }}
                     title="List View"
                   >
                     <List size={13} />
                   </button>
                 </div>
-              )}
+              </div>
             </div>
 
-            {/* Empty state: prompt to upload on the left */}
-            {files.length === 0 ? (
+            {/* 1. Render files in Grid View */}
+            {viewMode === 'grid' && (
               <div style={{
-                flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                textAlign: 'center', color: 'var(--fg-dim)', padding: 40, border: '1.5px dashed var(--border)',
-                borderRadius: 10, background: 'oklch(0.12 0.004 250 / 0.2)'
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+                gap: 16,
               }}>
-                <ImageIcon size={32} style={{ marginBottom: 10, opacity: 0.5 }} />
-                <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--fg-muted)', display: 'block', marginBottom: 4 }}>Queue is empty</span>
-                <span style={{ fontSize: 12, color: 'var(--fg-subtle)', maxWidth: 280 }}>
-                  Upload HEIC / HEIF files in the upload zone on the left to start.
-                </span>
-              </div>
-            ) : (
-              
-              /* Render file list */
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                
-                {/* 1. Render files in Grid View */}
-                {viewMode === 'grid' && (
-                  <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                    gap: 12,
-                  }}>
-                    {files.map((item, idx) => {
-                      const savings = calculateSavings(item.originalSize, item.convertedSize);
-                      return (
-                        <div
-                          key={item.id}
-                          style={{
-                            background: 'oklch(0.12 0.004 250)',
-                            border: item.status === 'success' 
-                              ? '1px solid oklch(0.78 0.16 145 / 0.2)' 
-                              : item.status === 'size_exceeded' || item.status === 'error'
-                                ? '1px solid oklch(0.80 0.10 15 / 0.2)'
-                                : '1px solid var(--border)',
-                            borderRadius: 10,
-                            padding: 10,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            position: 'relative',
-                          }}
-                        >
-                          {/* Close/Remove button */}
-                          <button
-                            onClick={() => handleRemoveFile(item.id)}
-                            disabled={convertingActive}
-                            style={{
-                              position: 'absolute', top: 6, right: 6, zIndex: 10,
-                              padding: 4, borderRadius: 4, background: 'oklch(0.06 0.002 250 / 0.65)',
-                              border: '1px solid var(--border)', color: 'oklch(0.70 0.12 15)', 
-                              cursor: convertingActive ? 'not-allowed' : 'pointer',
-                              display: 'flex', alignItems: 'center'
-                            }}
-                            className="reset"
-                          >
-                            <X size={10} />
-                          </button>
+                {files.map((item, idx) => {
+                  const savings = calculateSavings(item.originalSize, item.convertedSize);
+                  const isConverting = item.status === 'converting';
+                  return (
+                    <div
+                      key={item.id}
+                      style={{
+                        background: lightMode ? 'white' : 'oklch(0.12 0.004 250 / 0.6)',
+                        border: item.status === 'success' 
+                          ? '1px solid oklch(0.78 0.16 145 / 0.25)' 
+                          : item.status === 'size_exceeded' || item.status === 'error'
+                            ? '1px solid oklch(0.80 0.10 15 / 0.25)'
+                            : '1px solid var(--border)',
+                        borderRadius: 14,
+                        padding: 12,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        position: 'relative',
+                        transition: 'all 0.25s ease',
+                        boxShadow: '0 4px 12px var(--shadow-sm)',
+                        overflow: 'hidden',
+                      }}
+                      className="hover-card-asset"
+                    >
+                      {/* Close/Remove button */}
+                      <button
+                        onClick={() => handleRemoveFile(item.id)}
+                        disabled={convertingActive}
+                        style={{
+                          position: 'absolute', top: 8, right: 8, zIndex: 10,
+                          padding: 5, borderRadius: '50%', 
+                          background: lightMode ? 'oklch(0.95 0 0)' : 'oklch(0.06 0.002 250 / 0.65)',
+                          border: '1px solid var(--border)', color: 'oklch(0.70 0.12 15)', 
+                          cursor: convertingActive ? 'not-allowed' : 'pointer',
+                          display: 'flex', alignItems: 'center',
+                          transition: 'all 0.2s',
+                        }}
+                        className="reset remove-btn"
+                      >
+                        <X size={11} />
+                      </button>
 
-                          {/* Thumbnail */}
-                          <div style={{
-                            height: 100, borderRadius: 6, background: 'oklch(0.08 0.002 250 / 0.5)',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            overflow: 'hidden', position: 'relative', marginBottom: 8,
-                            border: '1px solid var(--border)',
+                      {/* Thumbnail */}
+                      <div style={{
+                        height: 110, borderRadius: 8, 
+                        background: lightMode ? 'oklch(0.96 0.002 250)' : 'oklch(0.08 0.002 250 / 0.5)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        overflow: 'hidden', position: 'relative', marginBottom: 12,
+                        border: '1px solid var(--border)',
+                      }}>
+                        {item.status === 'success' && item.convertedUrl ? (
+                          <img
+                            src={item.convertedUrl}
+                            alt="Converted preview"
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : isConverting ? (
+                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                            <Loader size={18} className="spin" style={{ color: tintFg(activeHue, lightMode) }} />
+                            <span style={{ fontSize: 9.5, color: 'var(--muted-foreground)' }} className="mono">Converting...</span>
+                          </div>
+                        ) : item.status === 'size_exceeded' ? (
+                          <LockIcon size={16} style={{ color: 'oklch(0.80 0.10 15)' }} />
+                        ) : item.status === 'error' ? (
+                          <XCircle size={16} style={{ color: 'oklch(0.80 0.10 15)' }} />
+                        ) : (
+                          <ImageIcon size={22} style={{ color: 'var(--muted-foreground)', opacity: 0.6 }} />
+                        )}
+                        
+                        {/* Engine Badge */}
+                        {item.status === 'success' && (
+                          <span className="mono" style={{
+                            position: 'absolute', bottom: 6, left: 6, fontSize: 8,
+                            padding: '2px 5px', borderRadius: 4,
+                            background: item.engine === 'native' ? 'oklch(0.70 0.16 145)' : 'oklch(0.68 0.18 265)',
+                            color: 'white',
+                            fontWeight: 600,
+                            boxShadow: '0 2px 4px oklch(0 0 0 / 0.15)',
                           }}>
-                            {item.status === 'success' && item.convertedUrl ? (
-                              <img
-                                src={item.convertedUrl}
-                                alt="Converted preview"
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                              />
-                            ) : item.status === 'converting' ? (
-                              <Loader size={16} className="spin" style={{ color: tintFg(activeHue) }} />
-                            ) : item.status === 'size_exceeded' ? (
-                              <LockIcon size={14} style={{ color: 'oklch(0.80 0.10 15)' }} />
-                            ) : item.status === 'error' ? (
-                              <XCircle size={14} style={{ color: 'oklch(0.80 0.10 15)' }} />
-                            ) : (
-                              <ImageIcon size={18} style={{ color: 'var(--fg-dim)' }} />
-                            )}
-                            
-                            {/* Engine Badge */}
-                            {item.status === 'success' && (
-                              <span className="mono" style={{
-                                position: 'absolute', bottom: 4, left: 4, fontSize: 8,
-                                padding: '1px 3.5px', borderRadius: 3,
-                                background: item.engine === 'native' ? 'oklch(0.70 0.16 145 / 0.85)' : 'oklch(0.68 0.18 265 / 0.85)',
-                                color: 'white',
-                              }}>
-                                {item.engine === 'native' ? 'NATIVE' : 'WASM'}
-                              </span>
-                            )}
-                          </div>
+                            {item.engine === 'native' ? 'NATIVE' : 'WASM'}
+                          </span>
+                        )}
 
-                          {/* Info & Inline Renaming */}
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-                            {item.isEditingName ? (
-                              <input
-                                type="text"
-                                value={item.name}
-                                onChange={e => handleRenameFile(item.id, e.target.value)}
-                                onBlur={() => toggleRenameMode(item.id, false)}
-                                onKeyDown={e => { if (e.key === 'Enter') toggleRenameMode(item.id, false); }}
-                                autoFocus
-                                style={{
-                                  width: '100%', padding: '2px 4px', background: 'var(--bg-elev-2)',
-                                  border: '1px solid var(--border-strong)', borderRadius: 4,
-                                  color: 'white', fontSize: 11.5, outline: 'none'
-                                }}
-                              />
-                            ) : (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                <div 
-                                  onClick={() => { if (!convertingActive) toggleRenameMode(item.id, true); }}
-                                  style={{
-                                    fontSize: 11.5, fontWeight: 600, color: 'white',
-                                    whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                                    flex: 1, cursor: convertingActive ? 'default' : 'pointer',
-                                  }} 
-                                  title="Click to rename"
-                                >
-                                  {item.name}
-                                </div>
-                                {!convertingActive && <Edit2 size={9} style={{ color: 'var(--fg-dim)', cursor: 'pointer' }} onClick={() => toggleRenameMode(item.id, true)} />}
-                              </div>
-                            )}
-                            
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto', fontSize: 10 }}>
-                              <span style={{ color: 'var(--fg-subtle)' }} className="mono">{formatSize(item.originalSize)}</span>
-                              {item.status === 'success' && item.convertedSize && (
-                                <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 600 }} className="mono">➔ {formatSize(item.convertedSize)}</span>
-                              )}
-                            </div>
-                            
-                            {item.status === 'success' && savings?.isSmaller && (
-                              <span style={{ fontSize: 9, color: 'oklch(0.78 0.16 145)', fontWeight: 500, alignSelf: 'flex-end' }} className="mono">
-                                ({savings.savingText})
-                              </span>
-                            )}
+                        {/* Linear Progress Bar for active conversions */}
+                        {isConverting && (
+                          <div style={{
+                            position: 'absolute', bottom: 0, left: 0, right: 0, height: 3,
+                            background: 'oklch(0.5 0.1 25 / 0.2)', overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              height: '100%', width: '60%', 
+                              background: tintFg(activeHue, lightMode),
+                              animation: 'progressMove 1.5s infinite linear',
+                            }} />
                           </div>
+                        )}
+                      </div>
 
-                          {/* Save Single Button */}
-                          {item.status === 'success' && (
-                            <button
-                              onClick={() => handleDownloadSingle(item, idx)}
-                              className="reset mono"
+                      {/* Info & Inline Renaming */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+                        {item.isEditingName ? (
+                          <input
+                            type="text"
+                            value={item.name}
+                            onChange={e => handleRenameFile(item.id, e.target.value)}
+                            onBlur={() => toggleRenameMode(item.id, false)}
+                            onKeyDown={e => { if (e.key === 'Enter') toggleRenameMode(item.id, false); }}
+                            autoFocus
+                            style={{
+                              width: '100%', padding: '3px 6px', 
+                              background: lightMode ? 'white' : 'var(--bg-elev-2)',
+                              border: `1px solid ${tintFg(activeHue, lightMode)}`, borderRadius: 6,
+                              color: 'var(--foreground)', fontSize: 12, outline: 'none',
+                              boxShadow: `0 0 0 2px ${tint(activeHue, lightMode, 0.4, 0.1, 0.25)}`
+                            }}
+                          />
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <div 
+                              onClick={() => { if (!convertingActive) toggleRenameMode(item.id, true); }}
                               style={{
-                                width: '100%', padding: '5px 0', fontSize: 10.5, fontWeight: 600, borderRadius: 4,
-                                background: tint(activeHue, 0.15, 0.04, 0.06), border: `1px solid ${tintBorder(activeHue)}`,
-                                color: tintFg(activeHue), cursor: 'pointer', display: 'flex',
-                                alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 8
-                              }}
+                                fontSize: 12, fontWeight: 600, color: 'var(--foreground)',
+                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                flex: 1, cursor: convertingActive ? 'default' : 'pointer',
+                              }} 
+                              title="Click to rename"
                             >
-                              <Download size={10} /> Save Single
-                            </button>
+                              {item.name}
+                            </div>
+                            {!convertingActive && (
+                              <Edit2 
+                                size={10} 
+                                style={{ color: 'var(--muted-foreground)', cursor: 'pointer', opacity: 0.6 }} 
+                                onClick={() => toggleRenameMode(item.id, true)} 
+                              />
+                            )}
+                          </div>
+                        )}
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, fontSize: 10.5 }}>
+                          <span style={{ color: 'var(--muted-foreground)' }} className="mono">{formatSize(item.originalSize)}</span>
+                          {item.status === 'success' && item.convertedSize && (
+                            <span style={{ color: 'var(--foreground)', fontWeight: 600 }} className="mono">➔ {formatSize(item.convertedSize)}</span>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
+                        
+                        {item.status === 'success' && savings && (
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
+                            <span style={{ 
+                              fontSize: 9.5, 
+                              color: savings.isSmaller ? 'oklch(0.70 0.16 145)' : 'oklch(0.70 0.12 15)', 
+                              fontWeight: 700,
+                              background: savings.isSmaller ? 'oklch(0.70 0.16 145 / 0.12)' : 'oklch(0.70 0.12 15 / 0.12)',
+                              padding: '2px 6px',
+                              borderRadius: 4,
+                            }} className="mono">
+                              {savings.isSmaller ? `-${savings.percentage}%` : `+${Math.abs(Number(savings.percentage))}%`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
 
-                {/* 2. Render files in List View */}
-                {viewMode === 'list' && (
-                  <div style={{
-                    border: '1px solid var(--border)',
-                    borderRadius: 10,
-                    overflow: 'hidden',
-                  }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 12.5 }}>
-                      <thead>
-                        <tr style={{ borderBottom: '1px solid var(--border)', background: 'oklch(0.14 0.005 250 / 0.5)' }}>
-                          <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--fg-dim)' }} className="mono uppercase">Name</th>
-                          <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--fg-dim)' }} className="mono uppercase">Original</th>
-                          <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--fg-dim)' }} className="mono uppercase">Converted</th>
-                          <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--fg-dim)' }} className="mono uppercase">Savings</th>
-                          <th style={{ padding: '10px 14px', fontWeight: 600, color: 'var(--fg-dim)', textAlign: 'right' }} className="mono uppercase">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {files.map((item, idx) => {
-                          const savings = calculateSavings(item.originalSize, item.convertedSize);
-                          return (
-                            <tr 
-                              key={item.id} 
-                              style={{ 
-                                borderBottom: '1px solid var(--border)',
-                                background: item.status === 'converting' ? 'oklch(0.70 0.16 25 / 0.03)' : 'transparent',
-                              }}
-                            >
-                              <td style={{ padding: '10px 14px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                  <div style={{
-                                    width: 24, height: 24, borderRadius: 4, background: 'var(--bg-elev-1)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden'
-                                  }}>
-                                    {item.status === 'success' && item.convertedUrl ? (
-                                      <img src={item.convertedUrl} alt="Mini preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    ) : (
-                                      <ImageIcon size={12} style={{ color: 'var(--fg-dim)' }} />
-                                    )}
-                                  </div>
-                                  
-                                  {item.isEditingName ? (
-                                    <input
-                                      type="text"
-                                      value={item.name}
-                                      onChange={e => handleRenameFile(item.id, e.target.value)}
-                                      onBlur={() => toggleRenameMode(item.id, false)}
-                                      onKeyDown={e => { if (e.key === 'Enter') toggleRenameMode(item.id, false); }}
-                                      autoFocus
-                                      style={{
-                                        padding: '1px 4px', background: 'var(--bg-elev-2)',
-                                        border: '1px solid var(--border-strong)', borderRadius: 4,
-                                        color: 'white', fontSize: 12, outline: 'none'
-                                      }}
-                                    />
-                                  ) : (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                      <span 
-                                        onClick={() => { if (!convertingActive) toggleRenameMode(item.id, true); }}
-                                        style={{ color: 'white', fontWeight: 500, cursor: convertingActive ? 'default' : 'pointer' }}
-                                      >
-                                        {item.name}
-                                      </span>
-                                      {!convertingActive && <Edit2 size={10} style={{ color: 'var(--fg-dim)', cursor: 'pointer' }} onClick={() => toggleRenameMode(item.id, true)} />}
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                              
-                              <td style={{ padding: '10px 14px', color: 'var(--fg-subtle)' }} className="mono">
-                                {formatSize(item.originalSize)}
-                              </td>
-                              
-                              <td style={{ padding: '10px 14px' }}>
-                                {item.status === 'success' && item.convertedSize ? (
-                                  <span style={{ color: 'white', fontWeight: 600 }} className="mono">{formatSize(item.convertedSize)}</span>
-                                ) : item.status === 'converting' ? (
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, color: tintFg(activeHue) }}>
-                                    <Loader size={10} className="spin" />
-                                    <span style={{ fontSize: 10 }}>Converting...</span>
-                                  </div>
-                                ) : item.status === 'error' ? (
-                                  <span style={{ color: 'oklch(0.80 0.10 15)' }} className="mono">Failed</span>
-                                ) : (
-                                  <span style={{ color: 'var(--fg-dim)' }} className="mono">-</span>
-                                )}
-                              </td>
-                              
-                              <td style={{ padding: '10px 14px' }} className="mono">
-                                {item.status === 'success' && savings?.isSmaller ? (
-                                  <span style={{ color: 'oklch(0.78 0.16 145)' }}>{savings.savingText}</span>
-                                ) : (
-                                  <span style={{ color: 'var(--fg-dim)' }}>-</span>
-                                )}
-                              </td>
-                              
-                              <td style={{ padding: '10px 14px', textAlign: 'right' }}>
-                                <div style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }}>
-                                  {item.status === 'success' && (
-                                    <button
-                                      onClick={() => handleDownloadSingle(item, idx)}
-                                      className="reset"
-                                      style={{
-                                        padding: '3px 8px', borderRadius: 4,
-                                        background: tint(activeHue, 0.15, 0.04, 0.06), border: `1px solid ${tintBorder(activeHue)}`,
-                                        color: tintFg(activeHue), fontSize: 11, fontWeight: 600, cursor: 'pointer'
-                                      }}
-                                    >
-                                      Save
-                                    </button>
-                                  )}
-                                  <button
-                                    onClick={() => handleRemoveFile(item.id)}
-                                    disabled={convertingActive}
-                                    className="reset"
-                                    style={{
-                                      padding: 4, borderRadius: 4, background: 'transparent',
-                                      color: 'var(--fg-dim)', cursor: convertingActive ? 'not-allowed' : 'pointer',
-                                      display: 'flex', alignItems: 'center'
-                                    }}
-                                    title="Remove File"
-                                  >
-                                    <Trash2 size={12} />
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {/* Batch Actions & ZIP Download Status */}
-                {successFiles.length > 0 && isAllConverted && (
-                  <div style={{
-                    marginTop: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                    background: 'oklch(0.12 0.002 250 / 0.3)', border: '1px solid var(--border)',
-                    borderRadius: 10, padding: 12, flexWrap: 'wrap', gap: 12
-                  }}>
-                    <span style={{ fontSize: 12.5, color: 'oklch(0.78 0.16 145)', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                      <CheckCircle size={14} /> Batch complete ({successFiles.length} photos ready)
-                    </span>
-                    
-                    <button
-                      onClick={handleDownloadAllZip}
-                      disabled={zipping}
-                      className="reset"
-                      style={{
-                        padding: '8px 18px', borderRadius: 6,
-                        background: `linear-gradient(180deg, ${tint(activeHue, 0.45, 0.12, 0.9)}, ${tint(activeHue, 0.55, 0.14, 0.9)})`,
-                        color: 'white', fontWeight: 600, fontSize: 12.5,
-                        cursor: zipping ? 'not-allowed' : 'pointer',
-                        display: 'inline-flex', alignItems: 'center', gap: 6,
-                        boxShadow: `0 4px 12px ${tint(activeHue, 0.5, 0.15, 0.15)}`,
-                      }}
-                    >
-                      {zipping ? (
-                        <>
-                          <Loader size={12} className="spin" />
-                          Archiving...
-                        </>
-                      ) : (
-                        <>
-                          <Download size={12} /> Download All (ZIP)
-                        </>
+                      {/* Save Single Button */}
+                      {item.status === 'success' && (
+                        <button
+                          onClick={() => handleDownloadSingle(item, idx)}
+                          className="reset mono"
+                          style={{
+                            width: '100%', padding: '6px 0', fontSize: 11, fontWeight: 600, borderRadius: 6,
+                            background: tint(activeHue, lightMode, 0.9, 0.08, 0.9), border: `1px solid ${tintBorder(activeHue, lightMode)}`,
+                            color: tintFg(activeHue, lightMode), cursor: 'pointer', display: 'flex',
+                            alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10,
+                            transition: 'all 0.2s',
+                          }}
+                        >
+                          <Download size={11} /> Save Image
+                        </button>
                       )}
-                    </button>
-                  </div>
-                )}
-
+                    </div>
+                  );
+                })}
               </div>
             )}
 
+            {/* 2. Render files in List View */}
+            {viewMode === 'list' && (
+              <div style={{
+                border: '1px solid var(--border)',
+                borderRadius: 14,
+                overflow: 'hidden',
+                background: lightMode ? 'white' : 'oklch(0.12 0.004 250 / 0.3)',
+              }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid var(--border)', background: lightMode ? 'oklch(0.97 0 0)' : 'oklch(0.14 0.005 250 / 0.5)' }}>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)' }} className="mono uppercase">Name</th>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)' }} className="mono uppercase">Original</th>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)' }} className="mono uppercase">Converted</th>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)' }} className="mono uppercase">Savings</th>
+                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--muted-foreground)', textAlign: 'right' }} className="mono uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {files.map((item, idx) => {
+                      const savings = calculateSavings(item.originalSize, item.convertedSize);
+                      return (
+                        <tr 
+                          key={item.id} 
+                          style={{ 
+                            borderBottom: '1px solid var(--border)',
+                            background: item.status === 'converting' ? tint(activeHue, lightMode, 0.95, 0.02, 0.04) : 'transparent',
+                            transition: 'background 0.2s',
+                          }}
+                        >
+                          <td style={{ padding: '12px 16px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <div style={{
+                                width: 28, height: 28, borderRadius: 6, 
+                                background: lightMode ? 'oklch(0.95 0 0)' : 'var(--bg-elev-1)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+                                border: '1px solid var(--border)',
+                              }}>
+                                {item.status === 'success' && item.convertedUrl ? (
+                                  <img src={item.convertedUrl} alt="Mini preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                ) : (
+                                  <ImageIcon size={14} style={{ color: 'var(--muted-foreground)', opacity: 0.6 }} />
+                                )}
+                              </div>
+                              
+                              {item.isEditingName ? (
+                                <input
+                                  type="text"
+                                  value={item.name}
+                                  onChange={e => handleRenameFile(item.id, e.target.value)}
+                                  onBlur={() => toggleRenameMode(item.id, false)}
+                                  onKeyDown={e => { if (e.key === 'Enter') toggleRenameMode(item.id, false); }}
+                                  autoFocus
+                                  style={{
+                                    padding: '2px 6px', background: lightMode ? 'white' : 'var(--bg-elev-2)',
+                                    border: `1px solid ${tintFg(activeHue, lightMode)}`, borderRadius: 6,
+                                    color: 'var(--foreground)', fontSize: 12.5, outline: 'none'
+                                  }}
+                                />
+                              ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                  <span 
+                                    onClick={() => { if (!convertingActive) toggleRenameMode(item.id, true); }}
+                                    style={{ color: 'var(--foreground)', fontWeight: 500, cursor: convertingActive ? 'default' : 'pointer' }}
+                                  >
+                                    {item.name}
+                                  </span>
+                                  {!convertingActive && (
+                                    <Edit2 
+                                      size={10} 
+                                      style={{ color: 'var(--muted-foreground)', cursor: 'pointer', opacity: 0.6 }} 
+                                      onClick={() => toggleRenameMode(item.id, true)} 
+                                    />
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                          
+                          <td style={{ padding: '12px 16px', color: 'var(--muted-foreground)' }} className="mono">
+                            {formatSize(item.originalSize)}
+                          </td>
+                          
+                          <td style={{ padding: '12px 16px' }}>
+                            {item.status === 'success' && item.convertedSize ? (
+                              <span style={{ color: 'var(--foreground)', fontWeight: 600 }} className="mono">{formatSize(item.convertedSize)}</span>
+                            ) : item.status === 'converting' ? (
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: tintFg(activeHue, lightMode) }}>
+                                <Loader size={12} className="spin" />
+                                <span style={{ fontSize: 11 }} className="mono">Converting...</span>
+                              </div>
+                            ) : item.status === 'error' ? (
+                              <span style={{ color: 'oklch(0.80 0.10 15)' }} className="mono">Failed</span>
+                            ) : (
+                              <span style={{ color: 'var(--muted-foreground)', opacity: 0.5 }} className="mono">-</span>
+                            )}
+                          </td>
+                          
+                          <td style={{ padding: '12px 16px' }} className="mono">
+                            {item.status === 'success' && savings ? (
+                              <span style={{ 
+                                color: savings.isSmaller ? 'oklch(0.70 0.16 145)' : 'oklch(0.70 0.12 15)',
+                                fontWeight: 600,
+                                background: savings.isSmaller ? 'oklch(0.70 0.16 145 / 0.1)' : 'oklch(0.70 0.12 15 / 0.1)',
+                                padding: '2px 6px',
+                                borderRadius: 4,
+                                fontSize: 11
+                              }}>
+                                {savings.isSmaller ? `-${savings.percentage}%` : `+${Math.abs(Number(savings.percentage))}%`}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'var(--muted-foreground)', opacity: 0.5 }}>-</span>
+                            )}
+                          </td>
+                          
+                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
+                            <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+                              {item.status === 'success' && (
+                                <button
+                                  onClick={() => handleDownloadSingle(item, idx)}
+                                  className="reset"
+                                  style={{
+                                    padding: '4px 10px', borderRadius: 6,
+                                    background: tint(activeHue, lightMode, 0.9, 0.08, 0.9), border: `1px solid ${tintBorder(activeHue, lightMode)}`,
+                                    color: tintFg(activeHue, lightMode), fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
+                                    transition: 'all 0.2s',
+                                  }}
+                                >
+                                  Save
+                                </button>
+                              )}
+                              <button
+                                onClick={() => handleRemoveFile(item.id)}
+                                disabled={convertingActive}
+                                className="reset"
+                                style={{
+                                  padding: 5, borderRadius: 6, background: 'transparent',
+                                  color: 'oklch(0.70 0.12 15)', cursor: convertingActive ? 'not-allowed' : 'pointer',
+                                  display: 'flex', alignItems: 'center', opacity: 0.7,
+                                  transition: 'all 0.2s'
+                                }}
+                                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+                                onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
+                                title="Remove File"
+                              >
+                                <Trash2 size={13} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+
+            {/* Conversions Bottom Action Panel */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              background: lightMode ? 'oklch(0.97 0 0)' : 'oklch(0.12 0.002 250 / 0.3)',
+              border: '1px solid var(--border)',
+              borderRadius: 14,
+              padding: '18px 24px',
+              marginTop: 12,
+              flexWrap: 'wrap',
+              gap: 16,
+              boxShadow: '0 4px 16px var(--shadow-sm)',
+            }}>
+              <div>
+                {pendingCount > 0 ? (
+                  <span style={{ fontSize: 13, color: 'var(--muted-foreground)' }}>
+                    🚀 Ready to convert <strong style={{ color: 'var(--foreground)' }}>{pendingCount}</strong> pending image{pendingCount > 1 ? 's' : ''}.
+                  </span>
+                ) : (
+                  <span style={{ fontSize: 13, color: 'oklch(0.70 0.16 145)', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
+                    <CheckCircle size={15} /> All conversions complete ({successFiles.length} photos ready)
+                  </span>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                {pendingCount > 0 && (
+                  <button
+                    onClick={handleConvertAll}
+                    disabled={convertingActive}
+                    className="reset"
+                    style={{
+                      padding: '11px 24px', borderRadius: 10,
+                      background: tint(activeHue, lightMode, 0.45, 0.15, 0.95),
+                      border: `1px solid ${tintBorder(activeHue, lightMode)}`,
+                      color: lightMode ? 'white' : tintFg(activeHue, lightMode),
+                      fontWeight: 600, fontSize: 13.5,
+                      cursor: convertingActive ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      boxShadow: `0 4px 14px ${tint(activeHue, lightMode, 0.5, 0.15, 0.25)}`,
+                      transition: 'all 0.25s ease',
+                    }}
+                  >
+                    {convertingActive ? (
+                      <>
+                        <Loader size={14} className="spin" />
+                        Converting ({remainingCount} left)...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw size={14} /> Convert Images
+                      </>
+                    )}
+                  </button>
+                )}
+
+                {successFiles.length > 0 && isAllConverted && (
+                  <button
+                    onClick={handleDownloadAllZip}
+                    disabled={zipping}
+                    className="reset"
+                    style={{
+                      padding: '11px 24px', borderRadius: 10,
+                      background: `linear-gradient(180deg, ${tint(activeHue, lightMode, 0.45, 0.15, 0.95)}, ${tint(activeHue, lightMode, 0.55, 0.17, 0.95)})`,
+                      color: 'white', fontWeight: 600, fontSize: 13.5,
+                      cursor: zipping ? 'not-allowed' : 'pointer',
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      boxShadow: `0 4px 16px ${tint(activeHue, lightMode, 0.5, 0.15, 0.25)}`,
+                      transition: 'all 0.25s ease',
+                    }}
+                  >
+                    {zipping ? (
+                      <>
+                        <Loader size={14} className="spin" />
+                        Archiving...
+                      </>
+                    ) : (
+                      <>
+                        <Download size={14} /> Download All (ZIP)
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+
           </div>
-        </div>
+        )}
 
       </div>
 
       {/* FAQ Block Accordion */}
       <div style={{
         marginTop: 48,
-        background: 'oklch(0.16 0.006 250 / 0.4)',
+        background: lightMode ? 'white' : 'oklch(0.16 0.006 250 / 0.4)',
         border: '1px solid var(--border)',
-        borderRadius: 16,
-        padding: '24px 28px',
+        borderRadius: 18,
+        padding: '28px 32px',
+        boxShadow: '0 8px 24px var(--shadow-sm)',
       }}>
-        <h2 style={{ fontSize: 18, fontWeight: 600, color: 'white', margin: '0 0 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
-          <HelpCircle size={18} style={{ color: tintFg(activeHue) }} /> Frequently Asked Questions
+        <h2 style={{ fontSize: 19, fontWeight: 700, color: 'var(--foreground)', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <HelpCircle size={19} style={{ color: tintFg(activeHue, lightMode) }} /> Frequently Asked Questions
         </h2>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {[
             {
               q: "How does the client-side WebAssembly conversion work?",
@@ -1031,8 +1142,9 @@ export default function HeicTool({
             <div 
               key={idx} 
               style={{ 
-                borderBottom: '1px solid var(--border)', 
-                paddingBottom: 12 
+                borderBottom: idx === 3 ? 'none' : '1px solid var(--border)', 
+                paddingBottom: 14,
+                paddingTop: idx === 0 ? 0 : 14,
               }}
             >
               <button
@@ -1040,22 +1152,22 @@ export default function HeicTool({
                 className="reset"
                 style={{
                   width: '100%', display: 'flex', justifySelf: 'space-between', alignItems: 'center',
-                  padding: '8px 0', cursor: 'pointer', textAlign: 'left', color: 'white', fontWeight: 500,
-                  fontSize: 14
+                  padding: '6px 0', cursor: 'pointer', textAlign: 'left', color: 'var(--foreground)', fontWeight: 600,
+                  fontSize: 14.5
                 }}
               >
-                <span>{faq.q}</span>
-                {faqOpen[idx] ? <ChevronUp size={16} style={{ color: 'var(--fg-dim)' }} /> : <ChevronDown size={16} style={{ color: 'var(--fg-dim)' }} />}
+                <span style={{ flex: 1 }}>{faq.q}</span>
+                {faqOpen[idx] ? <ChevronUp size={16} style={{ color: 'var(--muted-foreground)' }} /> : <ChevronDown size={16} style={{ color: 'var(--muted-foreground)' }} />}
               </button>
               
               {faqOpen[idx] && (
                 <div style={{ 
-                  marginTop: 6, fontSize: 13, color: 'var(--fg-muted)', lineHeight: 1.5,
-                  animation: 'slideDownFaq 0.2s cubic-bezier(0.16, 1, 0.3, 1)'
+                  marginTop: 8, fontSize: 13.5, color: 'var(--muted-foreground)', lineHeight: 1.6,
+                  animation: 'slideDownFaq 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
                 }}>
                   <style>{`
                     @keyframes slideDownFaq {
-                      from { opacity: 0; transform: translateY(-5px); }
+                      from { opacity: 0; transform: translateY(-4px); }
                       to { opacity: 1; transform: translateY(0); }
                     }
                   `}</style>
@@ -1068,16 +1180,40 @@ export default function HeicTool({
       </div>
 
       <style jsx global>{`
-        @keyframes pulse {
-          0% { transform: scale(0.95); opacity: 0.3; }
-          100% { transform: scale(1.05); opacity: 0.6; }
-        }
         .spin {
           animation: spin 1.2s linear infinite;
         }
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        @keyframes progressMove {
+          0% { transform: translateX(-100%); }
+          100% { transform: translateX(200%); }
+        }
+        .uploader-zone:hover {
+          border-color: ${tintFg(activeHue, lightMode)} !important;
+          box-shadow: 0 4px 16px ${tint(activeHue, lightMode, 0.5, 0.1, 0.15)};
+        }
+        .uploader-zone:hover .file-down-icon {
+          transform: translateY(-2px);
+          color: ${tintFg(activeHue, lightMode)} !important;
+        }
+        .hover-card-asset:hover {
+          transform: translateY(-3px);
+          box-shadow: 0 8px 24px var(--shadow-md) !important;
+          border-color: ${tintFg(activeHue, lightMode)} !important;
+        }
+        .rename-input:focus {
+          border-color: ${tintFg(activeHue, lightMode)} !important;
+          box-shadow: 0 0 0 3px ${tint(activeHue, lightMode, 0.4, 0.1, 0.2)} !important;
+        }
+        .remove-btn:hover {
+          background: oklch(0.80 0.10 15 / 0.15) !important;
+          color: oklch(0.70 0.12 15) !important;
+        }
+        .tool-icon-wrapper:hover {
+          transform: rotate(6deg) scale(1.05);
         }
       `}</style>
 
