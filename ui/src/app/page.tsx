@@ -3835,24 +3835,26 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
           <Icon.Image size={14} style={{ color: devTab === 'heic-to-jpg-converter' ? 'oklch(0.78 0.16 25)' : 'var(--fg-dim)' }} />
           HEIC to JPG/PNG Converter API
         </button>
-        <button
-          onClick={() => setDevTab('status')}
-          className="reset mono"
-          style={{
-            padding: '10px 20px', fontSize: 13, fontWeight: 600, borderRadius: 8,
-            border: devTab === 'status' ? '1px solid oklch(0.78 0.16 145 / 0.3)' : '1px solid var(--border)',
-            background: devTab === 'status' ? 'oklch(0.18 0.010 145 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
-            color: devTab === 'status' ? 'white' : 'var(--fg-muted)',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-            transition: 'all 0.15s',
-          }}
-        >
-          <Icon.Globe size={14} style={{ color: devTab === 'status' ? 'oklch(0.78 0.16 145)' : 'var(--fg-dim)' }} />
-          Space Engines Monitor
-        </button>
+        {userPlan === 'admin' && (
+          <button
+            onClick={() => setDevTab('status')}
+            className="reset mono"
+            style={{
+              padding: '10px 20px', fontSize: 13, fontWeight: 600, borderRadius: 8,
+              border: devTab === 'status' ? '1px solid oklch(0.78 0.16 145 / 0.3)' : '1px solid var(--border)',
+              background: devTab === 'status' ? 'oklch(0.18 0.010 145 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
+              color: devTab === 'status' ? 'white' : 'var(--fg-muted)',
+              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+              transition: 'all 0.15s',
+            }}
+          >
+            <Icon.Globe size={14} style={{ color: devTab === 'status' ? 'oklch(0.78 0.16 145)' : 'var(--fg-dim)' }} />
+            Space Engines Monitor
+          </button>
+        )}
       </div>
 
-      {devTab === 'status' ? (
+      {devTab === 'status' && userPlan === 'admin' ? (
         <SpaceStatusDashboard />
       ) : (
         <>
