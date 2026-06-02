@@ -32,6 +32,7 @@ import React, {
 
 import FormatterTool from './tools/universal-ai-formatter/FormatterTool';
 import JsonTool from './tools/json-formatter-validator/JsonTool';
+import HeicTool from './tools/heic-to-jpg-converter/HeicTool';
 import {
   Sparkles, MessageSquare, Mic, Link2, Diff,
   Braces, Binary, Database, Layers, Table, Terminal,
@@ -3502,10 +3503,27 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   const [copiedCurl, setCopiedCurl] = useState(false);
   const [showProdKey, setShowProdKey] = useState(false);
   
-  // Sandbox Interactive states
+  // API Console selection
+  const [devTab, setDevTab] = useState<'format' | 'heic'>('format');
+
+  // Document Sandbox Interactive states
   const [sandboxInput, setSandboxInput] = useState('Clean this messy transcription up and format it nicely into a report.');
   const [sandboxLoading, setSandboxLoading] = useState(false);
   const [sandboxResult, setSandboxResult] = useState<any>(null);
+
+  // HEIC Sandbox Interactive states
+  const [heicSandboxFile, setHeicSandboxFile] = useState<File | null>(null);
+  const [heicSandboxFormat, setHeicSandboxFormat] = useState<'jpg' | 'png'>('jpg');
+  const [heicSandboxLoading, setHeicSandboxLoading] = useState(false);
+  const [heicSandboxResult, setHeicSandboxResult] = useState<any>(null);
+  const [heicSandboxResultUrl, setHeicSandboxResultUrl] = useState<string | null>(null);
+  const fileInputSandboxRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    return () => {
+      if (heicSandboxResultUrl) URL.revokeObjectURL(heicSandboxResultUrl);
+    };
+  }, [heicSandboxResultUrl]);
 
   const cleanBrandDomain = brandName.toLowerCase().replace(/[^a-z0-9]/g, '');
   const displayDomain = cleanBrandDomain ? `${cleanBrandDomain}.com` : 'mysaas.com';
@@ -3516,14 +3534,21 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   // Active Key selection
   const activeKey = apiKey || (isLoggedIn ? 'ms_sandbox_unassigned_key' : 'ms_guest_unauthorized_locked');
 
-  const curlCommand = `curl -X POST https://api.${displayDomain}/v1/format \\
+  const curlCommand = devTab === 'format'
+    ? `curl -X POST https://api.${displayDomain}/v1/format \\
   -H "Authorization: Bearer ${activeKey}" \\
   -H "Content-Type: application/json" \\
   -d '{
     "tool": "ai-formatter",
     "content": "${sandboxInput.replace(/"/g, '\\"')}",
     "style": "modern"
-  }'`;
+  }'`
+    : `curl -X POST https://api.${displayDomain}/v1/convert-image \\
+  -H "Authorization: Bearer ${activeKey}" \\
+  -F "file=@/path/to/photo.heic" \\
+  -F "format=${heicSandboxFormat}" \\
+  -F "quality=0.95" \\
+  --output converted_photo.${heicSandboxFormat}`;
 
   // Sync API key directly from profiles table inside Supabase online cloud database!
   useEffect(() => {
@@ -3689,6 +3714,65 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
     }
   };
 
+  const runHeicSandboxTest = async () => {
+    if (!isLoggedIn) {
+      alert("Please sign in or create an account to run live tests in the API sandbox.");
+      onOpenAuthModal();
+      return;
+    }
+    if (!heicSandboxFile) {
+      alert("Please upload a test HEIC/HEIF file first.");
+      return;
+    }
+    
+    setHeicSandboxLoading(true);
+    setHeicSandboxResult(null);
+    if (heicSandboxResultUrl) {
+      URL.revokeObjectURL(heicSandboxResultUrl);
+      setHeicSandboxResultUrl(null);
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append('file', heicSandboxFile);
+      formData.append('format', heicSandboxFormat);
+      formData.append('quality', '0.95');
+
+      const response = await fetch('/api/v1/convert-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${activeKey}`,
+          'Accept': 'image/*' // Request binary output
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json();
+        setHeicSandboxResult(errJson);
+      } else {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        setHeicSandboxResultUrl(url);
+        setHeicSandboxResult({
+          status: "success",
+          message: `HEIC file converted successfully to ${heicSandboxFormat.toUpperCase()}!`,
+          contentType: blob.type,
+          sizeBytes: blob.size,
+          outputUrl: url
+        });
+      }
+    } catch (err: any) {
+      console.error('API HEIC Sandbox test failed:', err);
+      setHeicSandboxResult({
+        status: "error",
+        message: "Failed to connect to image conversion API server: " + err.message
+      });
+    } finally {
+      setHeicSandboxLoading(false);
+    }
+  };
+
   return (
     <div style={{
       maxWidth: 1100, margin: '40px auto 120px',
@@ -3713,6 +3797,43 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
         }}>Developer Hub & Sandbox</span>
         <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Developer API Dashboard</h1>
         <p style={sectionSubtitle}>Integrate the professional-grade formatting engines of {brandName} programmatically inside your workflows and scripts.</p>
+      </div>
+
+      {/* Dynamic API Tab Selector */}
+      <div style={{
+        display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32,
+        position: 'relative', zIndex: 1
+      }}>
+        <button
+          onClick={() => setDevTab('format')}
+          className="reset mono"
+          style={{
+            padding: '10px 20px', fontSize: 13, fontWeight: 600, borderRadius: 8,
+            border: devTab === 'format' ? '1px solid oklch(0.78 0.16 195 / 0.3)' : '1px solid var(--border)',
+            background: devTab === 'format' ? 'oklch(0.18 0.010 195 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
+            color: devTab === 'format' ? 'white' : 'var(--fg-muted)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+            transition: 'all 0.15s',
+          }}
+        >
+          <Icon.Terminal size={14} style={{ color: devTab === 'format' ? 'oklch(0.78 0.16 195)' : 'var(--fg-dim)' }} />
+          Document Formatter API
+        </button>
+        <button
+          onClick={() => setDevTab('heic')}
+          className="reset mono"
+          style={{
+            padding: '10px 20px', fontSize: 13, fontWeight: 600, borderRadius: 8,
+            border: devTab === 'heic' ? '1px solid oklch(0.78 0.16 25 / 0.3)' : '1px solid var(--border)',
+            background: devTab === 'heic' ? 'oklch(0.18 0.010 25 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
+            color: devTab === 'heic' ? 'white' : 'var(--fg-muted)',
+            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
+            transition: 'all 0.15s',
+          }}
+        >
+          <Icon.Image size={14} style={{ color: devTab === 'heic' ? 'oklch(0.78 0.16 25)' : 'var(--fg-dim)' }} />
+          HEIC to JPG/PNG Converter API
+        </button>
       </div>
 
       <div style={{
@@ -3988,11 +4109,11 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
               <span style={{
                 display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
                 width: 32, height: 32, borderRadius: 8,
-                background: 'oklch(0.18 0.010 195 / 0.15)',
-                border: '1px solid oklch(0.78 0.16 195 / 0.3)',
-                color: 'oklch(0.78 0.16 195)',
+                background: devTab === 'format' ? 'oklch(0.18 0.010 195 / 0.15)' : 'oklch(0.18 0.010 25 / 0.15)',
+                border: devTab === 'format' ? '1px solid oklch(0.78 0.16 195 / 0.3)' : '1px solid oklch(0.78 0.16 25 / 0.3)',
+                color: devTab === 'format' ? 'oklch(0.78 0.16 195)' : 'oklch(0.78 0.16 25)',
               }}>
-                <Icon.Code size={16} />
+                {devTab === 'format' ? <Icon.Code size={16} /> : <Icon.Image size={16} />}
               </span>
               <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Integration Example</span>
             </div>
@@ -4016,13 +4137,19 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
           </div>
 
           <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 16 }}>
-            Run this standard POST script to execute document parsing instantly.
+            {devTab === 'format' 
+              ? "Run this standard POST script to execute document parsing instantly."
+              : "Upload a HEIC file using multipart form-data to receive the converted image instantly."}
           </p>
 
           <pre style={{
             background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
             borderRadius: 8, padding: '14px 16px', overflowX: 'auto',
-            fontSize: 11.5, color: isLight ? 'oklch(0.55 0.15 265)' : 'oklch(0.80 0.10 195)', lineHeight: 1.5,
+            fontSize: 11.5, 
+            color: isLight 
+              ? (devTab === 'format' ? 'oklch(0.55 0.15 265)' : 'oklch(0.55 0.15 25)') 
+              : (devTab === 'format' ? 'oklch(0.80 0.10 195)' : 'oklch(0.80 0.10 25)'), 
+            lineHeight: 1.5,
             flex: 1, display: 'block', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all',
           }} className="mono">
             {curlCommand}
@@ -4036,9 +4163,9 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
           <span style={{
             display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
             width: 32, height: 32, borderRadius: 8,
-            background: 'oklch(0.18 0.010 195 / 0.15)',
-            border: '1px solid oklch(0.78 0.16 195 / 0.3)',
-            color: 'oklch(0.78 0.16 195)',
+            background: devTab === 'format' ? 'oklch(0.18 0.010 195 / 0.15)' : 'oklch(0.18 0.010 25 / 0.15)',
+            border: devTab === 'format' ? '1px solid oklch(0.78 0.16 195 / 0.3)' : '1px solid oklch(0.78 0.16 25 / 0.3)',
+            color: devTab === 'format' ? 'oklch(0.78 0.16 195)' : 'oklch(0.78 0.16 25)',
           }}>
             <Icon.Sparkles size={16} />
           </span>
@@ -4046,83 +4173,198 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
         </div>
 
         <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginTop: -8, marginBottom: 24 }}>
-          Send live test requests and monitor raw JSON response returns right inside the developer terminal.
+          Send live test requests and monitor raw response returns right inside the developer terminal.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
           {/* Sandbox Request Settings */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            <div>
-              <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>REQUEST DATA BODY</label>
-              <textarea
-                rows={4}
-                value={sandboxInput}
-                onChange={e => setSandboxInput(e.target.value)}
-                placeholder="Type anything to test the parser..."
+          {devTab === 'format' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>REQUEST DATA BODY</label>
+                <textarea
+                  rows={4}
+                  value={sandboxInput}
+                  onChange={e => setSandboxInput(e.target.value)}
+                  placeholder="Type anything to test the parser..."
+                  style={{
+                    width: '100%', padding: '11px 14px', borderRadius: 8,
+                    background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+                    color: 'var(--fg)', fontSize: 13, outline: 'none',
+                    resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                    transition: 'border-color 0.15s',
+                  }}
+                  onFocus={e => e.currentTarget.style.borderColor = 'var(--accent)'}
+                  onBlur={e => e.currentTarget.style.borderColor = 'var(--border)'}
+                />
+              </div>
+
+              <button
+                onClick={runSandboxTest}
+                disabled={sandboxLoading}
+                className="reset"
                 style={{
                   width: '100%', padding: '11px 14px', borderRadius: 8,
-                  background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-                  color: 'var(--fg)', fontSize: 13, outline: 'none',
-                  resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
-                  transition: 'border-color 0.15s',
+                  background: sandboxLoading 
+                    ? 'var(--bg-elev-2)' 
+                    : 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
+                  border: sandboxLoading ? '1px solid var(--border)' : 'none',
+                  color: sandboxLoading ? 'var(--fg-dim)' : 'white',
+                  fontWeight: 600, fontSize: 13, cursor: sandboxLoading ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  boxShadow: sandboxLoading ? 'none' : '0 4px 12px oklch(0.50 0.20 195 / 0.25)',
                 }}
-                onFocus={e => e.currentTarget.style.borderColor = 'var(--accent)'}
-                onBlur={e => e.currentTarget.style.borderColor = 'var(--border)'}
-              />
-            </div>
+              >
+                {sandboxLoading ? (
+                  <>
+                    <Icon.Loader size={14} className="spinning" />
+                    Streaming Response...
+                  </>
+                ) : (
+                  <>
+                    ⚡
+                    <span>Test API Endpoint</span>
+                  </>
+                )}
+              </button>
 
-            <button
-              onClick={runSandboxTest}
-              disabled={sandboxLoading}
-              className="reset"
-              style={{
-                width: '100%', padding: '11px 14px', borderRadius: 8,
-                background: sandboxLoading 
-                  ? 'var(--bg-elev-2)' 
-                  : 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
-                border: sandboxLoading ? '1px solid var(--border)' : 'none',
-                color: sandboxLoading ? 'var(--fg-dim)' : 'white',
-                fontWeight: 600, fontSize: 13, cursor: sandboxLoading ? 'not-allowed' : 'pointer',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                boxShadow: sandboxLoading ? 'none' : '0 4px 12px oklch(0.50 0.20 195 / 0.25)',
-              }}
-            >
-              {sandboxLoading ? (
-                <>
-                  <Icon.Loader size={14} className="spinning" />
-                  Streaming Response...
-                </>
-              ) : (
-                <>
-                  ⚡
-                  <span>Test API Endpoint</span>
-                </>
-              )}
-            </button>
-
-            {/* Simulated Live Analytics */}
-            <div style={{
-              background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-              borderRadius: 10, padding: '14px 16px', display: 'flex', flexWrap: 'wrap', gap: 16,
-              justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto',
-            }}>
-              <div>
-                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>API STATUS</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.16 145)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }} />
-                  OPERATIONAL
+              {/* Simulated Live Analytics */}
+              <div style={{
+                background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+                borderRadius: 10, padding: '14px 16px', display: 'flex', flexWrap: 'wrap', gap: 16,
+                justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto',
+              }}>
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>API STATUS</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.16 145)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }} />
+                    OPERATIONAL
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>AVERAGE LATENCY</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>42ms</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>GLOBAL UPTIME</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>100%</div>
                 </div>
               </div>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               <div>
-                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>AVERAGE LATENCY</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>42ms</div>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>UPLOAD TEST HEIC FILE</label>
+                <div
+                  onClick={() => fileInputSandboxRef.current?.click()}
+                  style={{
+                    border: '1px dashed var(--border)', borderRadius: 8,
+                    padding: '20px 16px', textAlign: 'center', cursor: 'pointer',
+                    background: 'oklch(0.12 0.004 250 / 0.3)', transition: 'background 0.15s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.12 0.004 250 / 0.5)'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.12 0.004 250 / 0.3)'}
+                >
+                  <input
+                    type="file"
+                    accept=".heic,.heif"
+                    ref={fileInputSandboxRef}
+                    onChange={e => e.target.files?.[0] && setHeicSandboxFile(e.target.files[0])}
+                    style={{ display: 'none' }}
+                  />
+                  <Icon.FileDown size={24} style={{ color: 'var(--fg-dim)', marginBottom: 6 }} />
+                  <div style={{ fontSize: 12.5, fontWeight: 500, color: 'white' }}>
+                    {heicSandboxFile ? `📄 ${heicSandboxFile.name} (${(heicSandboxFile.size / (1024 * 1024)).toFixed(2)} MB)` : "Click to select a HEIC photo"}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', marginTop: 4 }}>
+                    Converts client-side or proxies to active Space node.
+                  </div>
+                </div>
               </div>
-              <div>
-                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>GLOBAL UPTIME</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg)' }}>100%</div>
+
+              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', textTransform: 'uppercase' }}>TARGET FORMAT</label>
+                <div style={{ display: 'flex', gap: 4, background: 'oklch(0.12 0.004 250)', padding: 3, borderRadius: 6, border: '1px solid var(--border)' }}>
+                  <button
+                    onClick={() => setHeicSandboxFormat('jpg')}
+                    className="reset mono"
+                    style={{
+                      padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 4,
+                      background: heicSandboxFormat === 'jpg' ? 'oklch(0.20 0.008 250)' : 'transparent',
+                      color: heicSandboxFormat === 'jpg' ? 'white' : 'var(--fg-muted)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    JPG
+                  </button>
+                  <button
+                    onClick={() => setHeicSandboxFormat('png')}
+                    className="reset mono"
+                    style={{
+                      padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 4,
+                      background: heicSandboxFormat === 'png' ? 'oklch(0.20 0.008 250)' : 'transparent',
+                      color: heicSandboxFormat === 'png' ? 'white' : 'var(--fg-muted)',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    PNG
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={runHeicSandboxTest}
+                disabled={heicSandboxLoading}
+                className="reset"
+                style={{
+                  width: '100%', padding: '11px 14px', borderRadius: 8,
+                  background: heicSandboxLoading 
+                    ? 'var(--bg-elev-2)' 
+                    : 'linear-gradient(180deg, oklch(0.72 0.18 25), oklch(0.62 0.20 25))',
+                  border: heicSandboxLoading ? '1px solid var(--border)' : 'none',
+                  color: heicSandboxLoading ? 'var(--fg-dim)' : 'white',
+                  fontWeight: 600, fontSize: 13, cursor: heicSandboxLoading ? 'not-allowed' : 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  boxShadow: heicSandboxLoading ? 'none' : '0 4px 12px oklch(0.50 0.20 25 / 0.25)',
+                }}
+              >
+                {heicSandboxLoading ? (
+                  <>
+                    <Icon.Loader size={14} className="spinning" />
+                    Converting Image...
+                  </>
+                ) : (
+                  <>
+                    ⚡
+                    <span>Test Image Conversion API</span>
+                  </>
+                )}
+              </button>
+
+              {/* Simulated Live Analytics */}
+              <div style={{
+                background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+                borderRadius: 10, padding: '14px 16px', display: 'flex', flexWrap: 'wrap', gap: 16,
+                justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto',
+              }}>
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>API STATUS</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.16 145)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }} />
+                    OPERATIONAL
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>AVERAGE LATENCY</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>148ms</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>GLOBAL UPTIME</div>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>100%</div>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Sandbox Response Terminal */}
           <div style={{ display: 'flex', flexDirection: 'column' }}>
@@ -4133,20 +4375,67 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
               fontFamily: 'monospace', fontSize: 12, color: '#a5b4fc', lineHeight: 1.5,
               minHeight: 200, display: 'flex', flexDirection: 'column', boxSizing: 'border-box',
             }}>
-              {sandboxLoading ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#6366f1', margin: 'auto' }}>
-                  <Icon.Loader size={18} className="spinning" />
-                  <span>Waiting for API data streams...</span>
-                </div>
-              ) : sandboxResult ? (
-                <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                  {JSON.stringify(sandboxResult, null, 2)}
-                </pre>
+              {devTab === 'format' ? (
+                sandboxLoading ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#6366f1', margin: 'auto' }}>
+                    <Icon.Loader size={18} className="spinning" />
+                    <span>Waiting for API data streams...</span>
+                  </div>
+                ) : sandboxResult ? (
+                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                    {JSON.stringify(sandboxResult, null, 2)}
+                  </pre>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--fg-dim)', margin: 'auto', textAlign: 'center' }}>
+                    <Icon.Terminal size={24} style={{ opacity: 0.5 }} />
+                    <span style={{ fontSize: 12, maxWidth: 200 }}>Terminal idle. Click "Test API Endpoint" to execute.</span>
+                  </div>
+                )
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--fg-dim)', margin: 'auto', textAlign: 'center' }}>
-                  <Icon.Terminal size={24} style={{ opacity: 0.5 }} />
-                  <span style={{ fontSize: 12, maxWidth: 200 }}>Terminal idle. Click "Test API Endpoint" to execute.</span>
-                </div>
+                heicSandboxLoading ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'oklch(0.78 0.16 25)', margin: 'auto' }}>
+                    <Icon.Loader size={18} className="spinning" />
+                    <span>Processing binary image conversion...</span>
+                  </div>
+                ) : heicSandboxResult ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                      {JSON.stringify(heicSandboxResult, null, 2)}
+                    </pre>
+                    {heicSandboxResultUrl && (
+                      <div style={{
+                        marginTop: 14, paddingTop: 14, borderTop: '1px solid #1c1d22',
+                        display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center'
+                      }}>
+                        <div style={{ fontSize: 10.5, color: 'oklch(0.78 0.16 25)', fontWeight: 600, width: '100%', textAlign: 'left' }} className="mono">Visual Sandbox Output Preview:</div>
+                        <img
+                          src={heicSandboxResultUrl}
+                          alt="Sandbox API Converted Preview"
+                          style={{ maxWidth: '100%', maxHeight: 110, objectFit: 'contain', borderRadius: 6, border: '1px solid #1c1d22' }}
+                        />
+                        <a
+                          href={heicSandboxResultUrl}
+                          download={`sandbox_converted.${heicSandboxFormat}`}
+                          style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5,
+                            color: 'white', textDecoration: 'none', background: 'oklch(0.18 0.010 25 / 0.5)',
+                            border: '1px solid oklch(0.78 0.16 25 / 0.2)', padding: '5px 12px', borderRadius: 6,
+                            marginTop: 4, transition: 'background 0.15s'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.18 0.010 25 / 0.8)'}
+                          onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.18 0.010 25 / 0.5)'}
+                        >
+                          <Icon.Download size={11} /> Download Converted Sandbox Image
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--fg-dim)', margin: 'auto', textAlign: 'center' }}>
+                    <Icon.Terminal size={24} style={{ opacity: 0.5 }} />
+                    <span style={{ fontSize: 12, maxWidth: 200 }}>Terminal idle. Upload HEIC and click "Test Image Conversion API" to execute.</span>
+                  </div>
+                )
               )}
             </div>
           </div>
@@ -6874,7 +7163,13 @@ export function App({ initialSlug }: { initialSlug?: string }) {
     } else {
       const parts = initialSlug.split('-to-');
       if (parts.length === 2) {
-        initialView = 'universal-ai-formatter';
+        if (parts[0] === 'heic') {
+          initialView = 'heic';
+        } else {
+          initialView = 'universal-ai-formatter';
+        }
+      } else if (initialSlug === 'heic-to-jpg-converter' || initialSlug === 'heic') {
+        initialView = 'heic';
       } else {
         const matched = ALL_TOOLS.find(t => t.id === initialSlug);
         if (matched) initialView = initialSlug;
@@ -7521,7 +7816,18 @@ export function App({ initialSlug }: { initialSlug?: string }) {
                     onShowPaywall={handleShowPaywall}
                     supabase={supabase}
                   />
-                : <ComingSoonStub tool={activeTool} />
+                : activeTool.id === 'heic'
+                  ? <HeicTool
+                      tool={activeTool}
+                      initialSlug={initialSlug}
+                      brandName={brandName}
+                      userPlan={userPlan}
+                      sessionUser={sessionUser}
+                      onShowPaywall={handleShowPaywall}
+                      supabase={supabase}
+                      checkAndLogUsage={checkAndLogUsage}
+                    />
+                  : <ComingSoonStub tool={activeTool} />
           )}
         </main>
 
