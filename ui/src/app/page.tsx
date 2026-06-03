@@ -3671,8 +3671,10 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   // Key rotation handler
   const handleRegenerateKey = async () => {
     if (!supabase || !sessionUser || isAnonUser) return;
-    const confirmRotate = confirm("Are you sure you want to regenerate your API Key? All applications using this key will immediately fail authorization.");
-    if (!confirmRotate) return;
+    if (apiKey) {
+      const confirmRotate = confirm("Are you sure you want to regenerate your API Key? All applications using this key will immediately fail authorization.");
+      if (!confirmRotate) return;
+    }
 
     setIsRegenerating(true);
     try {
@@ -4404,7 +4406,7 @@ func main() {
                         {apiKey ? (
                           isKeyRevealed ? apiKey : `${apiKey.slice(0, 12)}${'•'.repeat(Math.max(1, apiKey.length - 12))}`
                         ) : (
-                          'ms_sandbox_unassigned_key'
+                          'No API Key generated yet'
                         )}
                       </code>
                       
@@ -4454,8 +4456,8 @@ func main() {
                       onMouseEnter={e => { e.currentTarget.style.borderColor = 'white'; e.currentTarget.style.color = 'white'; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = 'oklch(0.24 0.01 250)'; e.currentTarget.style.color = 'oklch(0.70 0.01 250)'; }}
                     >
-                      {isRegenerating ? <Icon.Loader size={12} className="spin" /> : <Icon.RefreshCw size={11} />}
-                      {isRegenerating ? 'Rotating Token...' : 'Rotate API Key'}
+                      {isRegenerating ? <Icon.Loader size={12} className="spin" /> : (apiKey ? <Icon.RefreshCw size={11} /> : <Icon.Key size={11} />)}
+                      {isRegenerating ? (apiKey ? 'Rotating Token...' : 'Generating...') : (apiKey ? 'Rotate API Key' : 'Generate API Key')}
                     </button>
                   )}
                 </div>
@@ -4661,8 +4663,10 @@ function AccountPage({
 
   const handleRegenerateKey = async () => {
     if (!supabase || !sessionUser || isAnonUser) return;
-    const confirmRotate = confirm("Are you sure you want to regenerate your API Key? All current applications using this key will immediately receive a 401 Unauthorized status.");
-    if (!confirmRotate) return;
+    if (apiKey) {
+      const confirmRotate = confirm("Are you sure you want to regenerate your API Key? All current applications using this key will immediately receive a 401 Unauthorized status.");
+      if (!confirmRotate) return;
+    }
 
     setIsRegenerating(true);
     try {
@@ -5946,7 +5950,7 @@ function AccountPage({
                         {apiKey ? (
                           isKeyRevealed ? apiKey : `${apiKey.slice(0, 12)}${'•'.repeat(Math.max(1, apiKey.length - 12))}`
                         ) : (
-                          'ms_sandbox_unassigned_key'
+                          'No API Key generated yet'
                         )}
                       </code>
                       
@@ -5996,8 +6000,8 @@ function AccountPage({
                       onMouseEnter={e => { e.currentTarget.style.borderColor = 'white'; e.currentTarget.style.color = 'white'; }}
                       onMouseLeave={e => { e.currentTarget.style.borderColor = 'oklch(0.24 0.01 250)'; e.currentTarget.style.color = 'oklch(0.70 0.01 250)'; }}
                     >
-                      {isRegenerating ? <Icon.Loader size={12} className="spin" /> : <Icon.RefreshCw size={11} />}
-                      {isRegenerating ? 'Rotating Token...' : 'Rotate API Key'}
+                      {isRegenerating ? <Icon.Loader size={12} className="spin" /> : (apiKey ? <Icon.RefreshCw size={11} /> : <Icon.Key size={11} />)}
+                      {isRegenerating ? (apiKey ? 'Rotating Token...' : 'Generating...') : (apiKey ? 'Rotate API Key' : 'Generate API Key')}
                     </button>
                   )}
                 </div>

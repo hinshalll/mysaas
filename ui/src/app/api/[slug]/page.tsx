@@ -154,6 +154,36 @@ export default function ApiDetailPage() {
       params: [{ name: 'text', type: 'string', required: true, desc: 'The unformatted raw transcription or text payload.' }],
       curlCode: 'curl -X POST https://mysaastools.vercel.app/api/v1/format ...',
       color: '#6366f1'
+    },
+    'json-formatter-validator': {
+      title: 'JSON Parser & Validator',
+      desc: 'Auto-repair broken JSON schemas, strip trailing commas, and prettify outputs.',
+      endpoint: '/api/v1/format',
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer YOUR_API_KEY', 'Content-Type': 'application/json' },
+      params: [{ name: 'text', type: 'string', required: true, desc: 'The unformatted JSON payload.' }],
+      curlCode: 'curl -X POST https://mysaastools.vercel.app/api/v1/format ...',
+      color: '#38bdf8'
+    },
+    'heic-to-jpg-converter': {
+      title: 'HEIC Image Transcoder',
+      desc: 'WASM-accelerated HEIC decoding and image optimization for web-ready formats.',
+      endpoint: '/api/v1/convert-image',
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer YOUR_API_KEY', 'Content-Type': 'multipart/form-data' },
+      params: [{ name: 'file', type: 'file', required: true, desc: 'The HEIC image file to convert.' }],
+      curlCode: 'curl -X POST -F "file=@image.heic" https://mysaastools.vercel.app/api/v1/convert-image ...',
+      color: '#fb923c'
+    },
+    'html-to-print-ready-pdf': {
+      title: 'PDF Generation Engine',
+      desc: 'Render highly-styled HTML and CSS grids into crisp, paginated vector PDFs.',
+      endpoint: '/api/v1/export-pdf',
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer YOUR_API_KEY', 'Content-Type': 'application/json' },
+      params: [{ name: 'html', type: 'string', required: true, desc: 'The HTML payload to render.' }],
+      curlCode: 'curl -X POST https://mysaastools.vercel.app/api/v1/export-pdf ...',
+      color: '#ec4899'
     }
   };
 
