@@ -2384,7 +2384,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
 
       <div style={{
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
         gap: 16,
         alignItems: 'stretch',
       }} className="pricing-grid">
@@ -2491,6 +2491,50 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
             textAlign: 'center', display: 'block',
             boxShadow: '0 1px 0 oklch(1 0 0 / 0.4) inset, 0 1px 3px oklch(0 0 0 / 0.5)',
           }}>Upgrade to Pro →</button>
+        </div>
+
+        {/* Developer API */}
+        <div style={{
+          padding: 32,
+          background: 'oklch(0.175 0.008 250 / 0.55)',
+          border: '1px solid var(--border)',
+          borderRadius: 16,
+          display: 'flex', flexDirection: 'column', gap: 22,
+        }}>
+          <div>
+            <div style={{
+              fontSize: 11.5, fontWeight: 600,
+              color: 'oklch(0.78 0.16 145)', letterSpacing: '0.10em',
+              textTransform: 'uppercase', marginBottom: 14,
+            }}>Developer API</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+              <span style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.03em' }}>{pricingData.currency}29</span>
+              <span style={{ color: 'var(--fg-subtle)', fontSize: 14 }}>{pricingData.suffix}</span>
+            </div>
+            <p style={{ margin: '12px 0 0', color: 'var(--fg-muted)', fontSize: 14, lineHeight: 1.5 }}>
+              For high-volume programmatic access.
+            </p>
+          </div>
+
+          <ul style={listStyle}>
+            {[
+              ['Everything in Pro Plan', true, true],
+              ['2,000 API requests / day', true],
+              ['Direct API keys console', true],
+              ['Custom webhooks & callbacks', true],
+              ['Priority compute resources', true],
+            ].map(([f, on, em]) => <Feature key={f as string} on={on as boolean} em={em as boolean}>{f as string}</Feature>)}
+          </ul>
+
+          <button onClick={onShowPaywall} className="reset" style={{
+            padding: '12px 18px',
+            background: 'var(--bg-elev-2)',
+            border: '1px solid var(--border)',
+            color: 'var(--fg)',
+            fontWeight: 500, fontSize: 14,
+            borderRadius: 9, cursor: 'pointer',
+            textAlign: 'center', display: 'block',
+          }}>Get API Keys →</button>
         </div>
       </div>
 
@@ -3229,7 +3273,7 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Perfect for quick daily copy-pastes and standard interactive tools.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
             <Feature on={true}>20 daily browser tool runs</Feature>
-            <Feature on={true}>5 daily Sandbox API requests</Feature>
+            <Feature on={true}>10 daily Sandbox API requests</Feature>
             <Feature on={true}>Standard document themes</Feature>
             <Feature on={true}>Mandatory brand watermarks</Feature>
             <Feature on={false}>Production API bearer keys</Feature>
@@ -3266,7 +3310,7 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Complete interactive browser-level cockpit for heavy document workflows.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
             <Feature on={true} em={true}>Unlimited browser tool runs</Feature>
-            <Feature on={true} em={true}>100 daily Production API requests</Feature>
+            <Feature on={true} em={true}>200 daily Production API requests</Feature>
             <Feature on={true} em={true}>Custom watermark removal</Feature>
             <Feature on={true} em={true}>Visual PDF Diff Checker</Feature>
             <Feature on={false}>Developer API Plan bounds</Feature>
@@ -3288,7 +3332,7 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', marginBottom: 24, minHeight: 40 }}>Direct programmatic integration, massive query capacity, and data webhooks.</p>
           <ul style={{ ...listStyle, marginBottom: 32 }}>
             <Feature on={true} em={true}><strong>All Pro Plan features included</strong></Feature>
-            <Feature on={true} em={true}><strong>1,000 daily Production API requests</strong></Feature>
+            <Feature on={true} em={true}><strong>2,000 daily Production API requests</strong></Feature>
             <Feature on={true} em={true}><strong>Direct API keys console console</strong></Feature>
             <Feature on={true} em={true}>Custom webhooks and status callbacks</Feature>
             <Feature on={true} em={true}>Priority server computing resources</Feature>
