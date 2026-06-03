@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Terminal, Image as ImageIcon, FileText, Globe, 
-  ArrowRight, Loader, Check, Zap, Server, Code, ShieldCheck 
+  ArrowRight, Loader, Check, Zap, Server, Code, ShieldCheck, Braces
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import SpaceStatusDashboard from '../developer/SpaceStatusDashboard';
@@ -64,6 +64,7 @@ export default function ApiHubPage() {
   }, []);
 
   const getEngineStatus = (keyword: string) => {
+    if (keyword === 'local') return 'active';
     if (loadingStatus) return 'checking';
     if (!statusData || !statusData.monitors) return 'unknown';
     
@@ -175,6 +176,15 @@ export default function ApiHubPage() {
                 color: 'oklch(0.68 0.18 265)'
               },
               {
+                id: 'json-formatter-validator',
+                title: 'JSON Formatter & Validator API',
+                desc: 'Parse, prettify, compress, or auto-repair messy JSON payloads. Robust schema validation, trailing comma removal, and key quoting correction.',
+                endpoint: 'POST /api/v1/format',
+                icon: Braces,
+                keyword: 'local', // Next.js router runs natively locally with no cold starts
+                color: 'oklch(0.70 0.15 195)'
+              },
+              {
                 id: 'heic-to-jpg-converter',
                 title: 'HEIC Image Converter API',
                 desc: 'Batch process and transcode Apple HEIC or HEIF images to optimized JPG/PNG formats. Preserves Exif metadata with low latency serverless decoding.',
@@ -190,7 +200,7 @@ export default function ApiHubPage() {
                 endpoint: 'POST /api/v1/export-pdf',
                 icon: Terminal,
                 keyword: 'pdf-compilerb', // keep-alive matches "pdf-compilerb"
-                color: 'oklch(0.70 0.15 195)'
+                color: 'oklch(0.65 0.12 145)'
               }
             ].map(api => {
               const status = getEngineStatus(api.keyword);

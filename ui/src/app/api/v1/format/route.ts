@@ -430,56 +430,122 @@ export async function POST(req: Request) {
     }
 
     // 7. Process / Format Text content programmatically on server
-    const rawText = content.trim();
-
-    if (tool === 'json' || tool === 'json-formatter') {
+    const rawText = content.trim();    if (tool === 'json' || tool === 'json-formatter' || tool === 'json-formatter-validator') {
+      const action = body.action || 'Format';
       try {
+        // 1. Try to parse normally
         const parsed = JSON.parse(rawText);
-        const formatted = JSON.stringify(parsed, null, 2);
-        return NextResponse.json({
-          status: 'success',
-          data: {
-            formatted: formatted,
-            metadata: {
-              chars_processed: rawText.length,
-              isValid: true,
-              repaired: false,
-              tier: profile.tier,
-              api_requests_today: currentCount + 1,
-              timestamp: new Date().toISOString()
-            }
-          }
-        });
-      } catch (e: any) {
-        // Try a simple auto-repair for common issues (like single quotes or trailing commas)
-        try {
-          let repairedContent = rawText
-            .replace(/'/g, '"') // Replace single quotes with double quotes
-            .replace(/,\s*([}\]])/g, '$1'); // Remove trailing commas
-          const parsed = JSON.parse(repairedContent);
-          const formatted = JSON.stringify(parsed, null, 2);
+        
+        if (action === 'Format' || action === 'Auto-Repair') {
+          const formatted = JSON.stringify(parsed, null, 4);
           return NextResponse.json({
-            status: 'repaired',
+            status: 'success',
             data: {
               formatted: formatted,
+              status: action === 'Auto-Repair' ? 'already_valid' : 'success',
+              error_details: action === 'Auto-Repair' ? 'JSON was already valid! No repairs needed.' : null,
               metadata: {
                 chars_processed: rawText.length,
                 isValid: true,
-                repaired: true,
+                repaired: false,
+                action: action,
                 tier: profile.tier,
                 api_requests_today: currentCount + 1,
                 timestamp: new Date().toISOString()
               }
             }
           });
-        } catch {
+        } else if (action === 'Minify') {
+          const minified = JSON.stringify(parsed);
+          return NextResponse.json({
+            status: 'success',
+            data: {
+              formatted: minified,
+              status: 'success',
+              error_details: null,
+              metadata: {
+                chars_processed: rawText.length,
+                isValid: true,
+                repaired: false,
+                action: action,
+                tier: profile.tier,
+                api_requests_today: currentCount + 1,
+                timestamp: new Date().toISOString()
+              }
+            }
+          });
+        }
+      } catch (err: any) {
+        if (action !== 'Auto-Repair') {
           return NextResponse.json({
             status: 'error',
-            message: `Invalid JSON payload. Parse error: ${e.message}`
+            message: `JSON syntax error: ${err.message}`,
+            data: {
+              formatted: '',
+              status: 'error',
+              error_details: `Syntax Error: ${err.message}`,
+              metadata: {
+                chars_processed: rawText.length,
+                isValid: false,
+                repaired: false,
+                action: action,
+                tier: profile.tier,
+                api_requests_today: currentCount + 1,
+                timestamp: new Date().toISOString()
+              }
+            }
+          }, { status: 400 });
+        }
+
+        // Try Auto-Repair
+        try {
+          const repaired = rawText
+            .replace(/(?<!\\)'/g, '"') // Replace single quotes
+            .replace(/,(\s*[\]}])/g, '$1') // Strip trailing commas
+            .replace(/([{,]\s*)([A-Za-z0-9_]+)(\s*:)/g, '$1"$2"$3'); // Enquote unquoted keys
+
+          const parsedRepaired = JSON.parse(repaired);
+          const formattedRepaired = JSON.stringify(parsedRepaired, null, 4);
+
+          return NextResponse.json({
+            status: 'success',
+            data: {
+              formatted: formattedRepaired,
+              status: 'repaired',
+              error_details: 'Auto-Repair successful! Trailing commas or quote errors were fixed.',
+              metadata: {
+                chars_processed: rawText.length,
+                isValid: true,
+                repaired: true,
+                action: action,
+                tier: profile.tier,
+                api_requests_today: currentCount + 1,
+                timestamp: new Date().toISOString()
+              }
+            }
+          });
+        } catch (repairErr: any) {
+          return NextResponse.json({
+            status: 'error',
+            message: `JSON is severely broken and could not be auto-repaired. Error: ${repairErr.message}`,
+            data: {
+              formatted: '',
+              status: 'fatal_error',
+              error_details: `JSON is severely broken. Could not auto-repair. Error: ${repairErr.message}`,
+              metadata: {
+                chars_processed: rawText.length,
+                isValid: false,
+                repaired: false,
+                action: action,
+                tier: profile.tier,
+                api_requests_today: currentCount + 1,
+                timestamp: new Date().toISOString()
+              }
+            }
           }, { status: 400 });
         }
       }
-    }
+    } 
 
     // Default: AI / Document formatting tool
     const formattedMarkdown = rawText;

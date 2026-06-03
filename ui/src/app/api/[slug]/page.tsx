@@ -28,6 +28,10 @@ export default function ApiDetailPage() {
   // Formatter sandbox states
   const [formatterText, setFormatterText] = useState('Clean this up and present it as a structured review.');
   const [formatterStyle, setFormatterStyle] = useState('modern');
+
+  // JSON sandbox states
+  const [jsonSandboxText, setJsonSandboxText] = useState("{\n    'name': 'John',\n    'age': 30,\n    'skills': ['React', 'Node'],\n}");
+  const [jsonSandboxAction, setJsonSandboxAction] = useState('Auto-Repair');
   
   // HEIC sandbox states
   const [heicFile, setHeicFile] = useState<File | null>(null);
@@ -218,6 +222,54 @@ payload = {
 response = requests.post(url, json=payload, headers=headers)
 with open("document.pdf", "wb") as f:
     f.write(response.content)`
+    },
+    'json-formatter-validator': {
+      title: 'JSON Formatter & Validator API',
+      desc: 'Parse, prettify, compress, or auto-repair messy JSON payloads. Robust schema validation, trailing comma removal, and key quoting correction.',
+      endpoint: '/api/v1/format',
+      method: 'POST',
+      headers: {
+        'Authorization': 'Bearer YOUR_API_KEY',
+        'Content-Type': 'application/json'
+      },
+      params: [
+        { name: 'text', type: 'string', required: true, desc: 'The messy, unformatted, or broken JSON string payload.' },
+        { name: 'tool', type: 'string', required: true, desc: 'Must be set to "json" to route parsing to the JSON validator engine.' },
+        { name: 'action', type: 'string', required: false, desc: 'Operation to perform: "Format" (default), "Auto-Repair", or "Minify".' }
+      ],
+      curlCode: `curl -X POST https://mysaastools.vercel.app/api/v1/format \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{"text": "{\\'name\\': \\'John\\',}", "tool": "json", "action": "Auto-Repair"}'`,
+      jsCode: `fetch('https://mysaastools.vercel.app/api/v1/format', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    text: "{'name': 'John',}",
+    tool: 'json',
+    action: 'Auto-Repair'
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data));`,
+      pythonCode: `import requests
+
+url = "https://mysaastools.vercel.app/api/v1/format"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+payload = {
+    "text": "{'name': 'John',}",
+    "tool": "json",
+    "action": "Auto-Repair"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print(response.json())`
     }
   };
 
@@ -266,6 +318,23 @@ with open("document.pdf", "wb") as f:
           body: JSON.stringify({
             text: formatterText,
             style: formatterStyle
+          })
+        });
+        setResStatus(res.status);
+        const json = await res.json();
+        setResBody(json);
+
+      } else if (slug === 'json-formatter-validator') {
+        const res = await fetch(api.endpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${sandboxToken}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            text: jsonSandboxText,
+            tool: 'json',
+            action: jsonSandboxAction
           })
         });
         setResStatus(res.status);
@@ -601,6 +670,38 @@ with open("document.pdf", "wb") as f:
                     <option value="modern">Modern Editorial</option>
                     <option value="academic">Academic Serif</option>
                     <option value="minimalist">Minimalist Mono</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {slug === 'json-formatter-validator' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--fg-dim)', display: 'block', marginBottom: 6, letterSpacing: '0.04em' }}>JSON PAYLOAD</label>
+                  <textarea
+                    rows={4}
+                    value={jsonSandboxText}
+                    onChange={e => setJsonSandboxText(e.target.value)}
+                    style={{
+                      width: '100%', boxSizing: 'border-box', background: '#0e0f12', border: '1px solid oklch(0.20 0.008 250)',
+                      borderRadius: 8, padding: 10, color: 'white', fontSize: 12.5, outline: 'none', fontFamily: 'monospace'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--fg-dim)', display: 'block', marginBottom: 6, letterSpacing: '0.04em' }}>ACTION</label>
+                  <select
+                    value={jsonSandboxAction}
+                    onChange={e => setJsonSandboxAction(e.target.value)}
+                    style={{
+                      width: '100%', boxSizing: 'border-box', background: '#0e0f12', border: '1px solid oklch(0.20 0.008 250)',
+                      borderRadius: 8, padding: 8, color: 'white', fontSize: 12.5, outline: 'none'
+                    }}
+                  >
+                    <option value="Format">Format & Validate</option>
+                    <option value="Auto-Repair">Auto-Repair Broken JSON</option>
+                    <option value="Minify">Minify (Compress)</option>
                   </select>
                 </div>
               </div>
