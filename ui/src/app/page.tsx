@@ -3333,7 +3333,7 @@ function PricingPage({ onLaunch, onEnterprise }: PricingPageProps) {
           <ul style={{ ...listStyle, marginBottom: 32 }}>
             <Feature on={true} em={true}><strong>All Pro Plan features included</strong></Feature>
             <Feature on={true} em={true}><strong>2,000 daily Production API requests</strong></Feature>
-            <Feature on={true} em={true}><strong>Direct API keys console console</strong></Feature>
+            <Feature on={true} em={true}><strong>Direct API keys console</strong></Feature>
             <Feature on={true} em={true}>Custom webhooks and status callbacks</Feature>
             <Feature on={true} em={true}>Priority server computing resources</Feature>
           </ul>

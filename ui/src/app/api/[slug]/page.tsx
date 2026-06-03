@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useRouter } from 'next/navigation';
 import { 
   Terminal, Image as ImageIcon, FileText, Globe, 
@@ -340,8 +341,11 @@ const data = await response.json();`;
         <span style={{ fontSize: 13, fontFamily: 'monospace', color: '#6366f1', fontWeight: 600 }}>{api.endpoint}</span>
       </div>
 
-      <div style={{ maxWidth: 1000, margin: '40px auto 0', padding: '0 24px', display: 'flex', flexDirection: 'column', gap: 60 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <div style={{ maxWidth: 1400, margin: '40px auto 0', padding: '0 24px', display: 'flex', flexWrap: 'wrap', gap: 60, alignItems: 'flex-start' }}>
+        
+        {/* Left Column (Context & Setup) */}
+        <div style={{ flex: '1 1 600px', display: 'flex', flexDirection: 'column', gap: 60, paddingBottom: 100, minWidth: 0 }}>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <h1 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: 'white' }}>{api.title}</h1>
           <p style={{ fontSize: 18, color: '#94a3b8', lineHeight: 1.6, margin: 0, maxWidth: 800 }}>{api.desc}</p>
 
@@ -361,9 +365,9 @@ const data = await response.json();`;
               Get your API key <ArrowRight size={14} />
             </Link>
           </div>
-        </div>
+        </motion.div>
 
-        <div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Authentication & Headers</h2>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, textAlign: 'left' }}>
@@ -377,9 +381,9 @@ const data = await response.json();`;
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
 
-        <div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
           <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Request Parameters</h2>
           <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, overflow: 'hidden', overflowX: 'auto' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, textAlign: 'left' }}>
@@ -407,52 +411,9 @@ const data = await response.json();`;
               </tbody>
             </table>
           </div>
-        </div>
+        </motion.div>
 
-        <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Code Examples</h2>
-          <div style={{ background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 16px', flexWrap: 'wrap', gap: 12, background: 'rgba(0,0,0,0.3)' }}>
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', overflowX: 'auto', scrollbarWidth: 'none' }}>
-                {['curl', 'js', 'python', 'go', 'rust', 'csharp', 'java', 'php', 'ruby'].map(lang => (
-                  <button key={lang} onClick={() => setActiveLang(lang as any)} className="reset mono" style={{
-                    padding: '6px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6,
-                    background: activeLang === lang ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    color: activeLang === lang ? 'white' : '#8b949e', cursor: 'pointer', transition: 'all 0.2s'
-                  }}>
-                    {lang === 'js' ? 'JavaScript' : lang === 'csharp' ? 'C#' : lang.charAt(0).toUpperCase() + lang.slice(1)}
-                  </button>
-                ))}
-              </div>
-              <button onClick={handleCopyCode} className="reset" style={{ color: copiedCode ? '#4ade80' : '#8b949e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
-                {copiedCode ? <CheckCircle2 size={14} /> : <Copy size={14} />} {copiedCode ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <pre style={{ margin: 0, padding: 24, overflowX: 'auto', fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, color: '#a5b4fc', maxHeight: 400, whiteSpace: 'pre-wrap' }}>
-              <code>{generateCodeSnippet(api, activeLang)}</code>
-            </pre>
-          </div>
-        </div>
-
-        <div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Response Schema</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-            <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: 12, padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#34d399', margin: '0 0 12px' }}>Success (200 OK)</h3>
-              <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 12, color: '#a7f3d0', whiteSpace: 'pre-wrap' }}>
-                {highlightJson(responseSchemaSuccess)}
-              </pre>
-            </div>
-            <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 12, padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#f87171', margin: '0 0 12px' }}>Error (400/500)</h3>
-              <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 12, color: '#fecaca', whiteSpace: 'pre-wrap' }}>
-                {highlightJson(responseSchemaError)}
-              </pre>
-            </div>
-          </div>
-        </div>
-
-        <div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
           <h2 style={{ fontSize: 24, fontWeight: 800, color: 'white', margin: '0 0 24px', display: 'flex', alignItems: 'center', gap: 10 }}>
             <Play size={20} color={api.color} /> Interactive Sandbox
           </h2>
@@ -591,8 +552,77 @@ const data = await response.json();`;
               </div>
             )}
           </div>
+        </motion.div>
+        </div> {/* End Left Column */}
+
+        {/* Right Column */}
+        <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: 40 }}>
+          <div style={{ position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 40, paddingBottom: 40 }}>
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+<div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Code Examples</h2>
+          <div style={{ background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 16px', flexWrap: 'wrap', gap: 12, background: 'rgba(0,0,0,0.3)' }}>
+              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                {['curl', 'js', 'python', 'go', 'rust', 'csharp', 'java', 'php', 'ruby'].map(lang => (
+                  <button key={lang} onClick={() => setActiveLang(lang as any)} className="reset mono" style={{
+                    padding: '6px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6,
+                    background: activeLang === lang ? 'rgba(255,255,255,0.1)' : 'transparent',
+                    color: activeLang === lang ? 'white' : '#8b949e', cursor: 'pointer', transition: 'all 0.2s'
+                  }}>
+                    {lang === 'js' ? 'JavaScript' : lang === 'csharp' ? 'C#' : lang.charAt(0).toUpperCase() + lang.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <button onClick={handleCopyCode} className="reset" style={{ color: copiedCode ? '#4ade80' : '#8b949e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
+                {copiedCode ? <CheckCircle2 size={14} /> : <Copy size={14} />} {copiedCode ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <motion.pre layout style={{ margin: 0, padding: 24, overflowX: 'auto', fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, color: '#a5b4fc', maxHeight: 400, whiteSpace: 'pre-wrap' }}>
+              <AnimatePresence mode="wait">
+                <motion.code 
+                  key={activeLang}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  style={{ display: 'block' }}
+                >
+                  {generateCodeSnippet(api, activeLang)}
+                </motion.code>
+              </AnimatePresence>
+            </motion.pre>
+          </div>
+        </div>
+
+        
+            </motion.div>
+            
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
+<div>
+          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Response Schema</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
+            <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: 12, padding: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#34d399', margin: '0 0 12px' }}>Success (200 OK)</h3>
+              <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 12, color: '#a7f3d0', whiteSpace: 'pre-wrap' }}>
+                {highlightJson(responseSchemaSuccess)}
+              </pre>
+            </div>
+            <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 12, padding: 20 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#f87171', margin: '0 0 12px' }}>Error (400/500)</h3>
+              <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 12, color: '#fecaca', whiteSpace: 'pre-wrap' }}>
+                {highlightJson(responseSchemaError)}
+              </pre>
+            </div>
+          </div>
+        </div>
+
+        
+            </motion.div>
+          </div>
         </div>
       </div>
+
       
       <style jsx global>{`
         .spin { animation: spin 1s linear infinite; }
