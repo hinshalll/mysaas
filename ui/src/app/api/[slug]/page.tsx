@@ -100,7 +100,7 @@ export default function ApiDetailPage() {
   const slug = params?.slug as string;
   const router = useRouter();
 
-  const [activeLang, setActiveLang] = useState<'curl' | 'js' | 'python'>('curl');
+  const [activeLang, setActiveLang] = useState<'curl' | 'js' | 'python' | 'go' | 'rust' | 'csharp' | 'java' | 'php' | 'ruby'>('curl');
   const [copiedCode, setCopiedCode] = useState(false);
   const [activeConsoleTab, setActiveConsoleTab] = useState<'body' | 'headers'>('body');
   const [copiedResponse, setCopiedResponse] = useState(false);
@@ -118,6 +118,8 @@ export default function ApiDetailPage() {
   const [heicFormat, setHeicFormat] = useState<'jpg' | 'png'>('jpg');
   const [heicQuality, setHeicQuality] = useState('0.95');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const sandboxRef = useRef<HTMLDivElement>(null);
+  const codeBlockRef = useRef<HTMLDivElement>(null);
 
   // PDF sandbox states
   const [pdfHtml, setPdfHtml] = useState('<h1>Developer API Report</h1><p>This PDF was generated live via the SaaS printing node.</p>');
@@ -148,6 +150,12 @@ export default function ApiDetailPage() {
     curlCode: string;
     jsCode: string;
     pythonCode: string;
+    goCode: string;
+    rustCode: string;
+    csharpCode: string;
+    javaCode: string;
+    phpCode: string;
+    rubyCode: string;
     color: string;
   }> = {
     'universal-ai-formatter': {
@@ -196,6 +204,152 @@ payload = {
 
 response = requests.post(url, json=payload, headers=headers)
 print(response.json())`,
+      goCode: `package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"io"
+)
+
+func main() {
+	url := "https://mysaastools.vercel.app/api/v1/format"
+	payload := map[string]string{
+		"text":  "messy text here",
+		"style": "modern",
+	}
+	jsonVal, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonVal))
+	req.Header.Set("Authorization", "Bearer YOUR_API_KEY")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(body))
+}`,
+      rustCode: `use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = "https://mysaastools.vercel.app/api/v1/format";
+    let client = reqwest::Client::new();
+    
+    let mut headers = HeaderMap::new();
+    headers.insert(AUTHORIZATION, HeaderValue::from_static("Bearer YOUR_API_KEY"));
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+    let payload = json!({
+        "text": "messy text here",
+        "style": "modern"
+    });
+
+    let res = client.post(url)
+        .headers(headers)
+        .json(&payload)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", res);
+    Ok(())
+}`,
+      csharpCode: `using System;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main()
+    {
+        var client = new HttpClient();
+        var url = "https://mysaastools.vercel.app/api/v1/format";
+        
+        var payload = new { text = "messy text here", style = "modern" };
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        client.DefaultRequestHeaders.Add("Authorization", "Bearer YOUR_API_KEY");
+        
+        var response = await client.PostAsync(url, content);
+        var result = await response.Content.ReadAsStringAsync();
+        
+        Console.WriteLine(result);
+    }
+}`,
+      javaCode: `import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        String url = "https://mysaastools.vercel.app/api/v1/format";
+        String json = "{\\"text\\":\\"messy text here\\",\\"style\\":\\"modern\\"}";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Authorization", "Bearer YOUR_API_KEY")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
+    }
+}`,
+      phpCode: `<?php
+$url = 'https://mysaastools.vercel.app/api/v1/format';
+$data = [
+    'text' => 'messy text here',
+    'style' => 'modern'
+];
+
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Authorization: Bearer YOUR_API_KEY',
+    'Content-Type: application/json'
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;
+?>`,
+      rubyCode: `require 'net/http'
+require 'uri'
+require 'json'
+
+uri = URI.parse("https://mysaastools.vercel.app/api/v1/format")
+request = Net::HTTP::Post.new(uri)
+request["Authorization"] = "Bearer YOUR_API_KEY"
+request["Content-Type"] = "application/json"
+request.body = JSON.dump({
+  "text" => "messy text here",
+  "style" => "modern"
+})
+
+req_options = { use_ssl: uri.scheme == "https" }
+response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+  http.request(request)
+end
+
+puts response.body`,
       color: 'oklch(0.68 0.18 265)'
     },
     'heic-to-jpg-converter': {
@@ -252,6 +406,168 @@ data = {
 response = requests.post(url, files=files, data=data, headers=headers)
 with open("converted.jpg", "wb") as f:
     f.write(response.content)`,
+      goCode: `package main
+
+import (
+	"bytes"
+	"fmt"
+	"io"
+	"mime/multipart"
+	"net/http"
+	"os"
+)
+
+func main() {
+	url := "https://mysaastools.vercel.app/api/v1/convert-image"
+	file, _ := os.Open("image.heic")
+	defer file.Close()
+
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	part, _ := writer.CreateFormFile("file", "image.heic")
+	io.Copy(part, file)
+	writer.WriteField("format", "jpg")
+	writer.WriteField("quality", "0.95")
+	writer.Close()
+
+	req, _ := http.NewRequest("POST", url, body)
+	req.Header.Set("Authorization", "Bearer YOUR_API_KEY")
+	req.Header.Set("Content-Type", writer.FormDataContentType())
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	outFile, _ := os.Create("converted.jpg")
+	defer outFile.Close()
+	io.Copy(outFile, resp.Body)
+	fmt.Println("Image saved successfully.")
+}`,
+      rustCode: `use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION};
+use reqwest::multipart;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = "https://mysaastools.vercel.app/api/v1/convert-image";
+    let client = reqwest::Client::new();
+    
+    let mut headers = HeaderMap::new();
+    headers.insert(AUTHORIZATION, HeaderValue::from_static("Bearer YOUR_API_KEY"));
+
+    let form = multipart::Form::new()
+        .file("file", "image.heic").await?
+        .text("format", "jpg")
+        .text("quality", "0.95");
+
+    let res = client.post(url)
+        .headers(headers)
+        .multipart(form)
+        .send()
+        .await?
+        .bytes()
+        .await?;
+
+    std::fs::write("converted.jpg", res)?;
+    println!("Image saved successfully.");
+    Ok(())
+}`,
+      csharpCode: `using System;
+using System.IO;
+using System.Net.Http;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main()
+    {
+        var client = new HttpClient();
+        var url = "https://mysaastools.vercel.app/api/v1/convert-image";
+        client.DefaultRequestHeaders.Add("Authorization", "Bearer YOUR_API_KEY");
+
+        using var content = new MultipartFormDataContent();
+        using var fileStream = File.OpenRead("image.heic");
+        content.Add(new StreamContent(fileStream), "file", "image.heic");
+        content.Add(new StringContent("jpg"), "format");
+        content.Add(new StringContent("0.95"), "quality");
+
+        var response = await client.PostAsync(url, content);
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        await File.WriteAllBytesAsync("converted.jpg", bytes);
+        
+        Console.WriteLine("Image saved successfully.");
+    }
+}`,
+      javaCode: `import java.io.File;
+import java.nio.file.Files;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        System.out.println("Use standard HTTP Client with a Multipart boundary generator, or curl wrapper:");
+        Process process = new ProcessBuilder(
+            "curl", "-X", "POST", "https://mysaastools.vercel.app/api/v1/convert-image",
+            "-H", "Authorization: Bearer YOUR_API_KEY",
+            "-F", "file=@image.heic",
+            "-F", "format=jpg",
+            "-F", "quality=0.95",
+            "--output", "converted.jpg"
+        ).start();
+        process.waitFor();
+        System.out.println("Converted image written to converted.jpg");
+    }
+}`,
+      phpCode: `<?php
+$url = 'https://mysaastools.vercel.app/api/v1/convert-image';
+
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, [
+    'file' => new CURLFile('image.heic', 'image/heic'),
+    'format' => 'jpg',
+    'quality' => '0.95'
+]);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Authorization: Bearer YOUR_API_KEY'
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+file_put_contents('converted.jpg', $response);
+echo "Image saved successfully.";
+?>`,
+      rubyCode: `require 'net/http'
+require 'uri'
+
+uri = URI.parse("https://mysaastools.vercel.app/api/v1/convert-image")
+request = Net::HTTP::Post.new(uri)
+request["Authorization"] = "Bearer YOUR_API_KEY"
+
+boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW"
+request.content_type = "multipart/form-data; boundary=#{boundary}"
+
+post_body = []
+post_body << "--#{boundary}\\r\\n"
+post_body << "Content-Disposition: form-data; name=\\"file\\"; filename=\\"image.heic\\"\\r\\n"
+post_body << "Content-Type: image/heic\\r\\n\\r\\n"
+post_body << File.read("image.heic")
+post_body << "\\r\\n--#{boundary}\\r\\n"
+post_body << "Content-Disposition: form-data; name=\\"format\\"\\r\\n\\r\\njpg\\r\\n"
+post_body << "--#{boundary}\\r\\n"
+post_body << "Content-Disposition: form-data; name=\\"quality\\"\\r\\n\\r\\n0.95\\r\\n"
+post_body << "--#{boundary}--\\r\\n"
+
+request.body = post_body.join
+
+req_options = { use_ssl: uri.scheme == "https" }
+response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+  http.request(request)
+end
+
+File.write("converted.jpg", response.body)
+puts "Image saved successfully."`,
       color: 'oklch(0.72 0.18 25)'
     },
     'html-to-print-ready-pdf': {
@@ -305,6 +621,162 @@ payload = {
 response = requests.post(url, json=payload, headers=headers)
 with open("document.pdf", "wb") as f:
     f.write(response.content)`,
+      goCode: `package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
+	"net/http"
+	"os"
+)
+
+func main() {
+	url := "https://mysaastools.vercel.app/api/v1/export-pdf"
+	payload := map[string]string{
+		"html":     "<h1>My Document</h1>",
+		"filename": "document.pdf",
+	}
+	jsonVal, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonVal))
+	req.Header.Set("Authorization", "Bearer YOUR_API_KEY")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	outFile, _ := os.Create("document.pdf")
+	defer outFile.Close()
+	io.Copy(outFile, resp.Body)
+	fmt.Println("PDF saved successfully.")
+}`,
+      rustCode: `use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = "https://mysaastools.vercel.app/api/v1/export-pdf";
+    let client = reqwest::Client::new();
+    
+    let mut headers = HeaderMap::new();
+    headers.insert(AUTHORIZATION, HeaderValue::from_static("Bearer YOUR_API_KEY"));
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+    let payload = json!({
+        "html": "<h1>My Document</h1>",
+        "filename": "document.pdf"
+    });
+
+    let res = client.post(url)
+        .headers(headers)
+        .json(&payload)
+        .send()
+        .await?
+        .bytes()
+        .await?;
+
+    std::fs::write("document.pdf", res)?;
+    println!("PDF saved successfully.");
+    Ok(())
+}`,
+      csharpCode: `using System;
+using System.IO;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main()
+    {
+        var client = new HttpClient();
+        var url = "https://mysaastools.vercel.app/api/v1/export-pdf";
+        
+        var payload = new { html = "<h1>My Document</h1>", filename = "document.pdf" };
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        client.DefaultRequestHeaders.Add("Authorization", "Bearer YOUR_API_KEY");
+        
+        var response = await client.PostAsync(url, content);
+        var bytes = await response.Content.ReadAsByteArrayAsync();
+        await File.WriteAllBytesAsync("document.pdf", bytes);
+        
+        Console.WriteLine("PDF saved successfully.");
+    }
+}`,
+      javaCode: `import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        String url = "https://mysaastools.vercel.app/api/v1/export-pdf";
+        String json = "{\\"html\\":\\"<h1>My Document</h1>\\",\\"filename\\":\\"document.pdf\\"}";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Authorization", "Bearer YOUR_API_KEY")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HttpResponse<Path> response = client.send(request, HttpResponse.BodyHandlers.ofFile(Paths.get("document.pdf")));
+        System.out.println("PDF written to " + response.body().toString());
+    }
+}`,
+      phpCode: `<?php
+$url = 'https://mysaastools.vercel.app/api/v1/export-pdf';
+$data = [
+    'html' => '<h1>My Document</h1>',
+    'filename' => 'document.pdf'
+];
+
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Authorization: Bearer YOUR_API_KEY',
+    'Content-Type: application/json'
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+file_put_contents('document.pdf', $response);
+echo "PDF saved successfully.";
+?>`,
+      rubyCode: `require 'net/http'
+require 'uri'
+require 'json'
+
+uri = URI.parse("https://mysaastools.vercel.app/api/v1/export-pdf")
+request = Net::HTTP::Post.new(uri)
+request["Authorization"] = "Bearer YOUR_API_KEY"
+request["Content-Type"] = "application/json"
+request.body = JSON.dump({
+  "text" => "<h1>My Document</h1>",
+  "filename" => "document.pdf"
+})
+
+req_options = { use_ssl: uri.scheme == "https" }
+response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+  http.request(request)
+end
+
+File.write("document.pdf", response.body)
+puts "PDF saved successfully."`,
       color: 'oklch(0.65 0.12 145)'
     },
     'json-formatter-validator': {
@@ -354,6 +826,156 @@ payload = {
 
 response = requests.post(url, json=payload, headers=headers)
 print(response.json())`,
+      goCode: `package main
+
+import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"io"
+)
+
+func main() {
+	url := "https://mysaastools.vercel.app/api/v1/format"
+	payload := map[string]string{
+		"text":   "{'name': 'John',}",
+		"tool":   "json",
+		"action": "Auto-Repair",
+	}
+	jsonVal, _ := json.Marshal(payload)
+
+	req, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonVal))
+	req.Header.Set("Authorization", "Bearer YOUR_API_KEY")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	fmt.Println(string(body))
+}`,
+      rustCode: `use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let url = "https://mysaastools.vercel.app/api/v1/format";
+    let client = reqwest::Client::new();
+    
+    let mut headers = HeaderMap::new();
+    headers.insert(AUTHORIZATION, HeaderValue::from_static("Bearer YOUR_API_KEY"));
+    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+    let payload = json!({
+        "text": "{'name': 'John',}",
+        "tool": "json",
+        "action": "Auto-Repair"
+    });
+
+    let res = client.post(url)
+        .headers(headers)
+        .json(&payload)
+        .send()
+        .await?
+        .text()
+        .await?;
+
+    println!("{}", res);
+    Ok(())
+}`,
+      csharpCode: `using System;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
+using System.Threading.Tasks;
+
+class Program
+{
+    static async Task Main()
+    {
+        var client = new HttpClient();
+        var url = "https://mysaastools.vercel.app/api/v1/format";
+        
+        var payload = new { text = "{'name': 'John',}", tool = "json", action = "Auto-Repair" };
+        var json = JsonSerializer.Serialize(payload);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        
+        client.DefaultRequestHeaders.Add("Authorization", "Bearer YOUR_API_KEY");
+        
+        var response = await client.PostAsync(url, content);
+        var result = await response.Content.ReadAsStringAsync();
+        
+        Console.WriteLine(result);
+    }
+}`,
+      javaCode: `import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
+public class Main {
+    public static void main(String[] args) throws Exception {
+        String url = "https://mysaastools.vercel.app/api/v1/format";
+        String json = "{\\"text\\":\\"{'name': 'John',}\\",\\"tool\\":\\"json\\",\\"action\\":\\"Auto-Repair\\"}";
+
+        HttpClient client = HttpClient.newHttpClient();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .header("Authorization", "Bearer YOUR_API_KEY")
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(json))
+                .build();
+
+        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+        System.out.println(response.body());
+    }
+}`,
+      phpCode: `<?php
+$url = 'https://mysaastools.vercel.app/api/v1/format';
+$data = [
+    'text' => "{'name': 'John',}",
+    'tool' => 'json',
+    'action' => 'Auto-Repair'
+];
+
+$ch = curl_init($url);
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_POST, true);
+curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Authorization: Bearer YOUR_API_KEY',
+    'Content-Type: application/json'
+]);
+
+$response = curl_exec($ch);
+curl_close($ch);
+echo $response;
+?>`,
+      rubyCode: `require 'net/http'
+require 'uri'
+require 'json'
+
+uri = URI.parse("https://mysaastools.vercel.app/api/v1/format")
+request = Net::HTTP::Post.new(uri)
+request["Authorization"] = "Bearer YOUR_API_KEY"
+request["Content-Type"] = "application/json"
+request.body = JSON.dump({
+  "text" => "{'name': 'John',}",
+  "tool" => "json",
+  "action" => "Auto-Repair"
+})
+
+req_options = { use_ssl: uri.scheme == "https" }
+response = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|
+  http.request(request)
+end
+
+puts response.body`,
       color: 'oklch(0.70 0.15 195)'
     }
   };
@@ -374,7 +996,16 @@ print(response.json())`,
   }
 
   const handleCopyCode = () => {
-    const code = activeLang === 'curl' ? api.curlCode : activeLang === 'js' ? api.jsCode : api.pythonCode;
+    let code = api.curlCode;
+    if (activeLang === 'js') code = api.jsCode;
+    else if (activeLang === 'python') code = api.pythonCode;
+    else if (activeLang === 'go') code = api.goCode;
+    else if (activeLang === 'rust') code = api.rustCode;
+    else if (activeLang === 'csharp') code = api.csharpCode;
+    else if (activeLang === 'java') code = api.javaCode;
+    else if (activeLang === 'php') code = api.phpCode;
+    else if (activeLang === 'ruby') code = api.rubyCode;
+
     navigator.clipboard.writeText(code);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
@@ -568,8 +1199,38 @@ print(response.json())`,
               onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                Try it Free <ArrowRight size={13} />
+                Get API Key <ArrowRight size={13} />
               </Link>
+              <button 
+                onClick={() => {
+                  sandboxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }}
+                className="reset"
+                style={{
+                  fontSize: 13,
+                  fontWeight: 600,
+                  color: 'white',
+                  background: 'oklch(0.18 0.01 250)',
+                  border: '1px solid oklch(0.28 0.01 250)',
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease-in-out',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'oklch(0.24 0.01 250)';
+                  e.currentTarget.style.borderColor = api.color || 'oklch(0.68 0.18 265)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'oklch(0.18 0.01 250)';
+                  e.currentTarget.style.borderColor = 'oklch(0.28 0.01 250)';
+                }}
+              >
+                Test in Sandbox <Play size={11} style={{ color: api.color || 'oklch(0.68 0.18 265)' }} />
+              </button>
               <a href="/api/openapi.json" download="openapi.json" style={{
                 fontSize: 13,
                 fontWeight: 600,
@@ -639,6 +1300,10 @@ print(response.json())`,
               ].map(sdk => (
                 <div 
                   key={sdk.name}
+                  onClick={() => {
+                    setActiveLang(sdk.lang as any);
+                    codeBlockRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
                   style={{
                     background: 'oklch(0.14 0.006 250 / 0.6)',
                     backdropFilter: 'blur(8px)',
@@ -788,7 +1453,7 @@ print(response.json())`,
               <Zap size={16} style={{ color: 'oklch(0.78 0.16 145)' }} /> Sandbox vs. Production Tiers
             </h4>
             <p style={{ margin: 0, fontSize: 13.5, color: 'oklch(0.70 0.01 250)', lineHeight: 1.5 }}>
-              Guests can run **3 free sandbox pings/day**. Sign up for a Free Account to increase your limit to **10 runs/day** with your own API key.
+              Guests can run **3 sandbox pings/day**. Sign up for a Free Account to get **10 runs/day** with an API key, upgrade to Pro for **100 runs/day**, or unlock the Developer API tier for high-volume integrations of up to **1,000 runs/day**.
             </p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))', gap: 10, marginTop: 4 }}>
               <div style={{ background: 'oklch(0.11 0.005 250)', padding: 10, borderRadius: 8, border: '1px solid oklch(0.18 0.005 250)' }}>
@@ -815,24 +1480,35 @@ print(response.json())`,
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24, position: 'sticky', top: 80 }}>
           
           {/* SDK / Code block card */}
-          <div style={{
-            background: '#0e0f12',
-            border: '1px solid #1c1d22',
-            borderRadius: 14,
-            overflow: 'hidden',
-          }}>
+          <div 
+            ref={codeBlockRef}
+            style={{
+              background: '#0e0f12',
+              border: '1px solid #1c1d22',
+              borderRadius: 14,
+              overflow: 'hidden',
+            }}
+          >
             <div style={{
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
               borderBottom: '1px solid #1c1d22',
               padding: '10px 16px',
+              flexWrap: 'wrap',
+              gap: 12
             }}>
-              <div style={{ display: 'flex', gap: 6 }}>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '2px 0' }}>
                 {[
                   { id: 'curl', label: 'cURL' },
                   { id: 'js', label: 'JavaScript' },
-                  { id: 'python', label: 'Python' }
+                  { id: 'python', label: 'Python' },
+                  { id: 'go', label: 'Go' },
+                  { id: 'rust', label: 'Rust' },
+                  { id: 'csharp', label: 'C#' },
+                  { id: 'java', label: 'Java' },
+                  { id: 'php', label: 'PHP' },
+                  { id: 'ruby', label: 'Ruby' }
                 ].map(lang => (
                   <button
                     key={lang.id}
@@ -871,19 +1547,30 @@ print(response.json())`,
               color: '#818cf8', background: '#0e0f12', maxBlockSize: 260
             }}>
               <code>
-                {activeLang === 'curl' ? api.curlCode : activeLang === 'js' ? api.jsCode : api.pythonCode}
+                {activeLang === 'curl' ? api.curlCode : 
+                 activeLang === 'js' ? api.jsCode : 
+                 activeLang === 'python' ? api.pythonCode : 
+                 activeLang === 'go' ? api.goCode : 
+                 activeLang === 'rust' ? api.rustCode : 
+                 activeLang === 'csharp' ? api.csharpCode : 
+                 activeLang === 'java' ? api.javaCode : 
+                 activeLang === 'php' ? api.phpCode : 
+                 api.rubyCode}
               </code>
             </pre>
           </div>
 
           {/* Sandbox interactive configuration */}
-          <div style={{
-            background: 'oklch(0.14 0.006 250)',
-            border: '1px solid oklch(0.20 0.008 250)',
-            borderRadius: 14,
-            padding: 24,
-            display: 'flex', flexDirection: 'column', gap: 16,
-          }}>
+          <div 
+            ref={sandboxRef}
+            style={{
+              background: 'oklch(0.14 0.006 250)',
+              border: '1px solid oklch(0.20 0.008 250)',
+              borderRadius: 14,
+              padding: 24,
+              display: 'flex', flexDirection: 'column', gap: 16,
+            }}
+          >
             <h4 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: 8 }}>
               <Play size={13} style={{ color: 'oklch(0.78 0.16 145)' }} /> Sandbox API Playground
             </h4>
