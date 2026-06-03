@@ -146,10 +146,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const { content, style = 'modern', tool = 'ai-formatter' } = body;
+    const content = body.content || body.text;
+    const style = body.style || 'modern';
+    const tool = body.tool || 'ai-formatter';
     if (!content) {
       return NextResponse.json(
-        { status: 'error', message: 'Missing "content" text parameter in request body.' },
+        { status: 'error', message: 'Missing "text" (or "content") parameter in request body.' },
         { status: 400 }
       );
     }
