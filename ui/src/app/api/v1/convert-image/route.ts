@@ -81,10 +81,11 @@ export async function POST(req: Request) {
     const isAdmin = profile.tier === 'admin';
     const isPaidOrAdmin = isPro || isApi || isAdmin;
 
-    // Sandbox Free Tier Limit: 5 requests/day
+    // Guest Sandbox Limit: 3 requests/day
+    // Free Account Limit: 10 requests/day
     // Pro Plan Limit: 100 requests/day
     // Developer Plan Limit: 1,000 requests/day
-    const maxLimits = isAdmin ? 999999 : (isApi ? 1000 : (isPro ? 100 : 5));
+    const maxLimits = isAdmin ? 999999 : (isApi ? 1000 : (isPro ? 100 : (isSandboxGuest ? 3 : 10)));
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -121,10 +122,14 @@ export async function POST(req: Request) {
 
     const currentCount = dailyCount || 0;
     if (currentCount >= maxLimits) {
+      const quotaName = isSandboxGuest ? 'Unsigned Guest Sandbox' : (!isPaidOrAdmin ? 'Free Account Sandbox' : `${profile.tier.toUpperCase()} Plan`);
+      const upgradeSuggestion = isSandboxGuest 
+        ? 'Please sign up for a free account to increase your limit to 10 runs/day, or subscribe to a Paid tier.'
+        : 'Please upgrade your subscription tier for higher production volume.';
       return NextResponse.json(
         {
           status: 'error',
-          message: `API daily limit exhausted (${currentCount}/${maxLimits} runs today). Please upgrade your subscription tier for higher volume.`
+          message: `API daily limit exhausted for ${quotaName} (${currentCount}/${maxLimits} runs today). ${upgradeSuggestion}`
         },
         { status: 429 }
       );

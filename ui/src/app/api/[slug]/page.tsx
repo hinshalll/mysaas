@@ -470,16 +470,20 @@ with open("document.pdf", "wb") as f:
               <Zap size={16} style={{ color: 'oklch(0.78 0.16 145)' }} /> Sandbox vs. Production Tiers
             </h4>
             <p style={{ margin: 0, fontSize: 13.5, color: 'oklch(0.70 0.01 250)', lineHeight: 1.5 }}>
-              Sandbox calls are **100% free** and don't require credentials. Upgrade to a Paid API Key for high-volume limits.
+              Guests can run **3 free sandbox pings/day**. Sign up for a Free Account to increase your limit to **10 runs/day** with your own API key.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginTop: 4 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginTop: 4 }}>
               <div style={{ background: 'oklch(0.11 0.005 250)', padding: 12, borderRadius: 8, border: '1px solid oklch(0.18 0.005 250)' }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'oklch(0.50 0.01 250)' }}>FREE SANDBOX</span>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'white', marginTop: 4 }}>5 runs / day</div>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'oklch(0.50 0.01 250)' }}>GUEST SANDBOX</span>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: 'white', marginTop: 4 }}>3 runs / day</div>
               </div>
               <div style={{ background: 'oklch(0.11 0.005 250)', padding: 12, borderRadius: 8, border: '1px solid oklch(0.18 0.005 250)' }}>
-                <span style={{ fontSize: 10, fontWeight: 700, color: 'oklch(0.78 0.16 145)' }}>DEVELOPER PRO</span>
-                <div style={{ fontSize: 15, fontWeight: 700, color: 'white', marginTop: 4 }}>1,000 runs / day</div>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'oklch(0.68 0.18 265)' }}>FREE ACCOUNT</span>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: 'white', marginTop: 4 }}>10 runs / day</div>
+              </div>
+              <div style={{ background: 'oklch(0.11 0.005 250)', padding: 12, borderRadius: 8, border: '1px solid oklch(0.18 0.005 250)' }}>
+                <span style={{ fontSize: 9, fontWeight: 700, color: 'oklch(0.78 0.16 145)' }}>DEVELOPER PRO</span>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: 'white', marginTop: 4 }}>1,000 runs / day</div>
               </div>
             </div>
           </div>

@@ -236,12 +236,23 @@ export async function POST(req: Request) {
     const isAdmin = profile.tier === 'admin';
     const isPaidOrAdmin = isPro || isApi || isAdmin;
 
-    // Sandbox Free Tier Limit: 5 requests/day
-    if (!isPaidOrAdmin && currentCount >= 5) {
+    // Unsigned Guest Sandbox Limit: 3 requests/day
+    if (isSandboxGuest && currentCount >= 3) {
       return NextResponse.json(
         { 
           status: 'error', 
-          message: `Sandbox API daily limit exhausted (${currentCount}/5 requests today). Please upgrade to the Pro Plan or Developer Plan for higher programmatic capacity.` 
+          message: `Unsigned Guest Sandbox daily limit exhausted (${currentCount}/3 requests today). Please sign up for a free account to increase your limit to 10 runs/day, or subscribe to a Paid tier.` 
+        },
+        { status: 429 }
+      );
+    }
+
+    // Signed-in Free Account Sandbox Limit: 10 requests/day
+    if (!isSandboxGuest && !isPaidOrAdmin && currentCount >= 10) {
+      return NextResponse.json(
+        { 
+          status: 'error', 
+          message: `Free Account daily API limit exhausted (${currentCount}/10 requests today). Please upgrade to a Pro or Developer Plan to unlock higher production volumes.` 
         },
         { status: 429 }
       );

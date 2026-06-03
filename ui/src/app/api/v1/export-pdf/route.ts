@@ -87,7 +87,8 @@ export async function POST(req: Request) {
     const isApi = profile && profile.tier === 'api';
     const isAdmin = profile && profile.tier === 'admin';
     const isPaidOrAdmin = isPro || isApi || isAdmin;
-    const rateLimitMax = isAdmin ? 999999 : (isApi ? 1000 : (isPro ? 100 : 5));
+    const isSandboxGuest = !profile;
+    const rateLimitMax = isAdmin ? 999999 : (isApi ? 1000 : (isPro ? 100 : (isSandboxGuest ? 3 : 10)));
 
     // 5. Enforce Daily Usage Quota Limits to prevent API rate limit abuse
     const today = new Date();
@@ -116,10 +117,14 @@ export async function POST(req: Request) {
     }
 
     if (dailyCount >= rateLimitMax && !isAdmin) {
+      const quotaName = isSandboxGuest ? 'Unsigned Guest Sandbox' : 'Free Account Sandbox';
+      const upgradeSuggestion = isSandboxGuest 
+        ? 'Please sign up for a free account to increase your limit to 10 compiles/day, or subscribe to a Paid tier.'
+        : 'Please upgrade to a Pro or Developer Plan to unlock higher programmatic volumes.';
       return NextResponse.json(
         { 
           status: 'error', 
-          message: `Cloud PDF generation limit reached (${dailyCount}/${rateLimitMax} compiles today). Please upgrade to the Pro Plan or Developer Plan for higher capacity.` 
+          message: `API daily limit exhausted for ${quotaName} (${dailyCount}/${rateLimitMax} compiles today). ${upgradeSuggestion}` 
         },
         { status: 429 }
       );

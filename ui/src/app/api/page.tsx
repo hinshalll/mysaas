@@ -293,9 +293,16 @@ export default function ApiHubPage() {
                 {[
                   {
                     name: 'Guest Sandbox',
-                    runs: '5 requests / day',
-                    key: 'No key (public sandbox endpoint)',
-                    limit: '5 requests / minute',
+                    runs: '3 requests / day',
+                    key: 'No key (public sandbox key)',
+                    limit: '3 requests / minute',
+                    price: 'Free'
+                  },
+                  {
+                    name: 'Free Account',
+                    runs: '10 requests / day',
+                    key: 'Yes (Unique Sandbox API Key)',
+                    limit: '10 requests / minute',
                     price: 'Free'
                   },
                   {
@@ -313,7 +320,7 @@ export default function ApiHubPage() {
                     price: '$29.00 / mo'
                   }
                 ].map((tier, idx) => (
-                  <tr key={idx} style={{ borderBottom: idx === 2 ? 'none' : '1px solid oklch(0.20 0.008 250)' }}>
+                  <tr key={idx} style={{ borderBottom: idx === 3 ? 'none' : '1px solid oklch(0.20 0.008 250)' }}>
                     <td style={{ padding: '16px 24px', color: 'white', fontWeight: 600 }}>{tier.name}</td>
                     <td style={{ padding: '16px 24px', color: 'oklch(0.70 0.01 250)' }} className="mono">{tier.runs}</td>
                     <td style={{ padding: '16px 24px', color: 'oklch(0.70 0.01 250)' }}>{tier.key}</td>
