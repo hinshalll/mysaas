@@ -17,6 +17,84 @@ interface Parameter {
   desc: string;
 }
 
+const capabilitiesMap: Record<string, Array<{ title: string; desc: string }>> = {
+  'universal-ai-formatter': [
+    { title: 'Context-Aware Structure', desc: 'Preserves original intent while structuring headers, tables, and lists.' },
+    { title: 'Local WASM Fallback', desc: 'Optional local compiler compiles document themes with sub-millisecond execution.' },
+    { title: 'Metadata Extraction', desc: 'Extracts formatting markers, word counts, and language statistics dynamically.' },
+    { title: 'Automatic Failover', desc: 'Automatic routing to fallback LLM nodes if primary nodes experience high latency.' }
+  ],
+  'json-formatter-validator': [
+    { title: 'Deep Syntax Auto-Repair', desc: 'Fixes missing quotes, trailing commas, unmatched brackets, and invalid comments.' },
+    { title: 'Zero Cold Starts', desc: 'Runs in native runtime environment for single-digit millisecond response times.' },
+    { title: 'Strict Schema Check', desc: 'Validates structure compliance against standard JSON specifications.' },
+    { title: 'High-Speed Minification', desc: 'Compresses whitespaces and newlines for high-throughput network transport.' }
+  ],
+  'heic-to-jpg-converter': [
+    { title: 'EXIF Preservation', desc: 'Keeps camera metadata, geolocation coordinates, and timestamps fully intact.' },
+    { title: 'Client-Side WebAssembly', desc: 'Fallback local decoder parses HEIC structure inside the browser canvas sandbox.' },
+    { title: 'Redundant Server Nodes', desc: 'Dynamic scaling workers scale to process batch image inputs with zero queues.' },
+    { title: 'Rate-Control Optimization', desc: 'Intelligent compression maps optimal file weights to desired quality percentages.' }
+  ],
+  'html-to-print-ready-pdf': [
+    { title: 'Vector PDF Rendering', desc: 'Compiles text, CSS layout structures, and system font families into clean vector paths.' },
+    { title: 'Print Layout Bleeds', desc: 'Full support for custom margins, standard A4 sizes, and print page break rules.' },
+    { title: 'Dynamic Header & Footer', desc: 'Custom running page headers and footers with auto-calculated page indices.' },
+    { title: 'HF Sandbox Pool Pings', desc: 'Automatic failover monitoring redirects jobs to active Hugging Face spaces.' }
+  ]
+};
+
+function highlightJson(json: any): React.ReactNode {
+  if (typeof json !== 'string') {
+    json = JSON.stringify(json, null, 2);
+  }
+  
+  const parts: React.ReactNode[] = [];
+  let lastIndex = 0;
+  
+  const regex = /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+-]?\d+)?)/g;
+  
+  let match;
+  let keyCount = 0;
+  while ((match = regex.exec(json)) !== null) {
+    const matchStr = match[0];
+    const index = match.index;
+    
+    if (index > lastIndex) {
+      parts.push(json.substring(lastIndex, index));
+    }
+    
+    let style: React.CSSProperties = {};
+    if (/^"/.test(matchStr)) {
+      if (/:$/.test(matchStr)) {
+        style = { color: 'oklch(0.70 0.15 195)' }; // Beautiful cyan
+      } else {
+        style = { color: 'oklch(0.78 0.16 145)' }; // Green
+      }
+    } else if (/true|false/.test(matchStr)) {
+      style = { color: 'oklch(0.75 0.14 75)' }; // Orange
+    } else if (/null/.test(matchStr)) {
+      style = { color: 'oklch(0.60 0.12 15)' }; // Muted red
+    } else {
+      style = { color: 'oklch(0.72 0.18 25)' }; // Amber
+    }
+    
+    parts.push(
+      <span key={keyCount++} style={style}>
+        {matchStr}
+      </span>
+    );
+    
+    lastIndex = regex.lastIndex;
+  }
+  
+  if (lastIndex < json.length) {
+    parts.push(json.substring(lastIndex));
+  }
+  
+  return <>{parts}</>;
+}
+
 export default function ApiDetailPage() {
   const params = useParams();
   const slug = params?.slug as string;
@@ -24,6 +102,8 @@ export default function ApiDetailPage() {
 
   const [activeLang, setActiveLang] = useState<'curl' | 'js' | 'python'>('curl');
   const [copiedCode, setCopiedCode] = useState(false);
+  const [activeConsoleTab, setActiveConsoleTab] = useState<'body' | 'headers'>('body');
+  const [copiedResponse, setCopiedResponse] = useState(false);
   
   // Formatter sandbox states
   const [formatterText, setFormatterText] = useState('Clean this up and present it as a structured review.');
@@ -68,6 +148,7 @@ export default function ApiDetailPage() {
     curlCode: string;
     jsCode: string;
     pythonCode: string;
+    color: string;
   }> = {
     'universal-ai-formatter': {
       title: 'Universal AI Document Formatter API',
@@ -114,7 +195,8 @@ payload = {
 }
 
 response = requests.post(url, json=payload, headers=headers)
-print(response.json())`
+print(response.json())`,
+      color: 'oklch(0.68 0.18 265)'
     },
     'heic-to-jpg-converter': {
       title: 'HEIC Image Transcoder API',
@@ -169,7 +251,8 @@ data = {
 
 response = requests.post(url, files=files, data=data, headers=headers)
 with open("converted.jpg", "wb") as f:
-    f.write(response.content)`
+    f.write(response.content)`,
+      color: 'oklch(0.72 0.18 25)'
     },
     'html-to-print-ready-pdf': {
       title: 'HTML & Markdown to PDF API',
@@ -221,7 +304,8 @@ payload = {
 
 response = requests.post(url, json=payload, headers=headers)
 with open("document.pdf", "wb") as f:
-    f.write(response.content)`
+    f.write(response.content)`,
+      color: 'oklch(0.65 0.12 145)'
     },
     'json-formatter-validator': {
       title: 'JSON Formatter & Validator API',
@@ -269,7 +353,8 @@ payload = {
 }
 
 response = requests.post(url, json=payload, headers=headers)
-print(response.json())`
+print(response.json())`,
+      color: 'oklch(0.70 0.15 195)'
     }
   };
 
@@ -293,6 +378,14 @@ print(response.json())`
     navigator.clipboard.writeText(code);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
+  };
+
+  const handleCopyResponse = () => {
+    if (resBody) {
+      navigator.clipboard.writeText(JSON.stringify(resBody, null, 2));
+      setCopiedResponse(true);
+      setTimeout(() => setCopiedResponse(false), 2000);
+    }
   };
 
   const executeSandbox = async () => {
@@ -455,6 +548,54 @@ print(response.json())`
             <p style={{ fontSize: 15, color: 'oklch(0.70 0.01 250)', lineHeight: 1.6, margin: 0 }}>
               {api.desc}
             </p>
+
+            {/* Premium CTA Row */}
+            <div style={{ display: 'flex', gap: 14, marginTop: 24, flexWrap: 'wrap' }}>
+              <Link href="/account" style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'black',
+                background: 'linear-gradient(180deg, oklch(0.78 0.16 145), oklch(0.68 0.18 145))',
+                padding: '10px 20px',
+                borderRadius: 8,
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px oklch(0.78 0.16 145 / 0.25)',
+                transition: 'all 0.15s ease-in-out',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                Try it Free <ArrowRight size={13} />
+              </Link>
+              <a href="/api/openapi.json" download="openapi.json" style={{
+                fontSize: 13,
+                fontWeight: 600,
+                color: 'white',
+                background: 'oklch(0.18 0.01 250)',
+                border: '1px solid oklch(0.28 0.01 250)',
+                padding: '10px 20px',
+                borderRadius: 8,
+                textDecoration: 'none',
+                transition: 'all 0.15s ease-in-out',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.background = 'oklch(0.24 0.01 250)';
+                e.currentTarget.style.borderColor = api.color || 'oklch(0.68 0.18 265)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.background = 'oklch(0.18 0.01 250)';
+                e.currentTarget.style.borderColor = 'oklch(0.28 0.01 250)';
+              }}
+              >
+                OpenAPI Spec <FileDown size={13} />
+              </a>
+            </div>
           </div>
 
           {/* Endpoint URL Card */}
@@ -469,7 +610,7 @@ print(response.json())`
           }}>
             <span style={{ fontSize: 10, fontWeight: 700, color: 'oklch(0.50 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>HTTP REQUEST ROUTE</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color: 'white', background: 'oklch(0.68 0.18 265)', padding: '3px 8px', borderRadius: 4 }}>
+              <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color: 'white', background: api.color || 'oklch(0.68 0.18 265)', padding: '3px 8px', borderRadius: 4 }}>
                 {api.method}
               </span>
               <span style={{ fontSize: 13.5, fontFamily: 'monospace', color: 'white', fontWeight: 500 }}>
@@ -478,9 +619,66 @@ print(response.json())`
             </div>
           </div>
 
+          {/* SDK Badges Section */}
+          <div>
+            <h3 style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Available Developer SDKs</h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
+              gap: 12
+            }}>
+              {[
+                { name: 'Node.js', lang: 'js' },
+                { name: 'Python', lang: 'python' },
+                { name: 'Go', lang: 'go' },
+                { name: 'Rust', lang: 'rust' },
+                { name: 'C#', lang: 'csharp' },
+                { name: 'Java', lang: 'java' },
+                { name: 'PHP', lang: 'php' },
+                { name: 'Ruby', lang: 'ruby' }
+              ].map(sdk => (
+                <div 
+                  key={sdk.name}
+                  style={{
+                    background: 'oklch(0.14 0.006 250 / 0.6)',
+                    backdropFilter: 'blur(8px)',
+                    border: '1px solid oklch(0.20 0.008 250)',
+                    borderRadius: 8,
+                    padding: '8px 12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = api.color || 'oklch(0.68 0.18 265)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.background = 'oklch(0.16 0.006 250 / 0.8)';
+                    e.currentTarget.style.boxShadow = `0 4px 12px ${api.color || 'oklch(0.68 0.18 265)'}20`;
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'oklch(0.20 0.008 250)';
+                    e.currentTarget.style.transform = 'none';
+                    e.currentTarget.style.background = 'oklch(0.14 0.006 250 / 0.6)';
+                    e.currentTarget.style.boxShadow = 'none';
+                  }}
+                >
+                  <span style={{ fontSize: 11, fontWeight: 700, color: 'white', fontFamily: 'monospace' }}>
+                    {sdk.name}
+                  </span>
+                  <span style={{ fontSize: 9, color: 'oklch(0.50 0.01 250)', border: '1px solid oklch(0.20 0.008 250)', padding: '1px 4px', borderRadius: 4, textTransform: 'uppercase', fontFamily: 'monospace' }}>
+                    v1.0
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* Header Requirements */}
           <div>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Header Parameters</h3>
+            <h3 style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Header Parameters</h3>
             <div style={{ border: '1px solid oklch(0.20 0.008 250)', borderRadius: 10, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'left' }}>
                 <thead>
@@ -492,7 +690,7 @@ print(response.json())`
                 <tbody>
                   {Object.entries(api.headers).map(([key, val]) => (
                     <tr key={key} style={{ borderBottom: '1px solid oklch(0.16 0.006 250)' }}>
-                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', color: 'oklch(0.68 0.18 265)' }}>{key}</td>
+                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', color: api.color || 'oklch(0.68 0.18 265)' }}>{key}</td>
                       <td style={{ padding: '10px 14px', fontFamily: 'monospace', color: 'oklch(0.70 0.01 250)' }}>{val}</td>
                     </tr>
                   ))}
@@ -503,7 +701,7 @@ print(response.json())`
 
           {/* Payload schema reference */}
           <div>
-            <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Payload Fields</h3>
+            <h3 style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Payload Fields</h3>
             <div style={{ border: '1px solid oklch(0.20 0.008 250)', borderRadius: 10, overflow: 'hidden' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'left' }}>
                 <thead>
@@ -527,6 +725,54 @@ print(response.json())`
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* Core Engine Capabilities Checklist Matrix */}
+          <div>
+            <h3 style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: '0 0 16px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Core Engine Capabilities</h3>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+              gap: 16
+            }}>
+              {(capabilitiesMap[slug] || []).map((cap, i) => (
+                <div 
+                  key={i} 
+                  style={{
+                    background: 'oklch(0.14 0.006 250 / 0.4)',
+                    border: '1px solid oklch(0.20 0.008 250)',
+                    borderRadius: 12,
+                    padding: 16,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                    transition: 'all 0.2s ease-in-out',
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.borderColor = api.color || 'oklch(0.68 0.18 265)';
+                    e.currentTarget.style.background = 'oklch(0.15 0.006 250 / 0.6)';
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.borderColor = 'oklch(0.20 0.008 250)';
+                    e.currentTarget.style.background = 'oklch(0.14 0.006 250 / 0.4)';
+                  }}
+                >
+                  <div style={{
+                    width: 32, height: 32, borderRadius: 8,
+                    background: `${api.color || 'oklch(0.68 0.18 265)'}1c`,
+                    border: `1px solid ${api.color || 'oklch(0.68 0.18 265)'}4d`,
+                    color: api.color || 'oklch(0.68 0.18 265)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}>
+                    <Check size={16} />
+                  </div>
+                  <div>
+                    <h5 style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: 'white' }}>{cap.title}</h5>
+                    <p style={{ margin: 0, fontSize: 11.5, color: 'oklch(0.70 0.01 250)', lineHeight: 1.4 }}>{cap.desc}</p>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -808,80 +1054,245 @@ print(response.json())`
 
           {/* Sandbox Response Console Terminal */}
           <div style={{
-            background: '#0e0f12',
-            border: '1px solid #1c1d22',
+            background: '#0a0b0d',
+            border: '1px solid #1a1c23',
             borderRadius: 14,
-            padding: 20,
-            display: 'flex', flexDirection: 'column', gap: 14,
-            minHeight: 180,
+            overflow: 'hidden',
+            boxShadow: '0 12px 36px rgba(0,0,0,0.5)',
+            display: 'flex', flexDirection: 'column',
+            minHeight: 340,
           }}>
-            {/* Headers of response */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #1c1d22', paddingBottom: 10 }}>
-              <span style={{ fontSize: 10.5, fontWeight: 700, color: '#7e8394', letterSpacing: '0.04em' }} className="mono">RESPONSE PAYLOAD</span>
+            {/* VS Code Window Title Bar */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: '#0f1115',
+              padding: '10px 16px',
+              borderBottom: '1px solid #1a1c23',
+              userSelect: 'none'
+            }}>
+              {/* Colored Circles */}
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff5f56' }} />
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ffbd2e' }} />
+                <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#27c93f' }} />
+              </div>
               
-              {resStatus !== null && (
-                <div style={{ display: 'flex', gap: 12, fontSize: 11, fontFamily: 'monospace' }}>
-                  <span style={{ color: resStatus < 300 ? 'oklch(0.78 0.16 145)' : 'oklch(0.70 0.12 15)' }}>
-                    STATUS: {resStatus}
+              {/* Window title tab */}
+              <div style={{
+                fontSize: 11,
+                fontFamily: 'monospace',
+                color: '#7e8394',
+                background: '#0a0b0d',
+                padding: '4px 12px',
+                borderRadius: '6px 6px 0 0',
+                border: '1px solid #1a1c23',
+                borderBottom: 'none',
+                marginBottom: -11,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                <Code size={11} style={{ color: api.color || 'oklch(0.68 0.18 265)' }} />
+                <span>sandbox-response.json</span>
+              </div>
+
+              {/* Utility actions */}
+              <div style={{ display: 'flex', gap: 10 }}>
+                {resBody && (
+                  <button
+                    onClick={handleCopyResponse}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: copiedResponse ? 'oklch(0.78 0.16 145)' : '#7e8394',
+                      cursor: 'pointer',
+                      fontSize: 11,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4
+                    }}
+                  >
+                    {copiedResponse ? <CheckCircle2 size={12} /> : <Copy size={12} />}
+                    <span>{copiedResponse ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            {/* Response status bar */}
+            {resStatus !== null && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 16px',
+                background: 'rgba(15, 17, 21, 0.4)',
+                borderBottom: '1px solid #16181f',
+                fontSize: 11,
+                fontFamily: 'monospace',
+              }}>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                  {/* Status Indicator */}
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    fontWeight: 700,
+                    color: resStatus < 300 ? 'oklch(0.78 0.16 145)' : 'oklch(0.70 0.12 15)',
+                    background: resStatus < 300 ? 'rgba(39, 201, 63, 0.1)' : 'rgba(255, 95, 86, 0.1)',
+                    padding: '2px 8px',
+                    borderRadius: 4
+                  }}>
+                    <span style={{
+                      width: 5, height: 5, borderRadius: '50%',
+                      background: resStatus < 300 ? 'oklch(0.78 0.16 145)' : 'oklch(0.70 0.12 15)',
+                      boxShadow: resStatus < 300 ? '0 0 8px oklch(0.78 0.16 145)' : '0 0 8px oklch(0.70 0.12 15)'
+                    }} />
+                    {resStatus} {resStatus < 300 ? 'OK' : 'Error'}
                   </span>
+
                   {resTime !== null && (
-                    <span style={{ color: '#7e8394' }}>
-                      TIME: {resTime}ms
+                    <span style={{ color: 'oklch(0.70 0.01 250)' }}>
+                      Latency: <strong style={{ color: 'white' }}>{resTime}ms</strong>
                     </span>
                   )}
                 </div>
-              )}
-            </div>
+
+                {/* Console tabs: Body vs Headers */}
+                <div style={{ display: 'flex', gap: 4 }}>
+                  <button
+                    onClick={() => setActiveConsoleTab('body')}
+                    style={{
+                      background: activeConsoleTab === 'body' ? '#1c1d22' : 'transparent',
+                      border: 'none',
+                      color: activeConsoleTab === 'body' ? 'white' : '#7e8394',
+                      padding: '2px 8px',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                      fontSize: 10.5,
+                      fontWeight: 600
+                    }}
+                  >
+                    Response
+                  </button>
+                  <button
+                    onClick={() => setActiveConsoleTab('headers')}
+                    style={{
+                      background: activeConsoleTab === 'headers' ? '#1c1d22' : 'transparent',
+                      border: 'none',
+                      color: activeConsoleTab === 'headers' ? 'white' : '#7e8394',
+                      padding: '2px 8px',
+                      borderRadius: 4,
+                      cursor: 'pointer',
+                      fontSize: 10.5,
+                      fontWeight: 600
+                    }}
+                  >
+                    Headers
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Sandbox Response Content body */}
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ flex: 1, padding: 16, display: 'flex', flexDirection: 'column', background: '#07080a', overflowY: 'auto' }}>
               {loading ? (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#6366f1', margin: 'auto' }}>
-                  <Loader size={16} className="spin" />
-                  <span style={{ fontSize: 12.5, fontFamily: 'monospace' }}>Awaiting API stream response...</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, margin: 'auto', color: api.color || 'oklch(0.68 0.18 265)' }}>
+                  <Loader size={24} className="spin" />
+                  <span style={{ fontSize: 12.5, fontFamily: 'monospace', letterSpacing: '0.02em' }}>Executing API Request...</span>
                 </div>
               ) : resBody ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14, width: '100%' }}>
-                  <pre style={{
-                    margin: 0, overflowY: 'auto', maxHeight: 180,
-                    fontFamily: 'monospace', fontSize: 11.5, color: '#a5b4fc', lineHeight: 1.5
-                  }}>
-                    {JSON.stringify(resBody, null, 2)}
-                  </pre>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }}>
                   
-                  {/* Converted Image preview */}
-                  {resImgUrl && (
-                    <div style={{ borderTop: '1px solid #1c1d22', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                      <span style={{ fontSize: 10.5, color: 'oklch(0.72 0.18 25)', fontWeight: 600 }} className="mono">Generated Image Output:</span>
-                      <img src={resImgUrl} alt="Converted sandbox output" style={{ maxWidth: '100%', maxHeight: 120, objectFit: 'contain', borderRadius: 6, border: '1px solid #1c1d22' }} />
-                      <a href={resImgUrl} download={`sandbox_result.${heicFormat}`} style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5,
-                        color: 'white', textDecoration: 'none', background: 'oklch(0.18 0.01 25 / 0.5)',
-                        border: '1px solid oklch(0.72 0.18 25 / 0.2)', padding: '5px 12px', borderRadius: 6,
-                        alignSelf: 'flex-start'
+                  {activeConsoleTab === 'body' ? (
+                    <>
+                      <pre style={{
+                        margin: 0,
+                        fontFamily: 'monospace',
+                        fontSize: 11.5,
+                        lineHeight: 1.5,
+                        overflowX: 'auto',
+                        whiteSpace: 'pre-wrap',
+                        wordBreak: 'break-all'
                       }}>
-                        <FileDown size={11} /> Download Result Image
-                      </a>
-                    </div>
-                  )}
+                        <code>
+                          {highlightJson(resBody)}
+                        </code>
+                      </pre>
 
-                  {/* Converted PDF preview/download link */}
-                  {resPdfUrl && (
-                    <div style={{ borderTop: '1px solid #1c1d22', paddingTop: 14 }}>
-                      <a href={resPdfUrl} download="sandbox_document.pdf" style={{
-                        display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5,
-                        color: 'white', textDecoration: 'none', background: 'oklch(0.68 0.18 265 / 0.2)',
-                        border: '1px solid oklch(0.68 0.18 265 / 0.2)', padding: '6px 14px', borderRadius: 6
-                      }}>
-                        <FileDown size={11} /> Download Generated PDF Document
-                      </a>
-                    </div>
+                      {/* Converted Image preview */}
+                      {resImgUrl && (
+                        <div style={{ borderTop: '1px solid #1a1c23', paddingTop: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+                          <span style={{ fontSize: 10.5, color: api.color || 'oklch(0.72 0.18 25)', fontWeight: 600, fontFamily: 'monospace' }}>Generated Image Output:</span>
+                          <img src={resImgUrl} alt="Converted sandbox output" style={{ maxWidth: '100%', maxHeight: 160, objectFit: 'contain', borderRadius: 6, border: '1px solid #1a1c23' }} />
+                          <a href={resImgUrl} download={`sandbox_result.${heicFormat}`} style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5,
+                            color: 'white', textDecoration: 'none', background: 'oklch(0.18 0.01 25 / 0.5)',
+                            border: `1px solid ${api.color || 'oklch(0.72 0.18 25)'}33`, padding: '5px 12px', borderRadius: 6,
+                            alignSelf: 'flex-start', transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = api.color || 'oklch(0.72 0.18 25)'}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = `${api.color || 'oklch(0.72 0.18 25)'}33`}
+                          >
+                            <FileDown size={11} /> Download Result Image
+                          </a>
+                        </div>
+                      )}
+
+                      {/* Converted PDF preview/download link */}
+                      {resPdfUrl && (
+                        <div style={{ borderTop: '1px solid #1a1c23', paddingTop: 14 }}>
+                          <a href={resPdfUrl} download="sandbox_document.pdf" style={{
+                            display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5,
+                            color: 'white', textDecoration: 'none', background: 'oklch(0.18 0.01 25 / 0.5)',
+                            border: `1px solid ${api.color || 'oklch(0.68 0.18 265)'}33`, padding: '6px 14px', borderRadius: 6,
+                            transition: 'all 0.2s'
+                          }}
+                          onMouseEnter={e => e.currentTarget.style.borderColor = api.color || 'oklch(0.68 0.18 265)'}
+                          onMouseLeave={e => e.currentTarget.style.borderColor = `${api.color || 'oklch(0.68 0.18 265)'}33`}
+                          >
+                            <FileDown size={11} /> Download Generated PDF Document
+                          </a>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <pre style={{
+                      margin: 0,
+                      fontFamily: 'monospace',
+                      fontSize: 11.5,
+                      lineHeight: 1.5,
+                      overflowX: 'auto',
+                      whiteSpace: 'pre-wrap'
+                    }}>
+                      <code>
+                        {highlightJson({
+                          'content-type': 'application/json; charset=utf-8',
+                          'cache-control': 'no-store, max-age=0',
+                          'x-powered-by': 'Next.js',
+                          'x-ratelimit-limit': slug === 'json-formatter-validator' || slug === 'universal-ai-formatter' ? '10' : '3',
+                          'x-ratelimit-remaining': '9',
+                          'x-ratelimit-reset': '60',
+                          'server': 'Vercel/Edge',
+                          'access-control-allow-origin': '*',
+                          'x-response-time': resTime ? `${resTime}ms` : '0ms'
+                        })}
+                      </code>
+                    </pre>
                   )}
+                  
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: '#4b5563', margin: 'auto', textAlign: 'center' }}>
-                  <Terminal size={22} style={{ opacity: 0.4 }} />
-                  <span style={{ fontSize: 12, maxWidth: 220 }}>Terminal Idle. Run the sandbox query above to print response details.</span>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, height: '100%', margin: '40px auto', color: '#4b5563', textAlign: 'center' }}>
+                  <Terminal size={32} style={{ color: `${api.color || 'oklch(0.68 0.18 265)'}50` }} />
+                  <span style={{ fontSize: 13, fontFamily: 'monospace', color: 'oklch(0.50 0.01 250)' }}>
+                    $ bin/sandbox --ping --endpoint={api.endpoint}
+                  </span>
+                  <span style={{ fontSize: 11.5, maxWidth: 300, color: 'oklch(0.50 0.01 250 / 0.8)' }}>
+                    Execute the sandbox query above to initiate a sandbox stream and capture the response console details.
+                  </span>
                 </div>
               )}
             </div>

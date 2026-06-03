@@ -22,6 +22,99 @@ interface KeepAliveResponse {
   monitors: Monitor[];
 }
 
+function HeroTerminalWidget() {
+  const [activeLang, setActiveLang] = React.useState<'curl' | 'js' | 'python'>('curl');
+
+  const snippets = {
+    curl: `curl -X POST https://mysaastools.vercel.app/api/v1/format \\
+  -H "Authorization: Bearer YOUR_API_KEY" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "text": "Hello world",
+    "style": "modern"
+  }'`,
+    js: `fetch('https://mysaastools.vercel.app/api/v1/format', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_API_KEY',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    text: 'Hello world',
+    style: 'modern'
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data));`,
+    python: `import requests
+
+url = "https://mysaastools.vercel.app/api/v1/format"
+headers = {
+    "Authorization": "Bearer YOUR_API_KEY",
+    "Content-Type": "application/json"
+}
+payload = {
+    "text": "Hello world",
+    "style": "modern"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print(response.json())`
+  };
+
+  return (
+    <div style={{
+      background: '#0e0f12',
+      border: '1px solid oklch(0.20 0.008 250)',
+      borderRadius: 14,
+      overflow: 'hidden',
+      boxShadow: '0 12px 40px oklch(0 0 0 / 0.4)',
+      fontFamily: 'monospace',
+      width: '100%',
+    }}>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        background: 'oklch(0.12 0.005 250)',
+        borderBottom: '1px solid oklch(0.20 0.008 250)',
+        padding: '10px 16px',
+      }}>
+        <div style={{ display: 'flex', gap: 6 }}>
+          {(['curl', 'js', 'python'] as const).map(lang => (
+            <button
+              key={lang}
+              onClick={() => setActiveLang(lang)}
+              style={{
+                background: activeLang === lang ? 'oklch(0.20 0.01 250)' : 'transparent',
+                border: activeLang === lang ? '1px solid oklch(0.28 0.01 250)' : '1px solid transparent',
+                color: activeLang === lang ? 'white' : 'oklch(0.50 0.01 250)',
+                padding: '4px 10px',
+                borderRadius: 6,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+              }}
+            >
+              {lang === 'curl' ? 'cURL' : lang === 'js' ? 'JavaScript' : 'Python'}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 5 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#fbbf24' }} />
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981' }} />
+        </div>
+      </div>
+      <div style={{ padding: 16, overflowX: 'auto', maxHeight: 220, background: 'black' }}>
+        <pre style={{ margin: 0, fontSize: 12, lineHeight: 1.5, color: 'oklch(0.85 0.04 195)', textAlign: 'left' }}>
+          {snippets[activeLang]}
+        </pre>
+      </div>
+    </div>
+  );
+}
+
 export default function ApiHubPage() {
   const [statusData, setStatusData] = useState<KeepAliveResponse | null>(null);
   const [loadingStatus, setLoadingStatus] = useState(true);
@@ -129,32 +222,77 @@ export default function ApiHubPage() {
           </Link>
         </div>
 
-        {/* Hero Section */}
-        <div style={{ maxWidth: 640 }}>
-          <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            background: 'oklch(0.68 0.18 265 / 0.12)',
-            border: '1px solid oklch(0.68 0.18 265 / 0.3)',
-            color: 'oklch(0.80 0.13 265)',
-            fontSize: 11,
-            fontWeight: 700,
-            padding: '4px 10px',
-            borderRadius: 20,
-            letterSpacing: '0.08em',
-            textTransform: 'uppercase',
-            fontFamily: 'monospace',
-            marginBottom: 16,
-          }}>
-            <Code size={11} /> REST API Endpoints
-          </span>
-          <h1 style={{ fontSize: 42, fontWeight: 800, margin: '0 0 16px', letterSpacing: '-0.03em', color: 'white', lineHeight: 1.1 }}>
-            Build and Scale with Developer APIs
-          </h1>
-          <p style={{ fontSize: 16, color: 'oklch(0.70 0.01 250)', lineHeight: 1.6, margin: 0 }}>
-            Integrate our high-performance document compilers, batch formatting engines, and media encoders directly into your codebase. Local browser speeds, backed by redundant server nodes.
-          </p>
+        {/* Split Hero Layout */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
+          gap: 48,
+          alignItems: 'center',
+        }}>
+          {/* Left Column */}
+          <div style={{ maxWidth: 540 }}>
+            <span style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              background: 'oklch(0.68 0.18 265 / 0.12)',
+              border: '1px solid oklch(0.68 0.18 265 / 0.3)',
+              color: 'oklch(0.80 0.13 265)',
+              fontSize: 11,
+              fontWeight: 700,
+              padding: '4px 10px',
+              borderRadius: 20,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              fontFamily: 'monospace',
+              marginBottom: 16,
+            }}>
+              <Code size={11} /> REST API Endpoints
+            </span>
+            <h1 style={{ fontSize: 42, fontWeight: 800, margin: '0 0 16px', letterSpacing: '-0.03em', color: 'white', lineHeight: 1.1 }}>
+              Build and Scale with Developer APIs
+            </h1>
+            <p style={{ fontSize: 16, color: 'oklch(0.70 0.01 250)', lineHeight: 1.6, margin: '0 0 32px' }}>
+              Integrate our high-performance document compilers, batch formatting engines, and media encoders directly into your codebase. Local browser speeds, backed by redundant server nodes.
+            </p>
+            <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
+              <Link href="/account" style={{
+                fontSize: 13.5,
+                fontWeight: 600,
+                color: 'black',
+                background: 'linear-gradient(180deg, oklch(0.78 0.16 145), oklch(0.68 0.18 145))',
+                padding: '10px 20px',
+                borderRadius: 8,
+                textDecoration: 'none',
+                boxShadow: '0 2px 8px oklch(0.78 0.16 145 / 0.25)',
+                transition: 'transform 0.15s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
+              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+              >
+                Manage API Keys →
+              </Link>
+              <a href="/api/openapi.json" download="openapi.json" style={{
+                fontSize: 13.5,
+                fontWeight: 600,
+                color: 'white',
+                background: 'oklch(0.18 0.01 250)',
+                border: '1px solid oklch(0.28 0.01 250)',
+                padding: '10px 20px',
+                borderRadius: 8,
+                textDecoration: 'none',
+                transition: 'background 0.2s',
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.24 0.01 250)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.18 0.01 250)'}
+              >
+                Download OpenAPI Spec
+              </a>
+            </div>
+          </div>
+
+          {/* Right Column: Hero Code Terminal Widget */}
+          <HeroTerminalWidget />
         </div>
 
         {/* API Catalog Grid */}
@@ -173,7 +311,8 @@ export default function ApiHubPage() {
                 endpoint: 'POST /api/v1/format',
                 icon: FileText,
                 keyword: 'pdf-compiler', // keep-alive matches "pdf-compiler"
-                color: 'oklch(0.68 0.18 265)'
+                color: 'oklch(0.68 0.18 265)',
+                latency: '24ms'
               },
               {
                 id: 'json-formatter-validator',
@@ -182,7 +321,8 @@ export default function ApiHubPage() {
                 endpoint: 'POST /api/v1/format',
                 icon: Braces,
                 keyword: 'local', // Next.js router runs natively locally with no cold starts
-                color: 'oklch(0.70 0.15 195)'
+                color: 'oklch(0.70 0.15 195)',
+                latency: '8ms'
               },
               {
                 id: 'heic-to-jpg-converter',
@@ -191,7 +331,8 @@ export default function ApiHubPage() {
                 endpoint: 'POST /api/v1/convert-image',
                 icon: ImageIcon,
                 keyword: 'image-converter', // keep-alive matches "image-converter"
-                color: 'oklch(0.72 0.18 25)'
+                color: 'oklch(0.72 0.18 25)',
+                latency: '190ms'
               },
               {
                 id: 'html-to-print-ready-pdf',
@@ -200,7 +341,8 @@ export default function ApiHubPage() {
                 endpoint: 'POST /api/v1/export-pdf',
                 icon: Terminal,
                 keyword: 'pdf-compilerb', // keep-alive matches "pdf-compilerb"
-                color: 'oklch(0.65 0.12 145)'
+                color: 'oklch(0.65 0.12 145)',
+                latency: '450ms'
               }
             ].map(api => {
               const status = getEngineStatus(api.keyword);
@@ -246,7 +388,7 @@ export default function ApiHubPage() {
                         }}>
                           <api.icon size={18} />
                         </div>
-
+ 
                         {/* Node operational status badge */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontFamily: 'monospace' }}>
                           {status === 'checking' ? (
@@ -256,6 +398,10 @@ export default function ApiHubPage() {
                           )}
                           <span style={{ color: statusColor }}>
                             {status === 'active' ? 'AWAKE' : status === 'sleeping' ? 'SLEEPING' : 'PINGING...'}
+                          </span>
+                          <span style={{ opacity: 0.35, color: 'oklch(0.70 0.01 250)' }}>·</span>
+                          <span style={{ color: 'oklch(0.70 0.01 250)' }}>
+                            Latency: ~{api.latency}
                           </span>
                         </div>
                       </div>
