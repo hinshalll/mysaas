@@ -201,8 +201,46 @@ export default function ApiDetailPage() {
     );
   }
 
+  const generateCodeSnippet = (api: any, lang: string) => {
+    const url = `https://mysaastools.vercel.app${api.endpoint}`;
+    const token = 'YOUR_API_KEY';
+    
+    if (lang === 'curl') {
+      return api.curlCode || `curl -X ${api.method} ${url} \\
+  -H "Authorization: Bearer ${token}" \\
+  -H "Content-Type: ${api.headers['Content-Type'] || 'application/json'}" \\
+  -d '{"example": "payload"}'`;
+    } else if (lang === 'js') {
+      return `const response = await fetch("${url}", {
+  method: "${api.method}",
+  headers: {
+    "Authorization": "Bearer ${token}",
+    "Content-Type": "${api.headers['Content-Type'] || 'application/json'}"
+  },
+  body: ${api.headers['Content-Type'] === 'multipart/form-data' ? 'formData' : 'JSON.stringify({ /* payload */ })'}
+});
+const data = await response.json();`;
+    } else if (lang === 'python') {
+      return `import requests\n\nurl = "${url}"\nheaders = {\n    "Authorization": "Bearer ${token}",\n    "Content-Type": "${api.headers['Content-Type'] || 'application/json'}"\n}\n${api.headers['Content-Type'] === 'multipart/form-data' ? "files = {'file': open('image.heic', 'rb')}\\nresponse = requests.post(url, headers=headers, files=files)" : "data = { /* payload */ }\\nresponse = requests.post(url, headers=headers, json=data)"}\n\nprint(response.json())`;
+    } else if (lang === 'go') {
+      return `package main\n\nimport (\n\t"fmt"\n\t"net/http"\n\t"io/ioutil"\n)\n\nfunc main() {\n\treq, _ := http.NewRequest("${api.method}", "${url}", nil)\n\treq.Header.Add("Authorization", "Bearer ${token}")\n\t\n\tres, _ := http.DefaultClient.Do(req)\n\tdefer res.Body.Close()\n\tbody, _ := ioutil.ReadAll(res.Body)\n\t\n\tfmt.Println(string(body))\n}`;
+    } else if (lang === 'rust') {
+      return `let client = reqwest::Client::new();\nlet res = client.post("${url}")\n    .header("Authorization", "Bearer ${token}")\n    .send()\n    .await?;\n    \nprintln!("{:?}", res.text().await?);`;
+    } else if (lang === 'csharp') {
+      return `var client = new HttpClient();\nclient.DefaultRequestHeaders.Add("Authorization", "Bearer ${token}");\nvar response = await client.PostAsync("${url}", content);\nvar result = await response.Content.ReadAsStringAsync();`;
+    } else if (lang === 'java') {
+      return `HttpRequest request = HttpRequest.newBuilder()\n    .uri(URI.create("${url}"))\n    .header("Authorization", "Bearer ${token}")\n    .method("${api.method}", HttpRequest.BodyPublishers.noBody())\n    .build();\nHttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());\nSystem.out.println(response.body());`;
+    } else if (lang === 'php') {
+      return `$ch = curl_init();\ncurl_setopt($ch, CURLOPT_URL, "${url}");\ncurl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);\ncurl_setopt($ch, CURLOPT_CUSTOMREQUEST, "${api.method}");\ncurl_setopt($ch, CURLOPT_HTTPHEADER, array('Authorization: Bearer ${token}'));\n$result = curl_exec($ch);\ncurl_close($ch);`;
+    } else if (lang === 'ruby') {
+      return `require 'net/http'\nrequire 'uri'\n\nuri = URI.parse("${url}")\nrequest = Net::HTTP::Post.new(uri)\nrequest["Authorization"] = "Bearer ${token}"\n\nresponse = Net::HTTP.start(uri.hostname, uri.port, use_ssl: true) do |http|\n  http.request(request)\nend\nputs response.body`;
+    }
+    
+    return `// Code example for ${lang} is currently being generated...`;
+  };
+
   const handleCopyCode = () => {
-    const code = api[`${activeLang === 'curl' ? 'curl' : activeLang}Code` as keyof typeof api] as string;
+    const code = generateCodeSnippet(api, activeLang);
     navigator.clipboard.writeText(code);
     setCopiedCode(true);
     setTimeout(() => setCopiedCode(false), 2000);
@@ -390,8 +428,8 @@ export default function ApiDetailPage() {
                 {copiedCode ? <CheckCircle2 size={14} /> : <Copy size={14} />} {copiedCode ? 'Copied!' : 'Copy'}
               </button>
             </div>
-            <pre style={{ margin: 0, padding: 24, overflowX: 'auto', fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, color: '#a5b4fc', maxHeight: 400 }}>
-              <code>{api[`${activeLang === 'curl' ? 'curl' : activeLang}Code` as keyof typeof api] as string}</code>
+            <pre style={{ margin: 0, padding: 24, overflowX: 'auto', fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, color: '#a5b4fc', maxHeight: 400, whiteSpace: 'pre-wrap' }}>
+              <code>{generateCodeSnippet(api, activeLang)}</code>
             </pre>
           </div>
         </div>
