@@ -30,8 +30,8 @@ export default function ApiDetailPage() {
   const [formatterStyle, setFormatterStyle] = useState('modern');
 
   // JSON sandbox states
-  const [jsonSandboxText, setJsonSandboxText] = useState("{\n    'name': 'John',\n    'age': 30,\n    'skills': ['React', 'Node'],\n}");
-  const [jsonSandboxAction, setJsonSandboxAction] = useState('Auto-Repair');
+  const [jsonSandboxText, setJsonSandboxText] = useState("{\n  \"name\": \"John\",\n  \"age\": 30,\n  \"skills\": [\n    \"React\",\n    \"Node\"\n  ]\n}");
+  const [jsonSandboxAction, setJsonSandboxAction] = useState('Format');
   
   // HEIC sandbox states
   const [heicFile, setHeicFile] = useState<File | null>(null);
