@@ -168,14 +168,29 @@ export async function POST(req: Request) {
 
 
 
-    // 4. Query profile by active API key
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('api_key', token)
-      .single();
+    // 4. Query profile by active API key or fallback to guest sandbox
+    const sandboxToken = 'sb_publishable_V66dv60NGqpWQ80q3PyALQ_Z4w0_08U';
+    let profile = null;
+    let isSandboxGuest = false;
 
-    if (profileError || !profile) {
+    if (token === sandboxToken) {
+      isSandboxGuest = true;
+      profile = {
+        id: 'sandbox_guest',
+        tier: 'free'
+      };
+    } else {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('api_key', token)
+        .single();
+      if (!error && data) {
+        profile = data;
+      }
+    }
+
+    if (!profile) {
       return NextResponse.json(
         { status: 'error', message: 'Unauthorized. Invalid or revoked API key.' },
         { status: 401 }
@@ -186,17 +201,33 @@ export async function POST(req: Request) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const { count: dailyCount, error: countError } = await supabase
-      .from('usage_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', profile.id)
-      .gte('created_at', today.toISOString());
+    const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    const ipHash = clientIp.split(',')[0].trim();
 
-    if (countError) {
-      return NextResponse.json(
-        { status: 'error', message: 'Database transaction error checking limits.' },
-        { status: 500 }
-      );
+    let dailyCount = 0;
+
+    if (isSandboxGuest) {
+      const { count } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('ip_hash', ipHash)
+        .eq('tool_id', tool)
+        .gte('created_at', today.toISOString());
+      dailyCount = count || 0;
+    } else {
+      const { count, error: countError } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', profile.id)
+        .gte('created_at', today.toISOString());
+
+      if (countError) {
+        return NextResponse.json(
+          { status: 'error', message: 'Database transaction error checking limits.' },
+          { status: 500 }
+        );
+      }
+      dailyCount = count || 0;
     }
 
     const currentCount = dailyCount || 0;
@@ -239,13 +270,10 @@ export async function POST(req: Request) {
     }
 
     // 6. Log Usage in Database
-    const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
-    const ipHash = clientIp.split(',')[0].trim();
-
     const { error: logError } = await supabase
       .from('usage_logs')
       .insert({
-        user_id: profile.id,
+        user_id: isSandboxGuest ? null : profile.id,
         tool_id: tool,
         ip_hash: ipHash,
         tier: isApi ? 3 : (isPro ? 2 : 1)

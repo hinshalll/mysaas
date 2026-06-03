@@ -25,36 +25,46 @@ export async function POST(req: Request) {
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_V66dv60NGqpWQ80q3PyALQ_Z4w0_08U';
     const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-    // Query user profile by token
+    // Query user profile by token or fallback to sandbox token
+    const sandboxToken = 'sb_publishable_V66dv60NGqpWQ80q3PyALQ_Z4w0_08U';
     let profile = null;
     let userId = null;
+    let isSandboxGuest = false;
 
-    try {
-      const { data: { user }, error: userError } = await supabase.auth.getUser(token);
-      if (!userError && user) {
-        userId = user.id;
-        const { data: userProfile } = await supabase
+    if (token === sandboxToken) {
+      isSandboxGuest = true;
+      profile = {
+        id: 'sandbox_guest',
+        tier: 'free'
+      };
+    } else {
+      try {
+        const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+        if (!userError && user) {
+          userId = user.id;
+          const { data: userProfile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
+          if (userProfile) {
+            profile = userProfile;
+          }
+        }
+      } catch (e) {
+        // Ignored: Not a Supabase JWT session
+      }
+
+      if (!profile) {
+        const { data: apiKeyProfile } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', user.id)
+          .eq('api_key', token)
           .single();
-        if (userProfile) {
-          profile = userProfile;
+        if (apiKeyProfile) {
+          profile = apiKeyProfile;
+          userId = apiKeyProfile.id;
         }
-      }
-    } catch (e) {
-      // Ignored: Not a Supabase JWT session, try checking developer API key
-    }
-
-    if (!profile) {
-      const { data: apiKeyProfile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('api_key', token)
-        .single();
-      if (apiKeyProfile) {
-        profile = apiKeyProfile;
-        userId = apiKeyProfile.id;
       }
     }
 
@@ -79,18 +89,34 @@ export async function POST(req: Request) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const { count: dailyCount, error: countError } = await supabase
-      .from('usage_logs')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', profile.id)
-      .eq('tool_id', 'heic-to-jpg-converter')
-      .gte('created_at', today.toISOString());
+    const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
+    const ipHash = clientIp.split(',')[0].trim();
 
-    if (countError) {
-      return NextResponse.json(
-        { status: 'error', message: 'Database connection error checking limits.' },
-        { status: 500 }
-      );
+    let dailyCount = 0;
+
+    if (isSandboxGuest) {
+      const { count } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('ip_hash', ipHash)
+        .eq('tool_id', 'heic-to-jpg-converter')
+        .gte('created_at', today.toISOString());
+      dailyCount = count || 0;
+    } else {
+      const { count, error: countError } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', profile.id)
+        .eq('tool_id', 'heic-to-jpg-converter')
+        .gte('created_at', today.toISOString());
+
+      if (countError) {
+        return NextResponse.json(
+          { status: 'error', message: 'Database connection error checking limits.' },
+          { status: 500 }
+        );
+      }
+      dailyCount = count || 0;
     }
 
     const currentCount = dailyCount || 0;
@@ -105,11 +131,8 @@ export async function POST(req: Request) {
     }
 
     // 4. Log Usage in Database
-    const clientIp = req.headers.get('x-forwarded-for') || '127.0.0.1';
-    const ipHash = clientIp.split(',')[0].trim();
-    
     await supabase.from('usage_logs').insert({
-      user_id: profile.id,
+      user_id: isSandboxGuest ? null : profile.id,
       tool_id: 'heic-to-jpg-converter',
       ip_hash: ipHash,
       tier: isApi ? 3 : (isPro ? 2 : 1)
