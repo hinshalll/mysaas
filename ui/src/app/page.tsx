@@ -2414,7 +2414,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
           <ul style={listStyle}>
             {[
               ['All standard tools', true],
-              ['5 free uses / day on Tier 1', true],
+              ['10 free API requests / day', true],
               ['Files up to 10 MB', true],
               ['Modern + Minimalist themes', true],
               ['Pro Vault tools', false],
@@ -2473,6 +2473,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
               ['Everything in Free, plus:', true, true],
               ['All Pro Vault tools (Diff, Print PDF, Batch, History)', true],
               ['Unlimited documents & files', true],
+              ['200 API requests / day', true],
               ['Files up to 2 GB', true],
               ['All themes incl. Academic', true],
               ['Branded exports (logo, colors, footer)', true],
@@ -3364,13 +3365,13 @@ function AboutPage({ onLaunch, brandName }: AboutPageProps) {
           </p>
           <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
-              <strong style={{ color: 'var(--fg)' }}>Free Plan</strong>: Standard daily usage on all essential browser utility tools. 100% free, no credit card required. Includes 5 daily sandbox API key test runs.
+              <strong style={{ color: 'var(--fg)' }}>Free Plan</strong>: Standard daily usage on all essential browser utility tools. 100% free, no credit card required. Includes 10 daily API key test runs.
             </li>
             <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
-              <strong style={{ color: 'var(--fg)' }}>Pro Plan</strong>: Advanced rendering features, custom watermark removal, unlimited daily interactive browser execution, and 100 daily production API requests for $9/month.
+              <strong style={{ color: 'var(--fg)' }}>Pro Plan</strong>: Advanced rendering features, custom watermark removal, unlimited daily interactive browser execution, and 200 daily production API requests for $9/month.
             </li>
             <li style={{ paddingLeft: 16, borderLeft: '3px solid var(--accent)' }}>
-              <strong style={{ color: 'var(--fg)' }}>Developer Plan</strong>: Premium high-volume programmatic API access with dedicated console endpoints, custom webhooks, and 1,000 daily production key requests for $29/month.
+              <strong style={{ color: 'var(--fg)' }}>Developer Plan</strong>: Premium high-volume programmatic API access with dedicated console endpoints, custom webhooks, and 2,000 daily production key requests for $29/month.
             </li>
           </ul>
 
