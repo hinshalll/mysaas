@@ -204,7 +204,7 @@ export default function ApiHubPage() {
             <span style={{ color: 'white' }}>DEVELOPER API</span>
           </div>
 
-          <Link href="/account" style={{
+          <Link href="/account#api-keys" style={{
             fontSize: 12.5,
             fontWeight: 600,
             color: 'white',
@@ -256,7 +256,7 @@ export default function ApiHubPage() {
               Integrate our high-performance document compilers, batch formatting engines, and media encoders directly into your codebase. Local browser speeds, backed by redundant server nodes.
             </p>
             <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-              <Link href="/account" style={{
+              <Link href="/account#api-keys" style={{
                 fontSize: 13.5,
                 fontWeight: 600,
                 color: 'black',
@@ -270,7 +270,7 @@ export default function ApiHubPage() {
               onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                Manage API Keys →
+                Get Free API Key →
               </Link>
               <a href="/api/openapi.json" download="openapi.json" style={{
                 fontSize: 13.5,

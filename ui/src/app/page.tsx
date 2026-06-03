@@ -4860,6 +4860,8 @@ function AccountPage({
     fetchDbProfile();
   }, [sessionUser, isAnonUser]);
 
+  const [isKeyRevealed, setIsKeyRevealed] = useState(false);
+
   // Fetch actual daily usage count for progress bar
   useEffect(() => {
     if (!supabase || !sessionUser) return;
@@ -4877,6 +4879,34 @@ function AccountPage({
     };
     fetchUsage();
   }, [sessionUser]);
+
+  // Autoscroll to hash section (like #api-keys)
+  useEffect(() => {
+    const handleScrollToHash = () => {
+      if (typeof window !== 'undefined' && window.location.hash === '#api-keys') {
+        const element = document.getElementById('api-keys');
+        if (element) {
+          setTimeout(() => {
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            // Apply a temporary premium highlight styling
+            element.style.outline = '2px solid var(--accent)';
+            element.style.boxShadow = '0 0 24px var(--accent)50';
+            element.style.transition = 'all 0.3s ease';
+            setTimeout(() => {
+              element.style.outline = 'none';
+              element.style.boxShadow = 'none';
+            }, 2500);
+          }, 300);
+        }
+      }
+    };
+
+    handleScrollToHash();
+    window.addEventListener('hashchange', handleScrollToHash);
+    return () => {
+      window.removeEventListener('hashchange', handleScrollToHash);
+    };
+  }, []);
 
   // Auto-sync billing status on mount to ensure database self-heals silently
   useEffect(() => {
@@ -5595,8 +5625,8 @@ function AccountPage({
           </div>
         </div>
 
-        {/* Section 7: Developer Sandbox Integration details */}
-        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+        {/* Section 7: Developer API Access Keys Details */}
+        <div id="api-keys" className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
             <span style={{
               display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -5608,12 +5638,13 @@ function AccountPage({
               <Icon.Database size={16} />
             </span>
             <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>API Sandbox Details</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Access credentials for the developer API playground.</p>
+              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Developer API Keys</h3>
+              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Manage your secure API keys for programmatically integrating formats, translations, and PDF renders.</p>
             </div>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Access Tier Row */}
             <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
               <div>
                 <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">Account Access Tier</div>
@@ -5624,20 +5655,76 @@ function AccountPage({
                   </span>
                 </div>
               </div>
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">Rate Limit Quota</div>
+                <span style={{ fontSize: 12.5, color: 'var(--fg-muted)', fontWeight: 550 }}>
+                  {userPlan === 'api' ? '100 requests / min' : userPlan === 'pro' ? '20 requests / min' : '10 requests / min'}
+                </span>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between' }}>
-              <div>
-                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">
-                  {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? 'Developer Production Key' : 'Developer Sandbox Key'}
-                </div>
-                <code style={{ fontSize: 11, background: 'var(--bg-elev-1)', border: '1px solid var(--border)', padding: '4px 8px', borderRadius: 6, display: 'inline-block', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {apiKey || 'No key generated'}
-                </code>
+            {/* API Keys Table/Card Row */}
+            <div style={{
+              background: 'oklch(0.12 0.005 250 / 0.5)',
+              border: '1px solid oklch(0.18 0.008 250)',
+              borderRadius: 10,
+              padding: 16,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 12
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>Default Secret Key</span>
+                <span style={{ 
+                  fontSize: 10, 
+                  background: (userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin') ? 'oklch(0.78 0.16 145 / 0.12)' : 'oklch(0.70 0.15 195 / 0.12)', 
+                  border: (userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin') ? '1px solid oklch(0.78 0.16 145 / 0.3)' : '1px solid oklch(0.70 0.15 195 / 0.3)',
+                  color: (userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin') ? 'oklch(0.78 0.16 145)' : 'oklch(0.70 0.15 195)',
+                  padding: '2px 8px', 
+                  borderRadius: 4,
+                  textTransform: 'uppercase',
+                  fontWeight: 600,
+                  fontFamily: 'monospace'
+                }}>
+                  {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? 'Production' : 'Sandbox'}
+                </span>
               </div>
-              <button type="button" onClick={handleCopyUUID} className="reset" style={{ padding: 8, borderRadius: 8, border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', background: 'var(--bg-elev-2)' }}>
-                {uuidCopied ? <Icon.Check size={13} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={13} style={{ color: 'white' }} />}
-              </button>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#0e0f12', border: '1px solid #1c1d22', padding: '10px 12px', borderRadius: 8 }}>
+                <div style={{ flex: 1, fontFamily: 'monospace', fontSize: 12, color: '#a5b4fc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {apiKey ? (
+                    isKeyRevealed ? apiKey : `${apiKey.slice(0, 14)}${'•'.repeat(Math.max(1, apiKey.length - 14))}`
+                  ) : (
+                    'No Key Generated. Please contact support.'
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button 
+                    type="button" 
+                    onClick={() => setIsKeyRevealed(!isKeyRevealed)} 
+                    className="reset" 
+                    style={{ padding: 6, borderRadius: 6, border: '1px solid #1c1d22', cursor: 'pointer', display: 'flex', alignItems: 'center', background: '#1c1d22', color: 'var(--fg-dim)' }}
+                    title={isKeyRevealed ? "Hide API Key" : "Reveal API Key"}
+                  >
+                    {isKeyRevealed ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleCopyUUID} 
+                    className="reset" 
+                    style={{ padding: 6, borderRadius: 6, border: '1px solid #1c1d22', cursor: 'pointer', display: 'flex', alignItems: 'center', background: '#1c1d22', color: 'white' }}
+                    title="Copy to Clipboard"
+                  >
+                    {uuidCopied ? <Icon.Check size={14} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={14} />}
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--fg-dim)' }}>
+                <span>Scope: All Operations (Read/Write)</span>
+                <span>Created: Active Session</span>
+              </div>
             </div>
           </div>
         </div>

@@ -1180,9 +1180,40 @@ puts response.body`,
               {api.desc}
             </p>
 
+            {/* Integrated Sleek Route Badge */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'oklch(0.12 0.005 250)',
+              border: '1px solid oklch(0.20 0.008 250)',
+              borderRadius: 8,
+              padding: '8px 12px',
+              marginTop: 18,
+              maxWidth: 'max-content'
+            }}>
+              <span style={{ fontSize: 10, fontFamily: 'monospace', fontWeight: 700, color: 'white', background: api.color || 'oklch(0.68 0.18 265)', padding: '2px 6px', borderRadius: 4 }}>
+                {api.method}
+              </span>
+              <span style={{ fontSize: 12.5, fontFamily: 'monospace', color: 'white', fontWeight: 500 }}>
+                https://mysaastools.vercel.app{api.endpoint}
+              </span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(`https://mysaastools.vercel.app${api.endpoint}`);
+                  alert("Copied endpoint to clipboard!");
+                }}
+                className="reset"
+                style={{ background: 'none', border: 'none', color: 'oklch(0.50 0.01 250)', cursor: 'pointer', display: 'flex', padding: 2 }}
+                title="Copy Endpoint URL"
+              >
+                <Copy size={12} />
+              </button>
+            </div>
+
             {/* Premium CTA Row */}
             <div style={{ display: 'flex', gap: 14, marginTop: 24, flexWrap: 'wrap' }}>
-              <Link href="/account" style={{
+              <Link href="/account#api-keys" style={{
                 fontSize: 13,
                 fontWeight: 600,
                 color: 'black',
@@ -1204,6 +1235,17 @@ puts response.body`,
               <button 
                 onClick={() => {
                   sandboxRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  // Focus flash sandbox element
+                  const sandboxElement = sandboxRef.current;
+                  if (sandboxElement) {
+                    sandboxElement.style.outline = `2px solid ${api.color || 'oklch(0.68 0.18 265)'}`;
+                    sandboxElement.style.boxShadow = `0 0 24px ${api.color || 'oklch(0.68 0.18 265)'}50`;
+                    sandboxElement.style.transition = 'all 0.3s ease';
+                    setTimeout(() => {
+                      sandboxElement.style.outline = 'none';
+                      sandboxElement.style.boxShadow = 'none';
+                    }, 2000);
+                  }
                 }}
                 className="reset"
                 style={{
@@ -1259,104 +1301,18 @@ puts response.body`,
             </div>
           </div>
 
-          {/* Endpoint URL Card */}
-          <div style={{
-            background: 'oklch(0.14 0.006 250)',
-            border: '1px solid oklch(0.20 0.008 250)',
-            borderRadius: 12,
-            padding: 16,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 8,
-          }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: 'oklch(0.50 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>HTTP REQUEST ROUTE</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color: 'white', background: api.color || 'oklch(0.68 0.18 265)', padding: '3px 8px', borderRadius: 4 }}>
-                {api.method}
-              </span>
-              <span style={{ fontSize: 13.5, fontFamily: 'monospace', color: 'white', fontWeight: 500 }}>
-                https://mysaastools.vercel.app{api.endpoint}
-              </span>
-            </div>
-          </div>
+          {/* Endpoint URL and SDK cards were combined or removed for a cleaner, spacious layout. */}
 
-          {/* SDK Badges Section */}
-          <div>
-            <h3 style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Available Developer SDKs</h3>
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
-              gap: 12
-            }}>
-              {[
-                { name: 'Node.js', lang: 'js' },
-                { name: 'Python', lang: 'python' },
-                { name: 'Go', lang: 'go' },
-                { name: 'Rust', lang: 'rust' },
-                { name: 'C#', lang: 'csharp' },
-                { name: 'Java', lang: 'java' },
-                { name: 'PHP', lang: 'php' },
-                { name: 'Ruby', lang: 'ruby' }
-              ].map(sdk => (
-                <div 
-                  key={sdk.name}
-                  onClick={() => {
-                    setActiveLang(sdk.lang as any);
-                    codeBlockRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }}
-                  style={{
-                    background: 'oklch(0.14 0.006 250 / 0.6)',
-                    backdropFilter: 'blur(8px)',
-                    border: '1px solid oklch(0.20 0.008 250)',
-                    borderRadius: 8,
-                    padding: '8px 12px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease-in-out',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = api.color || 'oklch(0.68 0.18 265)';
-                    e.currentTarget.style.transform = 'translateY(-2px)';
-                    e.currentTarget.style.background = 'oklch(0.16 0.006 250 / 0.8)';
-                    e.currentTarget.style.boxShadow = `0 4px 12px ${api.color || 'oklch(0.68 0.18 265)'}20`;
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = 'oklch(0.20 0.008 250)';
-                    e.currentTarget.style.transform = 'none';
-                    e.currentTarget.style.background = 'oklch(0.14 0.006 250 / 0.6)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
-                >
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'white', fontFamily: 'monospace' }}>
-                    {sdk.name}
-                  </span>
-                  <span style={{ fontSize: 9, color: 'oklch(0.50 0.01 250)', border: '1px solid oklch(0.20 0.008 250)', padding: '1px 4px', borderRadius: 4, textTransform: 'uppercase', fontFamily: 'monospace' }}>
-                    v1.0
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Header Requirements */}
+          {/* Header Parameters */}
           <div>
             <h3 style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Header Parameters</h3>
-            <div style={{ border: '1px solid oklch(0.20 0.008 250)', borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ background: 'oklch(0.12 0.005 250 / 0.5)', border: '1px solid oklch(0.18 0.008 250)', borderRadius: 10, padding: '8px 16px' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ background: 'oklch(0.12 0.005 250)', borderBottom: '1px solid oklch(0.20 0.008 250)' }}>
-                    <th style={{ padding: '10px 14px', color: 'white', fontWeight: 600 }}>HEADER</th>
-                    <th style={{ padding: '10px 14px', color: 'white', fontWeight: 600 }}>VALUE</th>
-                  </tr>
-                </thead>
                 <tbody>
                   {Object.entries(api.headers).map(([key, val]) => (
-                    <tr key={key} style={{ borderBottom: '1px solid oklch(0.16 0.006 250)' }}>
-                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', color: api.color || 'oklch(0.68 0.18 265)' }}>{key}</td>
-                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', color: 'oklch(0.70 0.01 250)' }}>{val}</td>
+                    <tr key={key} style={{ borderBottom: '1px solid oklch(0.16 0.006 250 / 0.5)' }}>
+                      <td style={{ padding: '12px 0', fontFamily: 'monospace', color: api.color || 'oklch(0.68 0.18 265)', fontWeight: 600 }}>{key}</td>
+                      <td style={{ padding: '12px 0', fontFamily: 'monospace', color: 'oklch(0.70 0.01 250)', textAlign: 'right' }}>{val}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -1367,25 +1323,25 @@ puts response.body`,
           {/* Payload schema reference */}
           <div>
             <h3 style={{ fontSize: 11.5, fontWeight: 700, color: 'white', margin: '0 0 12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Payload Fields</h3>
-            <div style={{ border: '1px solid oklch(0.20 0.008 250)', borderRadius: 10, overflow: 'hidden' }}>
+            <div style={{ background: 'oklch(0.12 0.005 250 / 0.5)', border: '1px solid oklch(0.18 0.008 250)', borderRadius: 10, padding: '8px 16px' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13, textAlign: 'left' }}>
                 <thead>
-                  <tr style={{ background: 'oklch(0.12 0.005 250)', borderBottom: '1px solid oklch(0.20 0.008 250)' }}>
-                    <th style={{ padding: '10px 14px', color: 'white', fontWeight: 600 }}>FIELD</th>
-                    <th style={{ padding: '10px 14px', color: 'white', fontWeight: 600 }}>TYPE</th>
-                    <th style={{ padding: '10px 14px', color: 'white', fontWeight: 600 }}>REQUIRED</th>
-                    <th style={{ padding: '10px 14px', color: 'white', fontWeight: 600 }}>DESCRIPTION</th>
+                  <tr style={{ borderBottom: '1px solid oklch(0.18 0.008 250)' }}>
+                    <th style={{ padding: '10px 0', color: 'white', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em' }}>FIELD</th>
+                    <th style={{ padding: '10px 0', color: 'white', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em' }}>TYPE</th>
+                    <th style={{ padding: '10px 0', color: 'white', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em' }}>REQ</th>
+                    <th style={{ padding: '10px 0', color: 'white', fontWeight: 600, fontSize: 11, textTransform: 'uppercase', letterSpacing: '0.04em' }}>DESCRIPTION</th>
                   </tr>
                 </thead>
                 <tbody>
                   {api.params.map(param => (
-                    <tr key={param.name} style={{ borderBottom: '1px solid oklch(0.16 0.006 250)' }}>
-                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', color: 'white', fontWeight: 600 }}>{param.name}</td>
-                      <td style={{ padding: '10px 14px', fontFamily: 'monospace', color: 'oklch(0.50 0.01 250)' }}>{param.type}</td>
-                      <td style={{ padding: '10px 14px', color: param.required ? 'oklch(0.72 0.18 25)' : 'oklch(0.50 0.01 250)' }}>
+                    <tr key={param.name} style={{ borderBottom: '1px solid oklch(0.16 0.006 250 / 0.5)' }}>
+                      <td style={{ padding: '12px 0', fontFamily: 'monospace', color: 'white', fontWeight: 600 }}>{param.name}</td>
+                      <td style={{ padding: '12px 0', fontFamily: 'monospace', color: 'oklch(0.50 0.01 250)' }}>{param.type}</td>
+                      <td style={{ padding: '12px 0', color: param.required ? 'oklch(0.72 0.18 25)' : 'oklch(0.50 0.01 250)' }}>
                         {param.required ? 'true' : 'false'}
                       </td>
-                      <td style={{ padding: '10px 14px', color: 'oklch(0.70 0.01 250)', lineHeight: 1.4 }}>{param.desc}</td>
+                      <td style={{ padding: '12px 0', color: 'oklch(0.70 0.01 250)', lineHeight: 1.4 }}>{param.desc}</td>
                     </tr>
                   ))}
                 </tbody>
