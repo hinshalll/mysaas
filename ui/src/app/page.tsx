@@ -47,7 +47,8 @@ import {
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
   Sun, Moon, Eye, EyeOff,
   CreditCard, AlertCircle, Info,
-  Lock, FileDown
+  Lock, FileDown,
+  Activity, ChevronLeft, FileCode, Clock, Sliders, User, Key, RefreshCw, Server, AlertTriangle
 } from 'lucide-react';
 
 // Map our legacy icon names to lucide-react components.
@@ -66,7 +67,8 @@ const Icon: Record<string, React.ComponentType<any>> = {
   AlignLeft, AlignCenter, AlignRight, Undo, Redo,
   Sun, Moon, Eye, EyeOff,
   CreditCard, AlertCircle, Info,
-  Lock, FileDown
+  Lock, FileDown,
+  Activity, ChevronLeft, FileCode, Clock, Sliders, User, Key, RefreshCw, Server, AlertTriangle
 };
 
 
@@ -3490,29 +3492,39 @@ interface DeveloperPageProps {
 
 function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywall, onOpenAuthModal }: DeveloperPageProps) {
   const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
+  const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
+  const isAnonUser = !isLoggedIn;
+
+  const [apiKey, setApiKey] = useState<string | null>(null);
+  const [isKeyRevealed, setIsKeyRevealed] = useState(false);
+  const [uuidCopied, setUuidCopied] = useState(false);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+
+  // Live Query Logs states
+  const [logs, setLogs] = useState<any[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  // Analytics states
+  const [usageCount, setUsageCount] = useState(0);
+
+  // Console Tabs State
+  const [activeConsoleTab, setActiveConsoleTab] = useState<'metrics' | 'playground' | 'credentials'>('metrics');
+  const [playgroundSubTab, setPlaygroundSubTab] = useState<'formatter' | 'heic'>('formatter');
+  const [snippetTab, setSnippetTab] = useState<'curl' | 'js' | 'python' | 'go'>('curl');
   
-  const storageKey = `${brandName.toLowerCase().replace(/\s+/g, '')}_prod_api_key`;
-  const [apiKey, setApiKey] = useState<string>(() => {
+  const [allowedOrigins, setAllowedOrigins] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem(storageKey) || '';
+      return localStorage.getItem('ms_allowed_origins') || '*';
     }
-    return '';
+    return '*';
   });
 
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [copiedKey, setCopiedKey] = useState(false);
-  const [copiedCurl, setCopiedCurl] = useState(false);
-  const [showProdKey, setShowProdKey] = useState(false);
-  
-  // API Console selection
-  const [devTab, setDevTab] = useState<'format' | 'heic-to-jpg-converter' | 'status'>('format');
-
-  // Document Sandbox Interactive states
+  // Sandbox Input / Output / Loading states
   const [sandboxInput, setSandboxInput] = useState('Clean this messy transcription up and format it nicely into a report.');
   const [sandboxLoading, setSandboxLoading] = useState(false);
   const [sandboxResult, setSandboxResult] = useState<any>(null);
 
-  // HEIC Sandbox Interactive states
+  // HEIC Sandbox states
   const [heicSandboxFile, setHeicSandboxFile] = useState<File | null>(null);
   const [heicSandboxFormat, setHeicSandboxFormat] = useState<'jpg' | 'png'>('jpg');
   const [heicSandboxLoading, setHeicSandboxLoading] = useState(false);
@@ -3526,161 +3538,128 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
     };
   }, [heicSandboxResultUrl]);
 
-  const cleanBrandDomain = brandName.toLowerCase().replace(/[^a-z0-9]/g, '');
-  const displayDomain = cleanBrandDomain ? `${cleanBrandDomain}.com` : 'mysaas.com';
+  // Fetch usage logs & daily count
+  const fetchLogs = useCallback(async (userId: string) => {
+    if (!supabase) return;
+    setLoadingLogs(true);
+    try {
+      const { data, error } = await supabase
+        .from('usage_logs')
+        .select('tool_id, tier, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (!error && data) {
+        setLogs(data);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch developer logs:", err);
+    } finally {
+      setLoadingLogs(false);
+    }
+  }, []);
 
-  const isPaidOrAdmin = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
-  const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
+  const fetchUsageCount = useCallback(async (userId: string) => {
+    if (!supabase) return;
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const { count, error } = await supabase
+        .from('usage_logs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', userId)
+        .gte('created_at', today.toISOString());
+      if (!error && count !== null) {
+        setUsageCount(count);
+      }
+    } catch (err) {
+      console.warn("Failed to fetch usage count:", err);
+    }
+  }, []);
 
-  // Active Key selection
-  const activeKey = apiKey || (isLoggedIn ? 'ms_sandbox_unassigned_key' : 'ms_guest_unauthorized_locked');
-
-  const curlCommand = devTab === 'format'
-    ? `curl -X POST https://api.${displayDomain}/v1/format \\
-  -H "Authorization: Bearer ${activeKey}" \\
-  -H "Content-Type: application/json" \\
-  -d '{
-    "tool": "ai-formatter",
-    "content": "${sandboxInput.replace(/"/g, '\\"')}",
-    "style": "modern"
-  }'`
-    : `curl -X POST https://api.${displayDomain}/v1/convert-image \\
-  -H "Authorization: Bearer ${activeKey}" \\
-  -F "file=@/path/to/photo.heic" \\
-  -F "format=${heicSandboxFormat}" \\
-  -F "quality=0.95" \\
-  --output converted_photo.${heicSandboxFormat}`;
-
-  // Sync API key directly from profiles table inside Supabase online cloud database!
+  // Sync API Key, Logs, and Counts on mount & change
   useEffect(() => {
-    async function syncKey() {
+    async function syncKeyAndLogs() {
       if (supabase && sessionUser?.id && isLoggedIn) {
         try {
-          const { data, error } = await supabase
+          const { data } = await supabase
             .from('profiles')
             .select('api_key')
             .eq('id', sessionUser.id)
             .single();
-          if (data) {
-            if (data.api_key) {
-              setApiKey(data.api_key);
-              if (typeof window !== 'undefined') {
-                localStorage.setItem(storageKey, data.api_key);
-              }
-            } else {
-              // Auto-generate their key right away (Sandbox for Free, Production for Pro/Developer) so they have one instantly!
-              const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-              let randomString = '';
-              for (let i = 0; i < 24; i++) {
-                randomString += chars[Math.floor(Math.random() * chars.length)];
-              }
-              const isPaidUser = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
-              const keyPrefix = isPaidUser ? 'ms_live_prod_' : 'ms_sandbox_';
-              const newKey = `${keyPrefix}${randomString}`;
+          if (data?.api_key) {
+            setApiKey(data.api_key);
+          } else {
+            // Auto-generate their key right away (Sandbox for Free, Production for Pro/Developer) so they have one instantly!
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let randomString = '';
+            for (let i = 0; i < 24; i++) {
+              randomString += chars[Math.floor(Math.random() * chars.length)];
+            }
+            const isPaidUser = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
+            const keyPrefix = isPaidUser ? 'ms_live_prod_' : 'ms_sandbox_';
+            const newKey = `${keyPrefix}${randomString}`;
 
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ api_key: newKey })
-                .eq('id', sessionUser.id);
+            const { error: updateError } = await supabase
+              .from('profiles')
+              .update({ api_key: newKey })
+              .eq('id', sessionUser.id);
 
-              if (!updateError) {
-                setApiKey(newKey);
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem(storageKey, newKey);
-                }
-              }
+            if (!updateError) {
+              setApiKey(newKey);
             }
           }
+          fetchLogs(sessionUser.id);
+          fetchUsageCount(sessionUser.id);
         } catch (err) {
-          console.error('Failed to sync API key from DB:', err);
+          console.error('Failed to sync API key/logs:', err);
         }
+      } else {
+        setApiKey(null);
+        setLogs([]);
+        setUsageCount(0);
       }
     }
-    syncKey();
-  }, [sessionUser, isLoggedIn, userPlan]);
+    syncKeyAndLogs();
+  }, [sessionUser, isLoggedIn, userPlan, fetchLogs, fetchUsageCount]);
 
-  const handleGenerateKey = async () => {
-    setIsGenerating(true);
-    const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
-    let randomString = '';
-    for (let i = 0; i < 24; i++) {
-      randomString += chars[Math.floor(Math.random() * chars.length)];
-    }
-    const isPaidUser = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
-    const keyPrefix = isPaidUser ? 'ms_live_prod_' : 'ms_sandbox_';
-    const newKey = `${keyPrefix}${randomString}`;
+  // Key rotation handler
+  const handleRegenerateKey = async () => {
+    if (!supabase || !sessionUser || isAnonUser) return;
+    const confirmRotate = confirm("Are you sure you want to regenerate your API Key? All applications using this key will immediately fail authorization.");
+    if (!confirmRotate) return;
 
-    // Write real API key into online Postgres profiles database row!
-    if (supabase && sessionUser?.id) {
-      try {
-        const { error } = await supabase
-          .from('profiles')
-          .update({ api_key: newKey })
-          .eq('id', sessionUser.id);
-        if (error) {
-          console.error("Database key update error:", error);
-          alert("Failed to save API key to online database. Please check your network and try again.");
-          setIsGenerating(false);
-          return;
-        }
-      } catch (err) {
-        console.error(err);
-        alert("Failed to connect to database transaction.");
-        setIsGenerating(false);
-        return;
-      }
-    }
+    setIsRegenerating(true);
+    try {
+      const randomBytes = Array.from(crypto.getRandomValues(new Uint8Array(20)), b => b.toString(16).padStart(2, '0')).join('');
+      const isPaidUser = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
+      const keyPrefix = isPaidUser ? 'ms_live_prod_' : 'ms_sandbox_';
+      const newKey = `${keyPrefix}${randomBytes}`;
 
-    setApiKey(newKey);
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(storageKey, newKey);
-    }
-    setIsGenerating(false);
-  };
+      const { error } = await supabase
+        .from('profiles')
+        .update({ api_key: newKey })
+        .eq('id', sessionUser.id);
 
-  const handleRevokeKey = async () => {
-    if (confirm("Are you sure you want to revoke your production API key? Any applications currently using this key will immediately receive a 401 Unauthorized status.")) {
-      // Clear real API key from online Postgres profiles database row!
-      if (supabase && sessionUser?.id) {
-        try {
-          const { error } = await supabase
-            .from('profiles')
-            .update({ api_key: null })
-            .eq('id', sessionUser.id);
-          if (error) {
-            console.error("Database key revoke error:", error);
-            alert("Failed to revoke API key in online database.");
-            return;
-          }
-        } catch (err) {
-          console.error(err);
-          alert("Database connection timeout.");
-          return;
-        }
-      }
-
-      setApiKey('');
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem(storageKey);
-      }
+      if (error) throw error;
+      setApiKey(newKey);
+      alert("API Key regenerated successfully!");
+    } catch (err: any) {
+      alert("Failed to regenerate API Key: " + err.message);
+    } finally {
+      setIsRegenerating(false);
     }
   };
 
   const handleCopyKey = () => {
-    navigator.clipboard.writeText(activeKey);
-    setCopiedKey(true);
-    setTimeout(() => setCopiedKey(false), 2000);
+    const keyToCopy = apiKey || 'ms_sandbox_unassigned_key';
+    navigator.clipboard.writeText(keyToCopy);
+    setUuidCopied(true);
+    setTimeout(() => setUuidCopied(false), 2000);
   };
 
-  const handleCopyCurl = () => {
-    navigator.clipboard.writeText(curlCommand);
-    setCopiedCurl(true);
-    setTimeout(() => setCopiedCurl(false), 2000);
-  };
-
-  // REAL network request executing format routes against our serverless Next.js endpoint!
   const runSandboxTest = async () => {
-    if (!isLoggedIn) {
+    if (isAnonUser) {
       alert("Please sign in or create an account to run live tests in the API sandbox.");
       onOpenAuthModal();
       return;
@@ -3688,6 +3667,8 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
     
     setSandboxLoading(true);
     setSandboxResult(null);
+
+    const activeKey = apiKey || 'ms_sandbox_unassigned_key';
 
     try {
       const response = await fetch('/api/v1/format', {
@@ -3704,6 +3685,10 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
       });
       const data = await response.json();
       setSandboxResult(data);
+      if (sessionUser) {
+        fetchLogs(sessionUser.id);
+        fetchUsageCount(sessionUser.id);
+      }
     } catch (err) {
       console.error('API Sandbox test fetch failed:', err);
       setSandboxResult({
@@ -3716,7 +3701,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
   };
 
   const runHeicSandboxTest = async () => {
-    if (!isLoggedIn) {
+    if (isAnonUser) {
       alert("Please sign in or create an account to run live tests in the API sandbox.");
       onOpenAuthModal();
       return;
@@ -3733,6 +3718,8 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
       setHeicSandboxResultUrl(null);
     }
 
+    const activeKey = apiKey || 'ms_sandbox_unassigned_key';
+
     try {
       const formData = new FormData();
       formData.append('file', heicSandboxFile);
@@ -3743,7 +3730,7 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${activeKey}`,
-          'Accept': 'image/*' // Request binary output
+          'Accept': 'image/*'
         },
         body: formData
       });
@@ -3763,6 +3750,10 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
           outputUrl: url
         });
       }
+      if (sessionUser) {
+        fetchLogs(sessionUser.id);
+        fetchUsageCount(sessionUser.id);
+      }
     } catch (err: any) {
       console.error('API HEIC Sandbox test failed:', err);
       setHeicSandboxResult({
@@ -3772,6 +3763,77 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
     } finally {
       setHeicSandboxLoading(false);
     }
+  };
+
+  const handleSaveOrigins = (origins: string) => {
+    setAllowedOrigins(origins);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ms_allowed_origins', origins);
+    }
+  };
+
+  const planName = userPlan === 'api' ? 'Developer API' : userPlan === 'pro' ? 'Pro Plan' : userPlan === 'admin' ? 'Administrator' : 'Free Account';
+  const rateLimit = userPlan === 'api' ? '100 / min' : userPlan === 'pro' ? '20 / min' : '10 / min';
+  const dailyLimit = userPlan === 'api' ? '30,000 / mo' : userPlan === 'pro' ? 'Unlimited' : '20 / day';
+
+  const activeKeyForSnippet = apiKey || 'ms_sandbox_unassigned_key';
+  const codeSnippets = {
+    curl: `curl -X POST https://mysaastools.vercel.app/api/v1/format \\
+  -H "Authorization: Bearer ${activeKeyForSnippet}" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "tool": "ai-formatter",
+    "content": "${sandboxInput.replace(/"/g, '\\"')}",
+    "style": "modern"
+  }'`,
+    js: `fetch('https://mysaastools.vercel.app/api/v1/format', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer ${activeKeyForSnippet}',
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    tool: 'ai-formatter',
+    content: '${sandboxInput.replace(/'/g, "\\'")}',
+    style: 'modern'
+  })
+})
+.then(res => res.json())
+.then(data => console.log(data));`,
+    python: `import requests
+
+url = "https://mysaastools.vercel.app/api/v1/format"
+headers = {
+    "Authorization": "Bearer ${activeKeyForSnippet}",
+    "Content-Type": "application/json"
+}
+payload = {
+    "tool": "ai-formatter",
+    "content": "${sandboxInput.replace(/"/g, '\\"')}",
+    "style": "modern"
+}
+
+response = requests.post(url, json=payload, headers=headers)
+print(response.json())`,
+    go: `package main
+
+import (
+	"bytes"
+	"fmt"
+	"net/http"
+)
+
+func main() {
+	jsonData := []byte(\`{"tool": "ai-formatter", "content": "Clean this messy text..."}\`)
+	req, _ := http.NewRequest("POST", "https://mysaastools.vercel.app/api/v1/format", bytes.NewBuffer(jsonData))
+	req.Header.Set("Authorization", "Bearer ${activeKeyForSnippet}")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, _ := client.Do(req)
+	defer resp.Body.Close()
+	fmt.Println("Response Status:", resp.Status)
+}`
   };
 
   return (
@@ -3791,682 +3853,688 @@ function DeveloperPage({ onLaunch, brandName, userPlan, sessionUser, onShowPaywa
 
       <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative', zIndex: 1 }}>
         <span style={{
-          ...eyebrow,
-          color: 'oklch(0.78 0.16 195)', // Cyan text
-          border: '1px solid oklch(0.78 0.16 195 / 0.3)',
-          background: 'oklch(0.18 0.010 195 / 0.1)',
-        }}>Developer Hub & Sandbox</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Developer API Dashboard</h1>
-        <p style={sectionSubtitle}>Integrate the professional-grade formatting engines of {brandName} programmatically inside your workflows and scripts.</p>
+          display: 'inline-flex', alignItems: 'center', gap: 6,
+          background: 'oklch(0.68 0.18 265 / 0.12)', border: '1px solid oklch(0.68 0.18 265 / 0.3)',
+          color: 'oklch(0.80 0.13 265)', fontSize: 11, fontWeight: 700,
+          padding: '4px 10px', borderRadius: 20, letterSpacing: '0.08em',
+          textTransform: 'uppercase', fontFamily: 'monospace', marginBottom: 12
+        }}>
+          <Icon.Activity size={11} /> Developer Console
+        </span>
+        <h1 style={{ fontSize: 32, fontWeight: 800, color: 'white', margin: 0, letterSpacing: '-0.025em' }}>
+          Developer Dashboard
+        </h1>
+        <p style={{ fontSize: 15, color: 'oklch(0.70 0.01 250)', marginTop: 6, margin: 0, maxWidth: 640, lineHeight: 1.5 }}>
+          Access sandbox credentials, monitor query volumes, rotate secure access tokens, and check server nodes health matrix in real-time.
+        </p>
       </div>
 
-      {/* Dynamic API Tab Selector */}
-      <div style={{
-        display: 'flex', justifyContent: 'center', gap: 12, marginBottom: 32,
-        position: 'relative', zIndex: 1, flexWrap: 'wrap'
-      }}>
-        <button
-          onClick={() => setDevTab('format')}
-          className="reset mono"
-          style={{
-            padding: '10px 20px', fontSize: 13, fontWeight: 600, borderRadius: 8,
-            border: devTab === 'format' ? '1px solid oklch(0.78 0.16 195 / 0.3)' : '1px solid var(--border)',
-            background: devTab === 'format' ? 'oklch(0.18 0.010 195 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
-            color: devTab === 'format' ? 'white' : 'var(--fg-muted)',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-            transition: 'all 0.15s',
-          }}
-        >
-          <Icon.Terminal size={14} style={{ color: devTab === 'format' ? 'oklch(0.78 0.16 195)' : 'var(--fg-dim)' }} />
-          Document Formatter API
-        </button>
-        <button
-          onClick={() => setDevTab('heic-to-jpg-converter')}
-          className="reset mono"
-          style={{
-            padding: '10px 20px', fontSize: 13, fontWeight: 600, borderRadius: 8,
-            border: devTab === 'heic-to-jpg-converter' ? '1px solid oklch(0.78 0.16 25 / 0.3)' : '1px solid var(--border)',
-            background: devTab === 'heic-to-jpg-converter' ? 'oklch(0.18 0.010 25 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
-            color: devTab === 'heic-to-jpg-converter' ? 'white' : 'var(--fg-muted)',
-            cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-            transition: 'all 0.15s',
-          }}
-        >
-          <Icon.Image size={14} style={{ color: devTab === 'heic-to-jpg-converter' ? 'oklch(0.78 0.16 25)' : 'var(--fg-dim)' }} />
-          HEIC to JPG/PNG Converter API
-        </button>
-        {userPlan === 'admin' && (
-          <button
-            onClick={() => setDevTab('status')}
-            className="reset mono"
-            style={{
-              padding: '10px 20px', fontSize: 13, fontWeight: 600, borderRadius: 8,
-              border: devTab === 'status' ? '1px solid oklch(0.78 0.16 145 / 0.3)' : '1px solid var(--border)',
-              background: devTab === 'status' ? 'oklch(0.18 0.010 145 / 0.2)' : 'oklch(0.12 0.004 250 / 0.5)',
-              color: devTab === 'status' ? 'white' : 'var(--fg-muted)',
-              cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8,
-              transition: 'all 0.15s',
-            }}
-          >
-            <Icon.Globe size={14} style={{ color: devTab === 'status' ? 'oklch(0.78 0.16 145)' : 'var(--fg-dim)' }} />
-            Space Engines Monitor
-          </button>
-        )}
-      </div>
-
-      {devTab === 'status' && userPlan === 'admin' ? (
-        <SpaceStatusDashboard />
-      ) : (
-        <>
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: 24,
-            alignItems: 'stretch',
-            position: 'relative',
-            zIndex: 1,
-          }}>
-        {/* API Keys Card */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 16 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 195 / 0.15)',
-              border: '1px solid oklch(0.78 0.16 195 / 0.3)',
-              color: 'oklch(0.78 0.16 195)',
-            }}>
-              <Icon.Terminal size={16} />
-            </span>
-            <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">API Authorization Keys</span>
+      {/* Guest Sandbox Lock Warn Banner */}
+      {isAnonUser && (
+        <div style={{
+          background: 'oklch(0.72 0.18 25 / 0.1)',
+          border: '1px solid oklch(0.72 0.18 25 / 0.3)',
+          padding: '16px 20px', borderRadius: 12,
+          display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap',
+          position: 'relative', zIndex: 1
+        }}>
+          <Icon.AlertTriangle size={20} style={{ color: 'oklch(0.72 0.18 25)', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 260 }}>
+            <h5 style={{ margin: 0, fontSize: 14, color: 'white', fontWeight: 700 }}>Guest Sandbox Workspace</h5>
+            <p style={{ margin: '4px 0 0', fontSize: 12.5, color: 'oklch(0.70 0.01 250)', lineHeight: 1.4 }}>
+              You are currently accessing credentials as a guest. All keys generated below will be standard public sandbox tokens. Sign in or create a free account to unlock a personal, dedicated API key and lift rate limits.
+            </p>
           </div>
+          <button onClick={onOpenAuthModal} style={{
+            fontSize: 12.5, fontWeight: 600, color: 'black',
+            background: 'linear-gradient(180deg, oklch(0.78 0.16 145), oklch(0.68 0.18 145))',
+            padding: '8px 16px', borderRadius: 8, textDecoration: 'none', border: 'none', cursor: 'pointer',
+            boxShadow: '0 2px 8px oklch(0.78 0.16 145 / 0.25)',
+          }}>
+            Register Account Free →
+          </button>
+        </div>
+      )}
 
-          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 20 }}>
-            Authenticate your HTTP requests by passing your bearer token in the headers list.
-          </p>
+      {/* Console Tab Selector */}
+      <div style={{ display: 'flex', gap: 12, borderBottom: '1px solid oklch(0.20 0.008 250)', paddingBottom: 12, flexWrap: 'wrap', position: 'relative', zIndex: 1 }}>
+        {[
+          { id: 'metrics', label: 'Overview & Metrics', icon: Icon.Activity },
+          { id: 'playground', label: 'Playground Sandbox', icon: Icon.Terminal },
+          { id: 'credentials', label: 'Access Credentials', icon: Icon.Lock }
+        ].map(tab => {
+          const tabIcon = tab.icon;
+          const tabLabel = tab.label;
+          const tabId = tab.id;
+          const isActive = activeConsoleTab === tabId;
+          return (
+            <button
+              key={tabId}
+              onClick={() => setActiveConsoleTab(tabId as any)}
+              className="reset"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 18px',
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: isActive ? 700 : 500,
+                cursor: 'pointer',
+                background: isActive ? 'oklch(0.68 0.18 265 / 0.15)' : 'transparent',
+                border: isActive ? '1px solid oklch(0.68 0.18 265 / 0.5)' : '1px solid transparent',
+                color: isActive ? 'white' : 'oklch(0.70 0.01 250)',
+                transition: 'all 0.15s'
+              }}
+            >
+              {tabIcon && React.createElement(tabIcon, { size: 14, style: { color: isActive ? 'oklch(0.68 0.18 265)' : 'oklch(0.50 0.01 250)' } })}
+              <span>{tabLabel}</span>
+            </button>
+          );
+        })}
+      </div>
 
-          {!isLoggedIn ? (
-            /* Guest UI - locked */
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        {activeConsoleTab === 'metrics' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }} className="fade-in">
+            {/* Grid Row */}
             <div style={{
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              border: '1px dashed var(--border)', borderRadius: 12, padding: '36px 20px',
-              textAlign: 'center', flex: 1, background: 'var(--bg-elev-1)',
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+              gap: 28,
+              alignItems: 'start'
             }}>
-              <div style={{ color: 'var(--fg-dim)', marginBottom: 12 }}>
-                <Icon.Shield size={36} style={{ opacity: 0.5 }} />
-              </div>
-              <h3 style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--fg)', margin: '0 0 6px' }}>API Keys Locked</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-subtle)', maxWidth: 240, margin: '0 0 20px', lineHeight: 1.4 }}>
-                Sign in or register an account to unlock sandbox credentials and test endpoints.
-              </p>
-              <button onClick={onOpenAuthModal} className="reset" style={{
-                padding: '8px 18px', borderRadius: 8,
-                background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
-                color: 'white', fontWeight: 500, fontSize: 13, cursor: 'pointer',
-                boxShadow: '0 2px 8px oklch(0.50 0.20 195 / 0.2)',
-              }}>Sign In / Sign Up</button>
-            </div>
-          ) : !isPaidOrAdmin ? (
-            /* Free User UI - sandbox key available, prod key locked */
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-dim)' }}>SANDBOX KEY (RATE LIMITED)</span>
-                  <span style={{ fontSize: 10, fontWeight: 600, color: 'oklch(0.78 0.16 75)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 75)' }}></span>
-                    FREE PLAN
-                  </span>
-                </div>
-                {apiKey ? (
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <input
-                      type="text"
-                      readOnly
-                      value={apiKey}
-                      style={{
-                        flex: 1, padding: '10px 12px', background: 'var(--bg-elev-1)',
-                        border: '1px solid var(--border)', borderRadius: 8,
-                        color: 'var(--fg)', fontSize: 12, outline: 'none', fontFamily: 'monospace',
-                      }}
-                    />
-                    <button onClick={handleCopyKey} className="reset" style={{
-                      padding: '8px 12px', borderRadius: 8,
-                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                      color: 'var(--fg)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                    }}>
-                      {copiedKey ? <Icon.Check size={14} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={14} />}
-                    </button>
+              
+              {/* Left Column: Usage Limit Meter & Analytics Cards */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                
+                {/* Meter card */}
+                <div style={{
+                  background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)',
+                  padding: 24, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid oklch(0.20 0.008 250)', paddingBottom: 12 }}>
+                    <Icon.Sparkles size={16} style={{ color: 'oklch(0.68 0.18 265)' }} />
+                    <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>Daily Quota Status</span>
                   </div>
-                ) : (
-                  <div style={{
-                    display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                    border: '1px dashed var(--border)', borderRadius: 12, padding: '30px 20px',
-                    textAlign: 'center', background: 'var(--bg-elev-1)',
-                  }}>
-                    {isGenerating ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
-                        <Icon.Loader size={24} className="spinning" style={{ color: 'var(--accent)' }} />
-                        <div style={{ fontSize: 12, color: 'var(--fg-dim)' }} className="mono">Generating Sandbox Key...</div>
-                      </div>
-                    ) : (
-                      <>
-                        <p style={{ fontSize: 12.5, color: 'var(--fg-muted)', margin: '0 0 16px', lineHeight: 1.4 }}>
-                          You don't have an active API key yet. Generate your unique sandbox key to start integrating.
-                        </p>
-                        <button onClick={handleGenerateKey} className="reset" style={{
-                          padding: '8px 16px', borderRadius: 8,
-                          background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
-                          color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                          boxShadow: '0 2px 8px oklch(0.50 0.20 195 / 0.2)',
-                        }}>Generate Sandbox Key</button>
-                      </>
-                    )}
-                  </div>
-                )}
-                <div style={{ fontSize: 11, color: 'var(--fg-dim)', marginTop: 6 }}>
-                  Free sandbox keys are metered to 5 daily runs.
-                </div>
-              </div>
 
-              <div style={{
-                background: 'oklch(0.18 0.005 250 / 0.4)',
-                border: '1px solid var(--border)',
-                borderRadius: 12, padding: '18px 20px',
-                marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 12,
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'oklch(0.72 0.18 265)' }}>
-                  <Icon.Shield size={14} />
-                  <span style={{ fontSize: 12.5, fontWeight: 600 }} className="mono">PRODUCTION API ACCESS</span>
-                </div>
-                <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
-                  Upgrade to the **Pro Plan** or **Developer Plan** to immediately generate production keys with higher requests limits.
-                </p>
-                <button onClick={onShowPaywall} className="reset" style={{
-                  width: '100%', padding: '10px 14px', borderRadius: 8,
-                  background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
-                  color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-                  boxShadow: '0 4px 12px oklch(0.50 0.20 265 / 0.25)',
-                  marginTop: 4,
-                }}>Upgrade to Production API</button>
-              </div>
-            </div>
-          ) : (
-            /* Paid User UI - production keys fully operational */
-            <div style={{ display: 'flex', flexDirection: 'column', flex: 1 }}>
-              {apiKey ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--fg-dim)' }}>PRODUCTION KEY</span>
-                      <span style={{ fontSize: 10, fontWeight: 600, color: 'oklch(0.78 0.16 145)', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-                        <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }}></span>
-                        {userPlan === 'admin' ? 'SYSTEM ADMIN' : userPlan === 'api' ? 'DEVELOPER PLAN' : 'PRO PLAN'}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 12.5, color: 'oklch(0.70 0.01 250)' }}>Metered Calls</span>
+                      <span style={{ fontSize: 12.5, fontWeight: 700, color: 'oklch(0.68 0.18 265)' }} className="mono">
+                        {userPlan === 'pro' ? 'Unlimited' : userPlan === 'api' ? 'Unlimited / 30k API Runs' : `${usageCount} / ${20}`}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', gap: 6 }}>
-                      <input
-                        type={showProdKey ? "text" : "password"}
-                        readOnly
-                        value={apiKey}
-                        style={{
-                          flex: 1, padding: '10px 12px', background: 'var(--bg-elev-1)',
-                          border: '1px solid var(--border)', borderRadius: 8,
-                          color: 'var(--fg)', fontSize: 12.5, outline: 'none', fontFamily: 'monospace',
-                          letterSpacing: showProdKey ? 'normal' : '0.12em',
-                        }}
-                      />
-                      <button onClick={() => setShowProdKey(!showProdKey)} className="reset" style={{
-                        padding: '8px 12px', borderRadius: 8,
-                        background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                        color: 'var(--fg)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                      }} title={showProdKey ? "Hide API Key" : "Show API Key"}>
-                        {showProdKey ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
-                      </button>
-                      <button onClick={handleCopyKey} className="reset" style={{
-                        padding: '8px 12px', borderRadius: 8,
-                        background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                        color: 'var(--fg)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                      }}>
-                        {copiedKey ? <Icon.Check size={14} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={14} />}
-                      </button>
+
+                    <div style={{ height: 8, width: '100%', background: 'oklch(0.18 0.005 250)', borderRadius: 4, overflow: 'hidden', border: '1px solid oklch(0.20 0.008 250)' }}>
+                      <div style={{
+                        height: '100%',
+                        width: (userPlan === 'pro' || userPlan === 'api') ? '100%' : `${Math.min((usageCount / 20) * 100, 100)}%`,
+                        background: 'linear-gradient(90deg, oklch(0.68 0.18 265) 0%, oklch(0.78 0.16 75) 100%)',
+                        transition: 'width 0.4s ease-out'
+                      }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Quick Metrics Cards */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                  <div style={{ background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)', padding: 20, borderRadius: 14 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'oklch(0.50 0.01 250)', display: 'block' }} className="mono">TODAY'S API USAGE</span>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: 'white', marginTop: 6 }}>
+                      {usageCount} <span style={{ fontSize: 13, fontWeight: 400, color: 'oklch(0.50 0.01 250)' }}>/ {dailyLimit}</span>
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', gap: 10 }}>
-                    <button onClick={handleRevokeKey} className="reset" style={{
-                      flex: 1, padding: '9px', borderRadius: 8,
-                      background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.4)',
-                      color: 'oklch(0.78 0.16 15)', fontWeight: 500, fontSize: 12.5, cursor: 'pointer',
-                      textAlign: 'center', transition: 'background 0.15s',
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.18 0.010 15 / 0.3)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.18 0.010 15 / 0.15)'}
-                    >Revoke API Key</button>
-                    <button onClick={handleCopyKey} className="reset" style={{
-                      flex: 1, padding: '9px', borderRadius: 8,
-                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                      color: 'var(--fg)', fontWeight: 500, fontSize: 12.5, cursor: 'pointer',
-                      textAlign: 'center',
-                    }}>Copy Bearer Token</button>
+                  <div style={{ background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)', padding: 20, borderRadius: 14 }}>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'oklch(0.50 0.01 250)', display: 'block' }} className="mono">SUCCESS RATE</span>
+                    <div style={{ fontSize: 24, fontWeight: 800, color: 'oklch(0.78 0.16 145)', marginTop: 6 }}>
+                      100%
+                    </div>
                   </div>
                 </div>
-              ) : (
+
+              </div>
+
+              {/* Right Column: Live query logs list */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+                
+                {/* Live Request Logs Card */}
                 <div style={{
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  border: '1px dashed var(--border)', borderRadius: 12, padding: '40px 20px',
-                  textAlign: 'center', flex: 1, background: 'var(--bg-elev-1)',
+                  background: 'oklch(0.14 0.006 250)',
+                  border: '1px solid oklch(0.20 0.008 250)',
+                  borderRadius: 16,
+                  padding: 24,
+                  display: 'flex', flexDirection: 'column', gap: 16
                 }}>
-                  {isGenerating ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                      <Icon.Loader size={32} className="spinning" style={{ color: 'var(--accent)' }} />
-                      <div style={{ fontSize: 13, color: 'var(--fg-dim)', fontWeight: 500 }} className="mono">Generating Cryptographic Key...</div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid oklch(0.20 0.008 250)', paddingBottom: 14 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{
+                        width: 32, height: 32, borderRadius: 8,
+                        background: 'oklch(0.68 0.18 265 / 0.12)', border: '1px solid oklch(0.68 0.18 265 / 0.3)',
+                        color: 'oklch(0.80 0.13 265)', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}>
+                        <Icon.Terminal size={16} />
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>Live Request Logs</h3>
+                        <p style={{ fontSize: 11.5, color: 'oklch(0.50 0.01 250)', margin: 0 }}>Dynamic logs of the last API invocations.</p>
+                      </div>
+                    </div>
+
+                    <button 
+                      onClick={() => sessionUser && fetchLogs(sessionUser.id)}
+                      disabled={loadingLogs}
+                      className="reset" 
+                      style={{ color: 'oklch(0.50 0.01 250)', cursor: 'pointer', display: 'flex', padding: 4, background: 'none', border: 'none' }}
+                      title="Reload Logs"
+                    >
+                      <Icon.RefreshCw size={13} className={loadingLogs ? 'spin' : ''} />
+                    </button>
+                  </div>
+
+                  {loadingLogs ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, height: 160, color: 'oklch(0.50 0.01 250)' }}>
+                      <Icon.Loader size={16} className="spin" />
+                      <span style={{ fontSize: 12.5, fontFamily: 'monospace' }}>Fetching query logs...</span>
+                    </div>
+                  ) : logs.length > 0 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                      {logs.map((log, index) => {
+                        const date = new Date(log.created_at);
+                        const formattedTime = date.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        return (
+                          <div key={index} style={{
+                            background: 'oklch(0.12 0.005 250 / 0.4)', border: '1px solid oklch(0.18 0.008 250 / 0.5)',
+                            borderRadius: 10, padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                          }}>
+                            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                              <span style={{ fontSize: 9.5, background: 'oklch(0.68 0.18 265 / 0.12)', border: '1px solid oklch(0.68 0.18 265 / 0.3)', color: 'oklch(0.80 0.13 265)', padding: '2px 6px', borderRadius: 4, fontWeight: 700, fontFamily: 'monospace' }}>
+                                POST
+                              </span>
+                              <div>
+                                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white', fontFamily: 'monospace' }}>
+                                  {log.tool_id === 'json' ? '/api/v1/format (JSON)' : log.tool_id === 'universal-ai-formatter' ? '/api/v1/format (AI)' : `/api/v1/${log.tool_id}`}
+                                </div>
+                                <div style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                                  <Icon.Clock size={10} />
+                                  <span>{formattedTime}</span>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, background: 'oklch(0.78 0.16 145 / 0.12)', border: '1px solid oklch(0.78 0.16 145 / 0.3)', color: 'oklch(0.78 0.16 145)', padding: '2px 8px', borderRadius: 6, fontSize: 11, fontWeight: 600 }}>
+                              <Icon.Check size={11} />
+                              <span>200 OK</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   ) : (
-                    <>
-                      <div style={{ color: 'var(--fg-dim)', marginBottom: 12 }}>
-                        <Icon.Database size={32} style={{ color: 'oklch(0.78 0.16 195)' }} />
-                      </div>
-                      <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--fg)', margin: '0 0 6px' }}>No Active API Keys</h3>
-                      <p style={{ fontSize: 12, color: 'var(--fg-subtle)', maxWidth: 260, margin: '0 0 20px', lineHeight: 1.4 }}>
-                        You are on a paid account. Click the button below to generate a production API key.
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: 160, gap: 10, color: 'oklch(0.50 0.01 250)', textAlign: 'center' }}>
+                      <Icon.Terminal size={24} style={{ opacity: 0.5 }} />
+                      <span style={{ fontSize: 12.5, fontFamily: 'monospace', color: 'oklch(0.50 0.01 250)' }}>$ tail -n 0 logs/stream.log</span>
+                      <p style={{ margin: 0, fontSize: 11, color: 'oklch(0.50 0.01 250 / 0.7)', maxWidth: 260 }}>
+                        Execute sandbox queries or call live endpoints to generate real-time developer metrics.
                       </p>
-                      <button onClick={handleGenerateKey} className="reset" style={{
-                        padding: '10px 20px', borderRadius: 8,
-                        background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
-                        color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-                        boxShadow: '0 4px 12px oklch(0.50 0.20 195 / 0.3)',
-                      }}>Generate Live Key</button>
-                    </>
+                    </div>
                   )}
                 </div>
-              )}
 
-              {/* Bottom Card depending on plan */}
-              {userPlan === 'pro' ? (
-                <div style={{
-                  background: 'oklch(0.18 0.005 250 / 0.4)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 12, padding: '18px 20px',
-                  marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 12,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'oklch(0.72 0.18 265)' }}>
-                    <Icon.Shield size={14} />
-                    <span style={{ fontSize: 12.5, fontWeight: 600 }} className="mono">HIGH-VOLUME API ACCESS</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
-                    You currently have **100 daily production runs**. Upgrade to the **Developer Plan** for priority compute resources, status webhooks, and 1,000 daily requests.
-                  </p>
-                  <button onClick={onShowPaywall} className="reset" style={{
-                    width: '100%', padding: '10px 14px', borderRadius: 8,
-                    background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
-                    color: 'white', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-                    boxShadow: '0 4px 12px oklch(0.50 0.20 265 / 0.25)',
-                    marginTop: 4,
-                  }}>Upgrade to Developer Plan</button>
-                </div>
-              ) : (
-                <div style={{
-                  background: 'oklch(0.18 0.005 250 / 0.4)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 12, padding: '18px 20px',
-                  marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 12,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'oklch(0.78 0.16 145)' }}>
-                    <Icon.Check size={14} />
-                    <span style={{ fontSize: 12.5, fontWeight: 600 }} className="mono">DEVELOPER SERVICE ACTIVE</span>
-                  </div>
-                  <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
-                    Your Developer Plan key is active with up to **1,000 daily production requests** secured. Enjoy custom status webhooks and prioritized queue computation.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+              </div>
 
-        {/* cURL Command Panel */}
-        <div className="glass-card" style={{ display: 'flex', flexDirection: 'column', padding: 28 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'space-between', justifyContent: 'space-between', marginBottom: 16 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 32, height: 32, borderRadius: 8,
-                background: devTab === 'format' ? 'oklch(0.18 0.010 195 / 0.15)' : 'oklch(0.18 0.010 25 / 0.15)',
-                border: devTab === 'format' ? '1px solid oklch(0.78 0.16 195 / 0.3)' : '1px solid oklch(0.78 0.16 25 / 0.3)',
-                color: devTab === 'format' ? 'oklch(0.78 0.16 195)' : 'oklch(0.78 0.16 25)',
-              }}>
-                {devTab === 'format' ? <Icon.Code size={16} /> : <Icon.Image size={16} />}
-              </span>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--fg-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }} className="mono">Integration Example</span>
             </div>
-            <button onClick={handleCopyCurl} className="reset" style={{
-              fontSize: 11, padding: '4px 10px', borderRadius: 6,
-              background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-              color: 'var(--fg-muted)', display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer',
-            }}>
-              {copiedCurl ? (
-                <>
-                  <Icon.Check size={11} style={{ color: 'oklch(0.78 0.16 145)' }} />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Icon.Copy size={11} />
-                  Copy cURL
-                </>
-              )}
-            </button>
+
+            {/* Node operational status matrix section */}
+            <div>
+              <h2 style={{ fontSize: 18, fontWeight: 700, color: 'white', margin: '0 0 16px', letterSpacing: '-0.02em' }}>
+                System Nodes Operational Matrix
+              </h2>
+              <SpaceStatusDashboard />
+            </div>
           </div>
+        )}
 
-          <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginBottom: 16 }}>
-            {devTab === 'format' 
-              ? "Run this standard POST script to execute document parsing instantly."
-              : "Upload a HEIC file using multipart form-data to receive the converted image instantly."}
-          </p>
+        {activeConsoleTab === 'playground' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }} className="fade-in">
+            {/* Sub Tabs */}
+            <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid oklch(0.16 0.006 250)', paddingBottom: 8 }}>
+              <button
+                onClick={() => setPlaygroundSubTab('formatter')}
+                className="reset mono"
+                style={{
+                  padding: '8px 16px', fontSize: 12.5, fontWeight: 600, borderRadius: 6,
+                  border: playgroundSubTab === 'formatter' ? '1px solid oklch(0.68 0.18 265 / 0.4)' : '1px solid transparent',
+                  background: playgroundSubTab === 'formatter' ? 'oklch(0.68 0.18 265 / 0.12)' : 'transparent',
+                  color: playgroundSubTab === 'formatter' ? 'white' : 'oklch(0.50 0.01 250)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
+                }}
+              >
+                <Icon.FileText size={12} />
+                <span>Document Formatter Sandbox</span>
+              </button>
+              <button
+                onClick={() => setPlaygroundSubTab('heic')}
+                className="reset mono"
+                style={{
+                  padding: '8px 16px', fontSize: 12.5, fontWeight: 600, borderRadius: 6,
+                  border: playgroundSubTab === 'heic' ? '1px solid oklch(0.68 0.18 265 / 0.4)' : '1px solid transparent',
+                  background: playgroundSubTab === 'heic' ? 'oklch(0.68 0.18 265 / 0.12)' : 'transparent',
+                  color: playgroundSubTab === 'heic' ? 'white' : 'oklch(0.50 0.01 250)',
+                  cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6
+                }}
+              >
+                <Icon.Image size={12} />
+                <span>HEIC Converter Sandbox</span>
+              </button>
+            </div>
 
-          <pre style={{
-            background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-            borderRadius: 8, padding: '14px 16px', overflowX: 'auto',
-            fontSize: 11.5, 
-            color: isLight 
-              ? (devTab === 'format' ? 'oklch(0.55 0.15 265)' : 'oklch(0.55 0.15 25)') 
-              : (devTab === 'format' ? 'oklch(0.80 0.10 195)' : 'oklch(0.80 0.10 25)'), 
-            lineHeight: 1.5,
-            flex: 1, display: 'block', margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all',
-          }} className="mono">
-            {curlCommand}
-          </pre>
-        </div>
-      </div>
+            {playgroundSubTab === 'formatter' ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 28 }} className="fade-in">
+                {/* Formatter Input Form */}
+                <div style={{ background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>Sandbox Request Data</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Text Content Input</label>
+                    <textarea
+                      value={sandboxInput}
+                      onChange={e => setSandboxInput(e.target.value)}
+                      rows={5}
+                      style={{
+                        width: '100%', background: '#0e0f12', border: '1px solid oklch(0.20 0.008 250)',
+                        borderRadius: 8, padding: 12, color: 'white', fontSize: 13, outline: 'none', fontFamily: 'monospace',
+                        resize: 'vertical', boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
 
-      {/* Interactive Sandbox & Terminal section */}
-      <div className="glass-card" style={{ marginTop: 24, padding: '32px 28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 32, height: 32, borderRadius: 8,
-            background: devTab === 'format' ? 'oklch(0.18 0.010 195 / 0.15)' : 'oklch(0.18 0.010 25 / 0.15)',
-            border: devTab === 'format' ? '1px solid oklch(0.78 0.16 195 / 0.3)' : '1px solid oklch(0.78 0.16 25 / 0.3)',
-            color: devTab === 'format' ? 'oklch(0.78 0.16 195)' : 'oklch(0.78 0.16 25)',
-          }}>
-            <Icon.Sparkles size={16} />
-          </span>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--fg)', margin: 0 }}>Interactive API Sandbox Playground</h2>
-        </div>
+                  <button
+                    onClick={runSandboxTest}
+                    disabled={sandboxLoading}
+                    className="reset"
+                    style={{
+                      width: '100%', padding: '12px 18px', borderRadius: 8,
+                      background: 'linear-gradient(180deg, oklch(0.68 0.18 265), oklch(0.58 0.20 265))',
+                      color: 'white', fontWeight: 600, fontSize: 13, cursor: sandboxLoading ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      boxShadow: '0 4px 12px oklch(0.68 0.18 265 / 0.3)', border: 'none'
+                    }}
+                  >
+                    {sandboxLoading ? <Icon.Loader size={14} className="spin" /> : <Icon.Zap size={14} />}
+                    <span>{sandboxLoading ? 'Formatting Output...' : 'Execute Format API call'}</span>
+                  </button>
+                </div>
 
-        <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.5, marginTop: -8, marginBottom: 24 }}>
-          Send live test requests and monitor raw response returns right inside the developer terminal.
-        </p>
+                {/* Formatter Result Output */}
+                <div style={{ background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>API Server Response</h3>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 }}>
-          {/* Sandbox Request Settings */}
-          {devTab === 'format' ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>REQUEST DATA BODY</label>
-                <textarea
-                  rows={4}
-                  value={sandboxInput}
-                  onChange={e => setSandboxInput(e.target.value)}
-                  placeholder="Type anything to test the parser..."
+                  {sandboxResult ? (
+                    <pre style={{
+                      background: '#07080a', border: '1px solid #16181d', borderRadius: 10,
+                      padding: 16, margin: 0, fontSize: 11.5, lineHeight: 1.5,
+                      color: sandboxResult.status === 'error' ? 'oklch(0.65 0.22 20)' : '#a5b4fc',
+                      overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+                      fontFamily: 'monospace', flex: 1, minHeight: 180
+                    }}>
+                      {JSON.stringify(sandboxResult, null, 2)}
+                    </pre>
+                  ) : (
+                    <div style={{ flex: 1, border: '1px dashed oklch(0.20 0.008 250)', borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, gap: 10, color: 'oklch(0.50 0.01 250)', minHeight: 180 }}>
+                      <Icon.Code size={28} style={{ opacity: 0.5 }} />
+                      <span style={{ fontSize: 12, fontFamily: 'monospace' }}>tail -f response/output.json</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 28 }} className="fade-in">
+                {/* HEIC Form */}
+                <div style={{ background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>Sandbox Request Data</h3>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Target Output Format</label>
+                    <select
+                      value={heicSandboxFormat}
+                      onChange={e => setHeicSandboxFormat(e.target.value as any)}
+                      style={{
+                        width: '100%', background: '#0e0f12', border: '1px solid oklch(0.20 0.008 250)',
+                        borderRadius: 8, padding: 10, color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer'
+                      }}
+                    >
+                      <option value="jpg">Convert to JPEG format (.jpg)</option>
+                      <option value="png">Convert to PNG format (.png)</option>
+                    </select>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <label style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Upload HEIC File</label>
+                    <input
+                      type="file"
+                      accept=".heic,.heif"
+                      ref={fileInputSandboxRef}
+                      onChange={e => setHeicSandboxFile(e.target.files?.[0] || null)}
+                      style={{ display: 'none' }}
+                    />
+                    <div 
+                      onClick={() => fileInputSandboxRef.current?.click()}
+                      style={{
+                        border: '1px dashed oklch(0.20 0.008 250)', borderRadius: 8, background: '#0e0f12',
+                        padding: '20px 12px', textAlign: 'center', cursor: 'pointer',
+                        color: heicSandboxFile ? 'white' : 'oklch(0.50 0.01 250)', fontSize: 13
+                      }}
+                    >
+                      {heicSandboxFile ? `Uploaded: ${heicSandboxFile.name} (${(heicSandboxFile.size / 1024 / 1024).toFixed(2)} MB)` : 'Click here to pick test HEIC image file'}
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={runHeicSandboxTest}
+                    disabled={heicSandboxLoading}
+                    className="reset"
+                    style={{
+                      width: '100%', padding: '12px 18px', borderRadius: 8,
+                      background: 'linear-gradient(180deg, oklch(0.68 0.18 265), oklch(0.58 0.20 265))',
+                      color: 'white', fontWeight: 600, fontSize: 13, cursor: heicSandboxLoading ? 'not-allowed' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                      boxShadow: '0 4px 12px oklch(0.68 0.18 265 / 0.3)', border: 'none'
+                    }}
+                  >
+                    {heicSandboxLoading ? <Icon.Loader size={14} className="spin" /> : <Icon.Zap size={14} />}
+                    <span>{heicSandboxLoading ? 'Converting HEIC...' : 'Execute Convert Image API call'}</span>
+                  </button>
+                </div>
+
+                {/* HEIC Result Output */}
+                <div style={{ background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)', borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>API Server Response</h3>
+
+                  {heicSandboxResult ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14, flex: 1 }}>
+                      <pre style={{
+                        background: '#07080a', border: '1px solid #16181d', borderRadius: 10,
+                        padding: 12, margin: 0, fontSize: 11, lineHeight: 1.4,
+                        color: heicSandboxResult.status === 'error' ? 'oklch(0.65 0.22 20)' : '#a5b4fc',
+                        overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+                        fontFamily: 'monospace'
+                      }}>
+                        {JSON.stringify({
+                          status: heicSandboxResult.status,
+                          message: heicSandboxResult.message,
+                          contentType: heicSandboxResult.contentType,
+                          sizeBytes: heicSandboxResult.sizeBytes
+                        }, null, 2)}
+                      </pre>
+                      
+                      {heicSandboxResultUrl && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                          <span style={{ fontSize: 11, color: 'oklch(0.50 0.01 250)', fontWeight: 600 }}>CONVERTED BINARY IMAGE PREVIEW</span>
+                          <div style={{ border: '1px solid oklch(0.20 0.008 250)', borderRadius: 8, padding: 6, background: '#0e0f12', textAlign: 'center' }}>
+                            <img 
+                              src={heicSandboxResultUrl} 
+                              alt="Converted HEIC Sandbox Result" 
+                              style={{ maxWidth: '100%', maxHeight: 180, borderRadius: 6, objectFit: 'contain' }} 
+                            />
+                          </div>
+                          <a 
+                            href={heicSandboxResultUrl} 
+                            download={`sandbox_converted_image.${heicSandboxFormat}`}
+                            style={{ alignSelf: 'flex-start', fontSize: 12, fontWeight: 600, color: 'oklch(0.68 0.18 265)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}
+                          >
+                            <span>Download Converted File</span>
+                            <Icon.ArrowRight size={11} />
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div style={{ flex: 1, border: '1px dashed oklch(0.20 0.008 250)', borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, gap: 10, color: 'oklch(0.50 0.01 250)', minHeight: 180 }}>
+                      <Icon.Code size={28} style={{ opacity: 0.5 }} />
+                      <span style={{ fontSize: 12, fontFamily: 'monospace' }}>tail -f response/output.json</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeConsoleTab === 'credentials' && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: 28 }} className="fade-in">
+            {/* Left side: credentials Rotate & CORS */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+              
+              {/* API Keys Card */}
+              <div style={{
+                background: 'oklch(0.14 0.006 250)',
+                border: '1px solid oklch(0.20 0.008 250)',
+                borderRadius: 16,
+                padding: 24,
+                display: 'flex', flexDirection: 'column', gap: 20
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid oklch(0.20 0.008 250)', paddingBottom: 14 }}>
+                  <Icon.Database size={16} style={{ color: 'oklch(0.68 0.18 265)' }} />
+                  <div>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>API Credentials</h3>
+                    <p style={{ fontSize: 11.5, color: 'oklch(0.50 0.01 250)', margin: 0 }}>Access tokens targeting formatting and media pipelines.</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Account Details Row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid oklch(0.16 0.006 250)', paddingBottom: 12 }}>
+                    <div>
+                      <span style={{ fontSize: 9, color: 'oklch(0.50 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Access Tier</span>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'white', marginTop: 2 }}>{planName}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: 9, color: 'oklch(0.50 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Rate Limit</span>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'white', marginTop: 2 }}>{rateLimit}</div>
+                    </div>
+                  </div>
+
+                  {/* Key block */}
+                  <div style={{
+                    background: 'oklch(0.12 0.005 250 / 0.6)', border: '1px solid oklch(0.18 0.008 250)',
+                    borderRadius: 10, padding: 16, display: 'flex', flexDirection: 'column', gap: 12
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'white' }}>Default Secret Key</span>
+                      <span style={{
+                        fontSize: 8.5, fontWeight: 700, fontFamily: 'monospace',
+                        background: isAnonUser ? 'oklch(0.72 0.18 25 / 0.12)' : 'oklch(0.78 0.16 145 / 0.12)',
+                        border: isAnonUser ? '1px solid oklch(0.72 0.18 25 / 0.3)' : '1px solid oklch(0.78 0.16 145 / 0.3)',
+                        color: isAnonUser ? 'oklch(0.72 0.18 25)' : 'oklch(0.78 0.16 145)',
+                        padding: '1px 6px', borderRadius: 4, textTransform: 'uppercase'
+                      }}>
+                        {isAnonUser ? 'Sandbox' : 'Production'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#0e0f12', border: '1px solid #1c1d22', padding: '8px 12px', borderRadius: 6 }}>
+                      <code style={{ flex: 1, fontFamily: 'monospace', fontSize: 11.5, color: '#a5b4fc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {apiKey ? (
+                          isKeyRevealed ? apiKey : `${apiKey.slice(0, 12)}${'•'.repeat(Math.max(1, apiKey.length - 12))}`
+                        ) : (
+                          'ms_sandbox_unassigned_key'
+                        )}
+                      </code>
+                      
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {apiKey && (
+                          <button
+                            type="button"
+                            onClick={() => setIsKeyRevealed(!isKeyRevealed)}
+                            className="reset"
+                            style={{ color: 'oklch(0.50 0.01 250)', cursor: 'pointer', display: 'flex', padding: 4, background: 'none', border: 'none' }}
+                            title={isKeyRevealed ? "Hide Secret Key" : "Reveal Secret Key"}
+                          >
+                            {isKeyRevealed ? <Icon.EyeOff size={13} /> : <Icon.Eye size={13} />}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={handleCopyKey}
+                          className="reset"
+                          style={{ color: uuidCopied ? 'oklch(0.78 0.16 145)' : 'white', cursor: 'pointer', display: 'flex', padding: 4, background: 'none', border: 'none' }}
+                          title="Copy Key to Clipboard"
+                        >
+                          {uuidCopied ? <Icon.Check size={13} /> : <Icon.Copy size={13} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'oklch(0.50 0.01 250)' }}>
+                      <span>Scope: Read & Write</span>
+                      <span>Created: Active Session</span>
+                    </div>
+                  </div>
+
+                  {/* Regenerate Trigger */}
+                  {!isAnonUser && (
+                    <button
+                      type="button"
+                      onClick={handleRegenerateKey}
+                      disabled={isRegenerating}
+                      className="reset"
+                      style={{
+                        padding: '10px 0', border: '1px dashed oklch(0.24 0.01 250)', borderRadius: 8,
+                        fontSize: 12, fontWeight: 600, color: 'oklch(0.70 0.01 250)', cursor: isRegenerating ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s',
+                        background: 'transparent'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'white'; e.currentTarget.style.color = 'white'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'oklch(0.24 0.01 250)'; e.currentTarget.style.color = 'oklch(0.70 0.01 250)'; }}
+                    >
+                      {isRegenerating ? <Icon.Loader size={12} className="spin" /> : <Icon.RefreshCw size={11} />}
+                      {isRegenerating ? 'Rotating Token...' : 'Rotate API Key'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Advanced CORS Setting */}
+              <div style={{
+                background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)',
+                borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 12
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'white', fontWeight: 600, fontSize: 13 }}>
+                  <Icon.Globe size={14} style={{ color: 'oklch(0.68 0.18 265)' }} />
+                  <span>Allowed Web Origins (CORS)</span>
+                </div>
+                <p style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', margin: 0, lineHeight: 1.45 }}>
+                  Restrict browser requests to specific domains (e.g. `https://my-domain.com`). Leave `*` to permit all.
+                </p>
+                <input
+                  type="text"
+                  value={allowedOrigins}
+                  onChange={e => handleSaveOrigins(e.target.value)}
                   style={{
-                    width: '100%', padding: '11px 14px', borderRadius: 8,
-                    background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-                    color: 'var(--fg)', fontSize: 13, outline: 'none',
-                    resize: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
-                    transition: 'border-color 0.15s',
+                    width: '100%', background: '#0e0f12', border: '1px solid oklch(0.20 0.008 250)',
+                    borderRadius: 8, padding: '8px 12px', color: 'white', fontSize: 13, outline: 'none',
+                    boxSizing: 'border-box'
                   }}
-                  onFocus={e => e.currentTarget.style.borderColor = 'var(--accent)'}
-                  onBlur={e => e.currentTarget.style.borderColor = 'var(--border)'}
                 />
               </div>
 
-              <button
-                onClick={runSandboxTest}
-                disabled={sandboxLoading}
-                className="reset"
-                style={{
-                  width: '100%', padding: '11px 14px', borderRadius: 8,
-                  background: sandboxLoading 
-                    ? 'var(--bg-elev-2)' 
-                    : 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
-                  border: sandboxLoading ? '1px solid var(--border)' : 'none',
-                  color: sandboxLoading ? 'var(--fg-dim)' : 'white',
-                  fontWeight: 600, fontSize: 13, cursor: sandboxLoading ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  boxShadow: sandboxLoading ? 'none' : '0 4px 12px oklch(0.50 0.20 195 / 0.25)',
-                }}
-              >
-                {sandboxLoading ? (
-                  <>
-                    <Icon.Loader size={14} className="spinning" />
-                    Streaming Response...
-                  </>
-                ) : (
-                  <>
-                    ⚡
-                    <span>Test API Endpoint</span>
-                  </>
-                )}
-              </button>
+            </div>
 
-              {/* Simulated Live Analytics */}
+            {/* Right side: Snippets & OpenAPI Specs */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+              
+              {/* Integration Snippets Card */}
               <div style={{
-                background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-                borderRadius: 10, padding: '14px 16px', display: 'flex', flexWrap: 'wrap', gap: 16,
-                justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto',
+                background: 'oklch(0.14 0.006 250)',
+                border: '1px solid oklch(0.20 0.008 250)',
+                borderRadius: 16,
+                padding: 24,
+                display: 'flex', flexDirection: 'column', gap: 16
               }}>
                 <div>
-                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>API STATUS</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.16 145)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }} />
-                    OPERATIONAL
-                  </div>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>API Integration Snippets</h3>
+                  <p style={{ fontSize: 11.5, color: 'oklch(0.50 0.01 250)', margin: '4px 0 0' }}>Authenticate your programs using standard HTTP request headers.</p>
                 </div>
-                <div>
-                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>AVERAGE LATENCY</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>42ms</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>GLOBAL UPTIME</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>100%</div>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>UPLOAD TEST HEIC FILE</label>
-                <div
-                  onClick={() => fileInputSandboxRef.current?.click()}
-                  style={{
-                    border: '1px dashed var(--border)', borderRadius: 8,
-                    padding: '20px 16px', textAlign: 'center', cursor: 'pointer',
-                    background: 'oklch(0.12 0.004 250 / 0.3)', transition: 'background 0.15s',
-                  }}
-                  onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.12 0.004 250 / 0.5)'}
-                  onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.12 0.004 250 / 0.3)'}
-                >
-                  <input
-                    type="file"
-                    accept=".heic,.heif"
-                    ref={fileInputSandboxRef}
-                    onChange={e => e.target.files?.[0] && setHeicSandboxFile(e.target.files[0])}
-                    style={{ display: 'none' }}
-                  />
-                  <Icon.FileDown size={24} style={{ color: 'var(--fg-dim)', marginBottom: 6 }} />
-                  <div style={{ fontSize: 12.5, fontWeight: 500, color: 'white' }}>
-                    {heicSandboxFile ? `📄 ${heicSandboxFile.name} (${(heicSandboxFile.size / (1024 * 1024)).toFixed(2)} MB)` : "Click to select a HEIC photo"}
-                  </div>
-                  <div style={{ fontSize: 10.5, color: 'var(--fg-subtle)', marginTop: 4 }}>
-                    Converts client-side or proxies to active Space node.
-                  </div>
-                </div>
-              </div>
 
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-                <label style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', textTransform: 'uppercase' }}>TARGET FORMAT</label>
-                <div style={{ display: 'flex', gap: 4, background: 'oklch(0.12 0.004 250)', padding: 3, borderRadius: 6, border: '1px solid var(--border)' }}>
-                  <button
-                    onClick={() => setHeicSandboxFormat('jpg')}
-                    className="reset mono"
-                    style={{
-                      padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 4,
-                      background: heicSandboxFormat === 'jpg' ? 'oklch(0.20 0.008 250)' : 'transparent',
-                      color: heicSandboxFormat === 'jpg' ? 'white' : 'var(--fg-muted)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    JPG
-                  </button>
-                  <button
-                    onClick={() => setHeicSandboxFormat('png')}
-                    className="reset mono"
-                    style={{
-                      padding: '4px 10px', fontSize: 11, fontWeight: 600, borderRadius: 4,
-                      background: heicSandboxFormat === 'png' ? 'oklch(0.20 0.008 250)' : 'transparent',
-                      color: heicSandboxFormat === 'png' ? 'white' : 'var(--fg-muted)',
-                      cursor: 'pointer',
-                    }}
-                  >
-                    PNG
-                  </button>
+                <div style={{ display: 'flex', gap: 8, background: '#0e0f12', border: '1px solid #1c1d22', padding: 4, borderRadius: 8 }}>
+                  {(['curl', 'js', 'python', 'go'] as const).map(tab => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setSnippetTab(tab)}
+                      className="reset"
+                      style={{
+                        flex: 1, padding: '6px 8px', borderRadius: 6,
+                        fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                        background: snippetTab === tab ? 'oklch(0.20 0.01 250)' : 'transparent',
+                        border: snippetTab === tab ? '1px solid oklch(0.28 0.01 250)' : '1px solid transparent',
+                        color: snippetTab === tab ? 'white' : 'oklch(0.50 0.01 250)',
+                        textAlign: 'center', transition: 'all 0.15s'
+                      }}
+                    >
+                      {tab === 'curl' ? 'cURL' : tab === 'js' ? 'JS Fetch' : tab === 'python' ? 'Python' : 'Go'}
+                    </button>
+                  ))}
                 </div>
-              </div>
 
-              <button
-                onClick={runHeicSandboxTest}
-                disabled={heicSandboxLoading}
-                className="reset"
-                style={{
-                  width: '100%', padding: '11px 14px', borderRadius: 8,
-                  background: heicSandboxLoading 
-                    ? 'var(--bg-elev-2)' 
-                    : 'linear-gradient(180deg, oklch(0.72 0.18 25), oklch(0.62 0.20 25))',
-                  border: heicSandboxLoading ? '1px solid var(--border)' : 'none',
-                  color: heicSandboxLoading ? 'var(--fg-dim)' : 'white',
-                  fontWeight: 600, fontSize: 13, cursor: heicSandboxLoading ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                  boxShadow: heicSandboxLoading ? 'none' : '0 4px 12px oklch(0.50 0.20 25 / 0.25)',
-                }}
-              >
-                {heicSandboxLoading ? (
-                  <>
-                    <Icon.Loader size={14} className="spinning" />
-                    Converting Image...
-                  </>
-                ) : (
-                  <>
-                    ⚡
-                    <span>Test Image Conversion API</span>
-                  </>
-                )}
-              </button>
-
-              {/* Simulated Live Analytics */}
-              <div style={{
-                background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-                borderRadius: 10, padding: '14px 16px', display: 'flex', flexWrap: 'wrap', gap: 16,
-                justifyContent: 'space-between', alignItems: 'center', marginTop: 'auto',
-              }}>
-                <div>
-                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>API STATUS</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'oklch(0.78 0.16 145)', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }} />
-                    OPERATIONAL
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>AVERAGE LATENCY</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>148ms</div>
-                </div>
-                <div>
-                  <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600 }}>GLOBAL UPTIME</div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>100%</div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Sandbox Response Terminal */}
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>RESPONSE HEADERS & BODY</div>
-            <div style={{
-              flex: 1, background: '#0e0f12', border: '1px solid #1c1d22',
-              borderRadius: 8, padding: '14px 16px', overflowY: 'auto',
-              fontFamily: 'monospace', fontSize: 12, color: '#a5b4fc', lineHeight: 1.5,
-              minHeight: 200, display: 'flex', flexDirection: 'column', boxSizing: 'border-box',
-            }}>
-              {devTab === 'format' ? (
-                sandboxLoading ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#6366f1', margin: 'auto' }}>
-                    <Icon.Loader size={18} className="spinning" />
-                    <span>Waiting for API data streams...</span>
-                  </div>
-                ) : sandboxResult ? (
-                  <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                    {JSON.stringify(sandboxResult, null, 2)}
+                <div style={{ position: 'relative' }}>
+                  <pre style={{
+                    background: '#07080a', border: '1px solid #16181d', borderRadius: 10,
+                    padding: 16, margin: 0, fontSize: 11.5, lineHeight: 1.5,
+                    color: '#a5b4fc', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+                    fontFamily: 'monospace', textAlign: 'left', maxHeight: 220
+                  }}>
+                    {codeSnippets[snippetTab]}
                   </pre>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--fg-dim)', margin: 'auto', textAlign: 'center' }}>
-                    <Icon.Terminal size={24} style={{ opacity: 0.5 }} />
-                    <span style={{ fontSize: 12, maxWidth: 200 }}>Terminal idle. Click "Test API Endpoint" to execute.</span>
-                  </div>
-                )
-              ) : (
-                heicSandboxLoading ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: 'oklch(0.78 0.16 25)', margin: 'auto' }}>
-                    <Icon.Loader size={18} className="spinning" />
-                    <span>Processing binary image conversion...</span>
-                  </div>
-                ) : heicSandboxResult ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                    <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                      {JSON.stringify(heicSandboxResult, null, 2)}
-                    </pre>
-                    {heicSandboxResultUrl && (
-                      <div style={{
-                        marginTop: 14, paddingTop: 14, borderTop: '1px solid #1c1d22',
-                        display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center'
-                      }}>
-                        <div style={{ fontSize: 10.5, color: 'oklch(0.78 0.16 25)', fontWeight: 600, width: '100%', textAlign: 'left' }} className="mono">Visual Sandbox Output Preview:</div>
-                        <img
-                          src={heicSandboxResultUrl}
-                          alt="Sandbox API Converted Preview"
-                          style={{ maxWidth: '100%', maxHeight: 110, objectFit: 'contain', borderRadius: 6, border: '1px solid #1c1d22' }}
-                        />
-                        <a
-                          href={heicSandboxResultUrl}
-                          download={`sandbox_converted.${heicSandboxFormat}`}
-                          style={{
-                            display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 11.5,
-                            color: 'white', textDecoration: 'none', background: 'oklch(0.18 0.010 25 / 0.5)',
-                            border: '1px solid oklch(0.78 0.16 25 / 0.2)', padding: '5px 12px', borderRadius: 6,
-                            marginTop: 4, transition: 'background 0.15s'
-                          }}
-                          onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.18 0.010 25 / 0.8)'}
-                          onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.18 0.010 25 / 0.5)'}
-                        >
-                          <Icon.Download size={11} /> Download Converted Sandbox Image
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, color: 'var(--fg-dim)', margin: 'auto', textAlign: 'center' }}>
-                    <Icon.Terminal size={24} style={{ opacity: 0.5 }} />
-                    <span style={{ fontSize: 12, maxWidth: 200 }}>Terminal idle. Upload HEIC and click "Test Image Conversion API" to execute.</span>
-                  </div>
-                )
-              )}
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(codeSnippets[snippetTab]);
+                      alert("Snippet copied to clipboard!");
+                    }}
+                    className="reset"
+                    style={{
+                      position: 'absolute', top: 10, right: 10,
+                      background: 'oklch(0.14 0.006 250 / 0.8)', border: '1px solid oklch(0.24 0.01 250)',
+                      color: 'white', padding: '4px 8px', borderRadius: 6,
+                      fontSize: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                    }}
+                  >
+                    <Icon.Copy size={10} />
+                    <span>Copy</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* OpenAPI spec sheet download */}
+              <div style={{
+                background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)',
+                padding: 24, borderRadius: 16, display: 'flex', alignItems: 'center', gap: 16
+              }}>
+                <Icon.Server size={28} style={{ color: 'oklch(0.70 0.15 195)', flexShrink: 0 }} />
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'white' }}>OpenAPI Spec Specifications</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'oklch(0.50 0.01 250)', lineHeight: 1.45 }}>
+                    Download our OpenAPI 3.0 specs to instantly generate types, API clients, and mock servers.
+                  </p>
+                  <a href="/api/openapi.json" download="openapi.json" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600,
+                    color: 'oklch(0.70 0.15 195)', textDecoration: 'none', marginTop: 10
+                  }}>
+                    Download openapi.json <Icon.ArrowRight size={11} />
+                  </a>
+                </div>
+              </div>
+
             </div>
           </div>
-        </div>
+        )}
       </div>
-        </>
-      )}
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40, position: 'relative', zIndex: 1 }}>
         <button onClick={onLaunch} className="reset" style={{
           padding: '11px 24px', borderRadius: 9,
           background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
@@ -4511,6 +4579,78 @@ function AccountPage({
   const isLoggedIn = !!sessionUser && !sessionUser.is_anonymous;
 
   const [apiKey, setApiKey] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('profile');
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [snippetTab, setSnippetTab] = useState<'curl' | 'js' | 'python' | 'go' | 'rust' | 'csharp' | 'java' | 'php' | 'ruby'>('curl');
+  const [allowedOrigins, setAllowedOrigins] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('ms_allowed_origins') || '*';
+    }
+    return '*';
+  });
+
+  // Sync hash changes to switch sidebar tabs
+  useEffect(() => {
+    const handleHashCheck = () => {
+      if (typeof window !== 'undefined') {
+        const hash = window.location.hash.replace('#', '');
+        if (['profile', 'security', 'preferences', 'billing', 'api-keys', 'danger'].includes(hash)) {
+          setActiveTab(hash);
+        }
+      }
+    };
+
+    handleHashCheck();
+    window.addEventListener('hashchange', handleHashCheck);
+    return () => {
+      window.removeEventListener('hashchange', handleHashCheck);
+    };
+  }, []);
+
+  const changeTab = (tab: string) => {
+    setActiveTab(tab);
+    if (typeof window !== 'undefined') {
+      window.history.pushState(null, '', `#${tab}`);
+    }
+  };
+
+  const handleRegenerateKey = async () => {
+    if (!supabase || !sessionUser || isAnonUser) return;
+    const confirmRotate = confirm("Are you sure you want to regenerate your API Key? All current applications using this key will immediately receive a 401 Unauthorized status.");
+    if (!confirmRotate) return;
+
+    setIsRegenerating(true);
+    try {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let randomString = '';
+      for (let i = 0; i < 24; i++) {
+        randomString += chars[Math.floor(Math.random() * chars.length)];
+      }
+      const isPaidUser = userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin';
+      const keyPrefix = isPaidUser ? 'ms_live_prod_' : 'ms_sandbox_';
+      const generatedKey = `${keyPrefix}${randomString}`;
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({ api_key: generatedKey })
+        .eq('id', sessionUser.id);
+
+      if (error) throw error;
+      setApiKey(generatedKey);
+      alert("API Key rotated successfully!");
+    } catch (err: any) {
+      alert("Failed to rotate API Key: " + err.message);
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
+
+  const handleSaveOrigins = (origins: string) => {
+    setAllowedOrigins(origins);
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('ms_allowed_origins', origins);
+    }
+  };
 
   useEffect(() => {
     async function loadKey() {
@@ -4971,14 +5111,29 @@ function AccountPage({
   const planPrice = userPlan === 'api' ? '$29.00' : userPlan === 'pro' ? '$9.00' : '$0.00';
   const planPeriod = userPlan === 'free' ? 'forever' : 'month';
   const planLimits = userPlan === 'api' 
-    ? 'Unlimited browser usage + 30,000 monthly API bearer token runs' 
+    ? '2,000 daily API bearer token runs (120/min)' 
     : userPlan === 'pro' 
-      ? 'Unlimited browser usage + 1,000 high-precision document scans/mo' 
-      : '20 daily runs on Free tools + 2 daily scans on Tier 2 heavy tools';
+      ? '200 daily API runs (30/min)' 
+      : '10 daily runs (10/min)';
+
+  const activeKeyForSnippet = apiKey || 'sb_publishable_V66dv60NGqpWQ80q3PyALQ_Z4w0_08U';
+  const codeSnippets: Record<string, string> = {
+    curl: `curl -X POST https://mysaastools.vercel.app/api/v1/format \\\n  -H "Authorization: Bearer ${activeKeyForSnippet}" \\\n  -H "Content-Type: application/json" \\\n  -d '{\n    "text": "messy text here",\n    "style": "modern"\n  }'`,
+    js: `fetch('https://mysaastools.vercel.app/api/v1/format', {\n  method: 'POST',\n  headers: {\n    'Authorization': 'Bearer ${activeKeyForSnippet}',\n    'Content-Type': 'application/json'\n  },\n  body: JSON.stringify({\n    text: 'messy text here',\n    style: 'modern'\n  })\n})\n.then(res => res.json())\n.then(data => console.log(data));`,
+    python: `import requests\n\nurl = "https://mysaastools.vercel.app/api/v1/format"\nheaders = {\n    "Authorization": "Bearer ${activeKeyForSnippet}",\n    "Content-Type": "application/json"\n}\npayload = {\n    "text": "messy text here",\n    "style": "modern"\n}\n\nresponse = requests.post(url, json=payload, headers=headers)\nprint(response.json())`,
+    go: `package main\n\nimport (\n\t"bytes"\n\t"encoding/json"\n\t"fmt"\n\t"net/http"\n\t"io"\n)\n\nfunc main() {\n\turl := "https://mysaastools.vercel.app/api/v1/format"\n\tpayload := map[string]string{"text": "messy text here", "style": "modern"}\n\tjsonVal, _ := json.Marshal(payload)\n\n\treq, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonVal))\n\treq.Header.Set("Authorization", "Bearer ${activeKeyForSnippet}")\n\treq.Header.Set("Content-Type", "application/json")\n\n\tclient := &http.Client{}\n\tresp, _ := client.Do(req)\n\tdefer resp.Body.Close()\n\n\tbody, _ := io.ReadAll(resp.Body)\n\tfmt.Println(string(body))\n}`,
+    rust: `use reqwest::header::{HeaderMap, HeaderValue, AUTHORIZATION, CONTENT_TYPE};\nuse serde_json::json;\n\n#[tokio::main]\nasync fn main() -> Result<(), Box<dyn std::error::Error>> {\n    let mut headers = HeaderMap::new();\n    headers.insert(AUTHORIZATION, HeaderValue::from_static("Bearer ${activeKeyForSnippet}"));\n    headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));\n\n    let payload = json!({"text": "messy text here", "style": "modern"});\n    let res = reqwest::Client::new()\n        .post("https://mysaastools.vercel.app/api/v1/format")\n        .headers(headers).json(&payload).send().await?.text().await?;\n\n    println!("{}", res);\n    Ok(())\n}`,
+    csharp: `using System;\nusing System.Net.Http;\nusing System.Text;\nusing System.Text.Json;\nusing System.Threading.Tasks;\n\nclass Program\n{\n    static async Task Main()\n    {\n        var client = new HttpClient();\n        var payload = new { text = "messy text here", style = "modern" };\n        var json = JsonSerializer.Serialize(payload);\n        var content = new StringContent(json, Encoding.UTF8, "application/json");\n        \n        client.DefaultRequestHeaders.Add("Authorization", "Bearer ${activeKeyForSnippet}");\n        var response = await client.PostAsync("https://mysaastools.vercel.app/api/v1/format", content);\n        Console.WriteLine(await response.Content.ReadAsStringAsync());\n    }\n}`,
+    java: `import java.net.URI;\nimport java.net.http.HttpClient;\nimport java.net.http.HttpRequest;\nimport java.net.http.HttpResponse;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        String json = "{\\"text\\":\\"messy text here\\",\\"style\\":\\"modern\\"}";\n        HttpRequest request = HttpRequest.newBuilder()\n                .uri(URI.create("https://mysaastools.vercel.app/api/v1/format"))\n                .header("Authorization", "Bearer ${activeKeyForSnippet}")\n                .header("Content-Type", "application/json")\n                .POST(HttpRequest.BodyPublishers.ofString(json))\n                .build();\n        HttpResponse<String> response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());\n        System.out.println(response.body());\n    }\n}`,
+    php: `<?php\n$data = ['text' => 'messy text here', 'style' => 'modern'];\n$ch = curl_init('https://mysaastools.vercel.app/api/v1/format');\ncurl_setopt($ch, CURLOPT_RETURNTRANSFER, true);\ncurl_setopt($ch, CURLOPT_POST, true);\ncurl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));\ncurl_setopt($ch, CURLOPT_HTTPHEADER, ['Authorization: Bearer ${activeKeyForSnippet}', 'Content-Type: application/json']);\n$response = curl_exec($ch);\ncurl_close($ch);\necho $response;\n?>`,
+    ruby: `require 'net/http'\nrequire 'uri'\nrequire 'json'\n\nuri = URI.parse("https://mysaastools.vercel.app/api/v1/format")\nrequest = Net::HTTP::Post.new(uri)\nrequest["Authorization"] = "Bearer ${activeKeyForSnippet}"\nrequest["Content-Type"] = "application/json"\nrequest.body = JSON.dump({"text" => "messy text here", "style" => "modern"})\n\nreq_options = { use_ssl: uri.scheme == "https" }\nresponse = Net::HTTP.start(uri.hostname, uri.port, req_options) do |http|\n  http.request(request)\nend\nputs response.body`
+  };
+
+  const dailyLimitMax = userPlan === 'api' ? 2000 : userPlan === 'pro' ? 200 : isAnonUser ? 3 : 10;
 
   return (
     <div style={{
-      maxWidth: 850, margin: '40px auto 120px',
+      maxWidth: 1040, margin: '40px auto 120px',
       padding: '0 24px', boxSizing: 'border-box',
       position: 'relative',
     }} className="fade-in">
@@ -4996,561 +5151,659 @@ function AccountPage({
         <p style={{ fontSize: 14, color: 'var(--fg-dim)', margin: '6px 0 0' }}>Configure your display name, regional localizations, layout preferences, and manage secure SaaS billing.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 28, position: 'relative', zIndex: 1 }}>
+      <div style={{ display: 'flex', flexDirection: 'row', gap: 32, flexWrap: 'wrap', position: 'relative', zIndex: 1, alignItems: 'start' }}>
         
-        {/* Section 1: Profile Information (B2C Focus) */}
-        <form onSubmit={handleSaveProfile} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 265 / 0.15)',
-              border: '1px solid oklch(0.70 0.18 265 / 0.3)',
-              color: 'oklch(0.70 0.18 265)',
-            }}>
-              <Icon.Braces size={16} />
-            </span>
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Profile Details</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Update your registered public user handle and full display name.</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Registered Email</label>
-              <input type="text" readOnly value={sessionUser?.email || ''} style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8,
-                background: 'oklch(0.10 0.002 250)', border: '1px solid var(--border)',
-                color: 'var(--fg-muted)', fontSize: 13, outline: 'none', cursor: 'not-allowed', boxSizing: 'border-box'
-              }} />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Full Display Name</label>
-              <input type="text" placeholder="Your full name" value={profileName} onChange={e => setProfileName(e.target.value)} style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8,
-                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-              }} />
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Username Handle</label>
-              <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
-                <span style={{ position: 'absolute', left: 12, fontSize: 13, color: 'var(--fg-dim)' }}>@</span>
-                <input type="text" placeholder="username" value={profileUsername} onChange={e => setProfileUsername(e.target.value)} style={{
-                  width: '100%', padding: '10px 12px 10px 26px', borderRadius: 8,
-                  background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                  color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                }} />
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-            <span style={{ fontSize: 12, color: profileError ? 'oklch(0.60 0.20 20)' : 'oklch(0.78 0.16 145)' }}>
-              {profileSuccess && "✓ Profile details updated successfully!"}
-              {profileError && profileError}
-            </span>
-            <button type="submit" disabled={isSavingProfile} className="reset" style={{
-              padding: '10px 20px', borderRadius: 8,
-              background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
-              color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px oklch(0.96 0.005 250 / 0.15)'
-            }}>
-              {isSavingProfile ? 'Saving...' : 'Save Profile Details'}
-            </button>
-          </div>
-        </form>
-
-        {/* Section 2: Security Credentials */}
-        <form onSubmit={handleUpdatePassword} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 15 / 0.15)',
-              border: '1px solid oklch(0.70 0.18 15 / 0.3)',
-              color: 'oklch(0.70 0.18 15)',
-            }}>
-              <Icon.Lock size={16} />
-            </span>
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Security Settings</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Update your account password. Secure crypt-hash applies.</p>
-            </div>
-          </div>
-
-          {!showPasswordFields ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', padding: '8px 0' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontSize: 13, fontWeight: 550, color: 'white' }}>Account Password Protection</span>
-                <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Last updated details saved. Minimum length constraints apply.</span>
-              </div>
+        {/* Sidebar Tabs */}
+        <div style={{
+          width: 220,
+          flexShrink: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 6,
+          position: 'sticky',
+          top: 100,
+          alignSelf: 'start',
+        }}>
+          {[
+            { id: 'profile', label: 'Profile Settings', icon: Icon.User },
+            { id: 'security', label: 'Security & Access', icon: Icon.Lock },
+            { id: 'preferences', label: 'Preferences', icon: Icon.Sliders },
+            { id: 'billing', label: 'Billing & Plans', icon: Icon.CreditCard },
+            { id: 'api-keys', label: 'API Keys & Secrets', icon: Icon.Key },
+            { id: 'danger', label: 'Danger Zone', icon: Icon.AlertTriangle, color: 'oklch(0.65 0.22 20)' },
+          ].map(tab => {
+            const isActive = activeTab === tab.id;
+            return (
               <button
-                type="button"
-                onClick={() => setShowPasswordFields(true)}
+                key={tab.id}
+                onClick={() => changeTab(tab.id)}
                 className="reset"
                 style={{
-                  padding: '8px 16px', borderRadius: 8,
-                  background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                  color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '10px 14px',
+                  borderRadius: 8,
+                  fontSize: 13,
+                  fontWeight: isActive ? 600 : 450,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  background: isActive ? 'var(--bg-elev-2)' : 'transparent',
+                  border: isActive ? '1px solid var(--border)' : '1px solid transparent',
+                  color: isActive ? (tab.color || 'white') : 'var(--fg-dim)',
+                  transition: 'all 0.15s'
                 }}
               >
-                Change Password...
+                {tab.icon && React.createElement(tab.icon, { size: 14, style: { color: isActive ? (tab.color || 'var(--accent)') : 'var(--fg-subtle)' } })}
+                <span>{tab.label}</span>
               </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
+            );
+          })}
+        </div>
+
+        {/* Content Pane */}
+        <div style={{
+          flex: 1,
+          minWidth: 280,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 28,
+        }}>
+
+          {activeTab === 'profile' && (
+            <form onSubmit={handleSaveProfile} className="glass-card fade-in" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 32, height: 32, borderRadius: 8,
+                  background: 'oklch(0.18 0.010 265 / 0.15)',
+                  border: '1px solid oklch(0.70 0.18 265 / 0.3)',
+                  color: 'oklch(0.70 0.18 265)',
+                }}>
+                  <Icon.Braces size={16} />
+                </span>
+                <div>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Profile Details</h3>
+                  <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Update your registered public user handle and full display name.</p>
+                </div>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">New Password</label>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input
-                      required
-                      type={showNewPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={newPassword}
-                      onChange={e => setNewPassword(e.target.value)}
-                      style={{
-                        width: '100%', padding: '10px 38px 10px 12px', borderRadius: 8,
-                        background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                        color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                      }}
-                    />
-                    <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="reset" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
-                      {showNewPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
-                    </button>
-                  </div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Registered Email</label>
+                  <input type="text" readOnly value={sessionUser?.email || ''} style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 8,
+                    background: 'oklch(0.10 0.002 250)', border: '1px solid var(--border)',
+                    color: 'var(--fg-muted)', fontSize: 13, outline: 'none', cursor: 'not-allowed', boxSizing: 'border-box'
+                  }} />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Confirm New Password</label>
-                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                    <input
-                      required
-                      type={showConfirmPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      value={confirmPassword}
-                      onChange={e => setConfirmPassword(e.target.value)}
-                      style={{
-                        width: '100%', padding: '10px 38px 10px 12px', borderRadius: 8,
-                        background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                        color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                      }}
-                    />
-                    <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="reset" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
-                      {showConfirmPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
-                    </button>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Full Display Name</label>
+                  <input type="text" placeholder="Your full name" value={profileName} onChange={e => setProfileName(e.target.value)} style={{
+                    width: '100%', padding: '10px 12px', borderRadius: 8,
+                    background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                    color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                  }} />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Username Handle</label>
+                  <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
+                    <span style={{ position: 'absolute', left: 12, fontSize: 13, color: 'var(--fg-dim)' }}>@</span>
+                    <input type="text" placeholder="username" value={profileUsername} onChange={e => setProfileUsername(e.target.value)} style={{
+                      width: '100%', padding: '10px 12px 10px 26px', borderRadius: 8,
+                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                      color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                    }} />
                   </div>
                 </div>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-                <span style={{ fontSize: 12, color: passwordSuccess ? 'oklch(0.78 0.16 145)' : 'oklch(0.60 0.20 20)' }}>
-                  {passwordMessage && passwordMessage}
+                <span style={{ fontSize: 12, color: profileError ? 'oklch(0.60 0.20 20)' : 'oklch(0.78 0.16 145)' }}>
+                  {profileSuccess && "✓ Profile details updated successfully!"}
+                  {profileError && profileError}
                 </span>
-                <div style={{ display: 'flex', gap: 12 }}>
+                <button type="submit" disabled={isSavingProfile} className="reset" style={{
+                  padding: '10px 20px', borderRadius: 8,
+                  background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+                  color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 13, cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px oklch(0.96 0.005 250 / 0.15)'
+                }}>
+                  {isSavingProfile ? 'Saving...' : 'Save Profile Details'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {activeTab === 'security' && (
+            <form onSubmit={handleUpdatePassword} className="glass-card fade-in" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 32, height: 32, borderRadius: 8,
+                  background: 'oklch(0.18 0.010 15 / 0.15)',
+                  border: '1px solid oklch(0.70 0.18 15 / 0.3)',
+                  color: 'oklch(0.70 0.18 15)',
+                }}>
+                  <Icon.Lock size={16} />
+                </span>
+                <div>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Security Settings</h3>
+                  <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Update your account password. Secure crypt-hash applies.</p>
+                </div>
+              </div>
+
+              {!showPasswordFields ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', padding: '8px 0' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 13, fontWeight: 550, color: 'white' }}>Account Password Protection</span>
+                    <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Last updated details saved. Minimum length constraints apply.</span>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => { setShowPasswordFields(false); setNewPassword(''); setConfirmPassword(''); setPasswordMessage(null); }}
-                    className="reset"
-                    style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isUpdatingPassword}
+                    onClick={() => setShowPasswordFields(true)}
                     className="reset"
                     style={{
                       padding: '8px 16px', borderRadius: 8,
-                      background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
-                      color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 12.5,
-                      cursor: isUpdatingPassword ? 'not-allowed' : 'pointer'
+                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                      color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
                     }}
                   >
-                    {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                    Change Password...
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">New Password</label>
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <input
+                          required
+                          type={showNewPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={newPassword}
+                          onChange={e => setNewPassword(e.target.value)}
+                          style={{
+                            width: '100%', padding: '10px 38px 10px 12px', borderRadius: 8,
+                            background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                            color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                          }}
+                        />
+                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="reset" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
+                          {showNewPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Confirm New Password</label>
+                      <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                        <input
+                          required
+                          type={showConfirmPassword ? "text" : "password"}
+                          placeholder="••••••••"
+                          value={confirmPassword}
+                          onChange={e => setConfirmPassword(e.target.value)}
+                          style={{
+                            width: '100%', padding: '10px 38px 10px 12px', borderRadius: 8,
+                            background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                            color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                          }}
+                        />
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="reset" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
+                          {showConfirmPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+                    <span style={{ fontSize: 12, color: passwordSuccess ? 'oklch(0.78 0.16 145)' : 'oklch(0.60 0.20 20)' }}>
+                      {passwordMessage && passwordMessage}
+                    </span>
+                    <div style={{ display: 'flex', gap: 12 }}>
+                      <button
+                        type="button"
+                        onClick={() => { setShowPasswordFields(false); setNewPassword(''); setConfirmPassword(''); setPasswordMessage(null); }}
+                        className="reset"
+                        style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isUpdatingPassword}
+                        className="reset"
+                        style={{
+                          padding: '8px 16px', borderRadius: 8,
+                          background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+                          color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 12.5,
+                          cursor: isUpdatingPassword ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        {isUpdatingPassword ? 'Updating...' : 'Update Password'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </form>
+          )}
+
+          {activeTab === 'preferences' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }} className="fade-in">
+              {/* Section 3: Layout Configuration */}
+              <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: 32, height: 32, borderRadius: 8,
+                    background: 'oklch(0.18 0.010 210 / 0.15)',
+                    border: '1px solid oklch(0.70 0.18 210 / 0.3)',
+                    color: 'oklch(0.70 0.18 210)',
+                  }}>
+                    <Icon.Grid size={16} />
+                  </span>
+                  <div>
+                    <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Layout Settings</h3>
+                    <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Choose the active alignment display of the document editing cockpit.</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
+                  <button onClick={() => handleLayoutChange('standard')} className="reset layout-card" style={{
+                    textAlign: 'left', padding: '16px 20px', borderRadius: 12,
+                    background: editorLayout === 'standard' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
+                    border: editorLayout === 'standard' ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.15s ease'
+                  }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Standard Layout</span>
+                    <span style={{ fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.4 }}>Dual comparison pane: Markdown text editor on the left and visual document outputs on the right.</span>
+                  </button>
+
+                  <button onClick={() => handleLayoutChange('reversed')} className="reset layout-card" style={{
+                    textAlign: 'left', padding: '16px 20px', borderRadius: 12,
+                    background: editorLayout === 'reversed' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
+                    border: editorLayout === 'reversed' ? '1px solid var(--accent)' : '1px solid var(--border)',
+                    cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.15s ease'
+                  }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Reversed Layout</span>
+                    <span style={{ fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.4 }}>Mirror layout: Visual live outputs rendered on the left, editing Markdown content on the right.</span>
                   </button>
                 </div>
               </div>
-            </div>
-          )}
-        </form>
 
-        {/* Section 3: Layout Configuration */}
-        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 210 / 0.15)',
-              border: '1px solid oklch(0.70 0.18 210 / 0.3)',
-              color: 'oklch(0.70 0.18 210)',
-            }}>
-              <Icon.Grid size={16} />
-            </span>
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Layout Settings</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Choose the active alignment display of the document editing cockpit.</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-            <button onClick={() => handleLayoutChange('standard')} className="reset layout-card" style={{
-              textAlign: 'left', padding: '16px 20px', borderRadius: 12,
-              background: editorLayout === 'standard' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
-              border: editorLayout === 'standard' ? '1px solid var(--accent)' : '1px solid var(--border)',
-              cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.15s ease'
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Standard Layout</span>
-              <span style={{ fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.4 }}>Dual comparison pane: Markdown text editor on the left and visual document outputs on the right.</span>
-            </button>
-
-            <button onClick={() => handleLayoutChange('reversed')} className="reset layout-card" style={{
-              textAlign: 'left', padding: '16px 20px', borderRadius: 12,
-              background: editorLayout === 'reversed' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
-              border: editorLayout === 'reversed' ? '1px solid var(--accent)' : '1px solid var(--border)',
-              cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.15s ease'
-            }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Reversed Layout</span>
-              <span style={{ fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.4 }}>Mirror layout: Visual live outputs rendered on the left, editing Markdown content on the right.</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Section 4: Localization Preferences */}
-        <form onSubmit={handleSaveLocalization} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 120 / 0.15)',
-              border: '1px solid oklch(0.70 0.16 120 / 0.3)',
-              color: 'oklch(0.70 0.16 120)',
-            }}>
-              <Icon.Globe size={16} />
-            </span>
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Localization Preferences</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Configure regional timezones and display languages.</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
-            <div>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Display Language</label>
-              <select value={profileLanguage} onChange={e => setProfileLanguage(e.target.value)} style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8,
-                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
-              }}>
-                <option value="en_US">English (United States)</option>
-                <option value="en_GB">English (United Kingdom)</option>
-                <option value="es_ES">Español (España)</option>
-                <option value="fr_FR">Français (France)</option>
-                <option value="de_DE">Deutsch (Deutschland)</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">System Timezone</label>
-              <select value={profileTimezone} onChange={e => setProfileTimezone(e.target.value)} style={{
-                width: '100%', padding: '10px 12px', borderRadius: 8,
-                background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
-              }}>
-                <option value="UTC">Coordinated Universal Time (UTC)</option>
-                <option value="America/New_York">Eastern Standard Time (New York, -5)</option>
-                <option value="Europe/London">Greenwich Mean Time (London, +0)</option>
-                <option value="Europe/Berlin">Central European Time (Berlin, +1)</option>
-                <option value="Asia/Kolkata">Indian Standard Time (New Delhi, +5:30)</option>
-                <option value="Asia/Tokyo">Japan Standard Time (Tokyo, +9)</option>
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-            <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)' }}>
-              {locSuccess && "✓ Localization saved successfully!"}
-            </span>
-            <button type="submit" disabled={isSavingLoc} className="reset" style={{
-              padding: '8px 16px', borderRadius: 8,
-              background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
-              color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
-            }}>
-              {isSavingLoc ? 'Saving...' : 'Save Localization'}
-            </button>
-          </div>
-        </form>
-
-        {/* Section 5: Daily limits visual meter */}
-        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 75 / 0.15)',
-              border: '1px solid oklch(0.70 0.16 75 / 0.3)',
-              color: 'oklch(0.70 0.16 75)',
-            }}>
-              <Icon.Sparkles size={16} />
-            </span>
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Daily Workspace Limit Meter</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Real-time count of active data runs and metered bounds.</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 13, color: 'white', fontWeight: 550 }}>Daily Metered Runs</span>
-              <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--accent)' }} className="mono">
-                {userPlan === 'pro' ? 'Unlimited / Unlimited' : userPlan === 'api' ? 'Unlimited / 30,000 API Runs/mo' : `${dailyUsageCount} / 20 used today`}
-              </span>
-            </div>
-
-            <div style={{ height: 10, width: '100%', background: 'oklch(0.18 0.005 250)', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--border)' }}>
-              <div style={{
-                height: '100%',
-                width: (userPlan === 'pro' || userPlan === 'api') ? '100%' : `${Math.min((dailyUsageCount / 20) * 100, 100)}%`,
-                background: (userPlan === 'pro' || userPlan === 'api')
-                  ? 'linear-gradient(90deg, oklch(0.70 0.18 265) 0%, oklch(0.70 0.16 195) 50%, oklch(0.70 0.16 145) 100%)'
-                  : 'linear-gradient(90deg, oklch(0.70 0.16 145) 0%, oklch(0.70 0.16 75) 60%, oklch(0.65 0.20 20) 100%)',
-                boxShadow: '0 0 10px var(--accent)30',
-                transition: 'width 0.5s ease-out'
-              }} />
-            </div>
-            {userPlan !== 'pro' && userPlan !== 'api' && (
-              <p style={{ fontSize: 11.5, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.4 }}>
-                Free registered accounts have a metered bound of 20 runs. Upgrade to Pro or API Tier to strip watermarks automatically and unlock unlimited daily loops!
-              </p>
-            )}
-          </div>
-        </div>
-
-        {/* Section 6: Subscription, Billing & Invoice History Details */}
-        <div className="glass-card" style={{ padding: '32px 30px', display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 145 / 0.15)',
-              border: '1px solid oklch(0.70 0.16 145 / 0.3)',
-              color: 'oklch(0.70 0.16 145)',
-            }}>
-              <Icon.Database size={16} />
-            </span>
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Billing, Subscription & Invoices</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Manage your active payment billing tier, view usage limits, and download invoices.</p>
-            </div>
-          </div>
-
-          {billingMessage && (
-            <div className="fade-in" style={{
-              padding: '12px 16px', borderRadius: 8,
-              background: billingMessage.startsWith('✓') ? 'oklch(0.22 0.010 145 / 0.15)' : 'oklch(0.18 0.010 15 / 0.15)',
-              border: billingMessage.startsWith('✓') ? '1px solid oklch(0.78 0.16 145 / 0.3)' : '1px solid oklch(0.78 0.16 15 / 0.3)',
-              color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              fontSize: 12.5
-            }}>
-              <span>{billingMessage}</span>
-              <button onClick={() => setBillingMessage(null)} className="reset" style={{
-                color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                padding: 4, background: 'none', border: 'none'
-              }}>
-                <Icon.X size={14} />
-              </button>
-            </div>
-          )}
-
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: 32,
-          }}>
-            {/* Left Side: Subscription Plan Details */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div>
-                <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }} className="mono">Active Plan</span>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: 22, fontWeight: 700, color: 'white' }}>{planName}</span>
-                  {userPlan !== 'free' && (
-                    <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--accent)' }}>
-                      {planPrice} <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--fg-dim)' }}>/ {planPeriod}</span>
-                    </span>
-                  )}
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    {isCanceling ? (
-                      <>
-                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.65 0.20 50)', boxShadow: '0 0 8px oklch(0.65 0.20 50)' }} />
-                        <span style={{ fontSize: 12, color: 'oklch(0.65 0.20 50)', fontWeight: 600 }}>
-                          Canceling
-                        </span>
-                      </>
-                    ) : (userPlan === 'pro' || userPlan === 'api') ? (
-                      <>
-                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.78 0.16 145)', boxShadow: '0 0 8px oklch(0.78 0.16 145)' }} />
-                        <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)', fontWeight: 600 }}>
-                          Active
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--fg-dim)' }} />
-                        <span style={{ fontSize: 12, color: 'var(--fg-dim)', fontWeight: 500 }}>
-                          No Active Subscription
-                        </span>
-                      </>
-                    )}
+              {/* Section 4: Localization Preferences */}
+              <form onSubmit={handleSaveLocalization} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: 32, height: 32, borderRadius: 8,
+                    background: 'oklch(0.18 0.010 120 / 0.15)',
+                    border: '1px solid oklch(0.70 0.16 120 / 0.3)',
+                    color: 'oklch(0.70 0.16 120)',
+                  }}>
+                    <Icon.Globe size={16} />
+                  </span>
+                  <div>
+                    <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Localization Preferences</h3>
+                    <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Configure regional timezones and display languages.</p>
                   </div>
-                  {isCanceling && (
-                    <p style={{ fontSize: 12, color: 'oklch(0.65 0.20 50 / 0.9)', margin: 0, lineHeight: 1.4 }}>
-                      Your plan remains active until <strong>{nextStr}</strong>. After that, your account will revert to the Free tier.
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Display Language</label>
+                    <select value={profileLanguage} onChange={e => setProfileLanguage(e.target.value)} style={{
+                      width: '100%', padding: '10px 12px', borderRadius: 8,
+                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                      color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
+                    }}>
+                      <option value="en_US">English (United States)</option>
+                      <option value="en_GB">English (United Kingdom)</option>
+                      <option value="es_ES">Español (España)</option>
+                      <option value="fr_FR">Français (France)</option>
+                      <option value="de_DE">Deutsch (Deutschland)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">System Timezone</label>
+                    <select value={profileTimezone} onChange={e => setProfileTimezone(e.target.value)} style={{
+                      width: '100%', padding: '10px 12px', borderRadius: 8,
+                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                      color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
+                    }}>
+                      <option value="UTC">Coordinated Universal Time (UTC)</option>
+                      <option value="America/New_York">Eastern Standard Time (New York, -5)</option>
+                      <option value="Europe/London">Greenwich Mean Time (London, +0)</option>
+                      <option value="Europe/Berlin">Central European Time (Berlin, +1)</option>
+                      <option value="Asia/Kolkata">Indian Standard Time (New Delhi, +5:30)</option>
+                      <option value="Asia/Tokyo">Japan Standard Time (Tokyo, +9)</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+                  <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)' }}>
+                    {locSuccess && "✓ Localization saved successfully!"}
+                  </span>
+                  <button type="submit" disabled={isSavingLoc} className="reset" style={{
+                    padding: '8px 16px', borderRadius: 8,
+                    background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
+                    color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
+                  }}>
+                    {isSavingLoc ? 'Saving...' : 'Save Localization'}
+                  </button>
+                </div>
+              </form>
+
+              {/* Section 5: Daily limits visual meter */}
+              <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
+                  <span style={{
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    width: 32, height: 32, borderRadius: 8,
+                    background: 'oklch(0.18 0.010 75 / 0.15)',
+                    border: '1px solid oklch(0.70 0.16 75 / 0.3)',
+                    color: 'oklch(0.70 0.16 75)',
+                  }}>
+                    <Icon.Sparkles size={16} />
+                  </span>
+                  <div>
+                    <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Daily Workspace Limit Meter</h3>
+                    <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Real-time count of active data runs and metered bounds.</p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 13, color: 'white', fontWeight: 550 }}>Daily Metered Runs</span>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--accent)' }} className="mono">
+                      {userPlan === 'pro' ? 'Unlimited / Unlimited' : userPlan === 'api' ? 'Unlimited / 30,000 API Runs/mo' : `${dailyUsageCount} / 20 used today`}
+                    </span>
+                  </div>
+
+                  <div style={{ height: 10, width: '100%', background: 'oklch(0.18 0.005 250)', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--border)' }}>
+                    <div style={{
+                      height: '100%',
+                      width: (userPlan === 'pro' || userPlan === 'api') ? '100%' : `${Math.min((dailyUsageCount / 20) * 100, 100)}%`,
+                      background: (userPlan === 'pro' || userPlan === 'api')
+                        ? 'linear-gradient(90deg, oklch(0.70 0.18 265) 0%, oklch(0.70 0.16 195) 50%, oklch(0.70 0.16 145) 100%)'
+                        : 'linear-gradient(90deg, oklch(0.70 0.16 145) 0%, oklch(0.70 0.16 75) 60%, oklch(0.65 0.20 20) 100%)',
+                      boxShadow: '0 0 10px var(--accent)30',
+                      transition: 'width 0.5s ease-out'
+                    }} />
+                  </div>
+                  {userPlan !== 'pro' && userPlan !== 'api' && (
+                    <p style={{ fontSize: 11.5, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.4 }}>
+                      Free registered accounts have a metered bound of 20 runs. Upgrade to Pro or API Tier to strip watermarks automatically and unlock unlimited daily loops!
                     </p>
                   )}
                 </div>
               </div>
+            </div>
+          )}
 
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
-                <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }} className="mono">Quotas & Usage Limits</span>
-                <p style={{ fontSize: 12.5, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
-                  {planLimits}
-                </p>
+          {activeTab === 'billing' && (
+            <div className="glass-card fade-in" style={{ padding: '32px 30px', display: 'flex', flexDirection: 'column', gap: 24 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 16 }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 32, height: 32, borderRadius: 8,
+                  background: 'oklch(0.18 0.010 145 / 0.15)',
+                  border: '1px solid oklch(0.70 0.16 145 / 0.3)',
+                  color: 'oklch(0.70 0.16 145)',
+                }}>
+                  <Icon.CreditCard size={16} />
+                </span>
+                <div>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Billing, Subscription & Invoices</h3>
+                  <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Manage your active payment billing tier, view usage limits, and download invoices.</p>
+                </div>
               </div>
 
-              {(userPlan === 'pro' || userPlan === 'api') && (
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">
-                      {isCanceling ? 'Access Expires' : 'Next Billing Date'}
-                    </span>
-                    <span style={{ fontSize: 13, color: 'white', fontWeight: 500 }}>{nextStr}</span>
-                  </div>
-                  {!isCanceling && (
-                    <div>
-                      <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">Payment Partner</span>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--fg-muted)' }}>
-                        <Icon.CreditCard size={14} style={{ color: 'var(--accent)' }} />
-                        <span>Creem Payment Hub</span>
-                      </div>
-                    </div>
-                  )}
+              {billingMessage && (
+                <div className="fade-in" style={{
+                  padding: '12px 16px', borderRadius: 8,
+                  background: billingMessage.startsWith('✓') ? 'oklch(0.22 0.010 145 / 0.15)' : 'oklch(0.18 0.010 15 / 0.15)',
+                  border: billingMessage.startsWith('✓') ? '1px solid oklch(0.78 0.16 145 / 0.3)' : '1px solid oklch(0.78 0.16 15 / 0.3)',
+                  color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                  fontSize: 12.5
+                }}>
+                  <span>{billingMessage}</span>
+                  <button onClick={() => setBillingMessage(null)} className="reset" style={{
+                    color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
+                    padding: 4, background: 'none', border: 'none'
+                  }}>
+                    <Icon.X size={14} />
+                  </button>
                 </div>
               )}
 
-              <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto' }}>
-                {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-                    {!isCanceling && (
-                      <button onClick={onShowPaywall} className="reset" style={{
-                        width: '100%', padding: '10px 14px', borderRadius: 8,
-                        background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
-                        border: '1px solid var(--border)',
-                        color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                        textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                      }}>
-                        <Icon.Sparkles size={14} style={{ color: 'white' }} />
-                        <span>Change Plan</span>
-                      </button>
-                    )}
-                    <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-                      <button onClick={handleManageBilling} className="reset" style={{
-                        flex: 1, padding: '10px 14px', borderRadius: 8,
-                        background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                        color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                        textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                      }}>
-                        <Icon.Grid size={14} />
-                        <span>Manage Billing</span>
-                      </button>
-                      {isCanceling ? (
-                        <button onClick={handleResumeSubscription} disabled={isResumingSub} className="reset" style={{
-                          flex: 1, padding: '10px 14px', borderRadius: 8,
-                          background: 'oklch(0.18 0.010 145 / 0.15)', border: '1px solid oklch(0.70 0.16 145 / 0.3)',
-                          color: 'oklch(0.78 0.16 145)', fontWeight: 600, fontSize: 12.5, cursor: isResumingSub ? 'not-allowed' : 'pointer',
-                        }}>{isResumingSub ? 'Resuming...' : 'Resume Subscription'}</button>
-                      ) : (
-                        <button onClick={() => setCancelModalOpen(true)} className="reset" style={{
-                          flex: 1, padding: '10px 14px', borderRadius: 8,
-                          background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
-                          color: 'oklch(0.78 0.16 15)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                        }}>Cancel Subscription</button>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: 32,
+              }}>
+                {/* Left Side: Subscription Plan Details */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                  <div>
+                    <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }} className="mono">Active Plan</span>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 22, fontWeight: 700, color: 'white' }}>{planName}</span>
+                      {userPlan !== 'free' && (
+                        <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--accent)' }}>
+                          {planPrice} <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--fg-dim)' }}>/ {planPeriod}</span>
+                        </span>
+                      )}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                        {isCanceling ? (
+                          <>
+                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.65 0.20 50)', boxShadow: '0 0 8px oklch(0.65 0.20 50)' }} />
+                            <span style={{ fontSize: 12, color: 'oklch(0.65 0.20 50)', fontWeight: 600 }}>
+                              Canceling
+                            </span>
+                          </>
+                        ) : (userPlan === 'pro' || userPlan === 'api') ? (
+                          <>
+                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.78 0.16 145)', boxShadow: '0 0 8px oklch(0.78 0.16 145)' }} />
+                            <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)', fontWeight: 600 }}>
+                              Active
+                            </span>
+                          </>
+                        ) : (
+                          <>
+                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--fg-dim)' }} />
+                            <span style={{ fontSize: 12, color: 'var(--fg-dim)', fontWeight: 500 }}>
+                              No Active Subscription
+                            </span>
+                          </>
+                        )}
+                      </div>
+                      {isCanceling && (
+                        <p style={{ fontSize: 12, color: 'oklch(0.65 0.20 50 / 0.9)', margin: 0, lineHeight: 1.4 }}>
+                          Your plan remains active until <strong>{nextStr}</strong>. After that, your account will revert to the Free tier.
+                        </p>
                       )}
                     </div>
                   </div>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-                    <button onClick={onShowPaywall} className="reset" style={{
-                      width: '100%', padding: '10px 14px', borderRadius: 8,
-                      background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
-                      border: '1px solid var(--border)',
-                      color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                      textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                    }}>
-                      <Icon.Sparkles size={14} style={{ color: 'white' }} />
-                      <span>Upgrade to Premium</span>
-                    </button>
+
+                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
+                    <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }} className="mono">Quotas & Usage Limits</span>
+                    <p style={{ fontSize: 12.5, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
+                      {planLimits}
+                    </p>
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Right Side: Invoice History */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }} className="mono">Invoice History</span>
-                <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '0 0 12px' }}>View your payment history here. Download legally valid tax invoices directly in your secure Creem Portal.</p>
-              </div>
-
-              {userPlan === 'free' ? (
-                <div style={{
-                  flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  padding: '24px 20px', background: 'var(--bg-elev-1)', border: '1px dashed var(--border)',
-                  borderRadius: 12, textAlign: 'center', gap: 8
-                }}>
-                  <Icon.FileText size={24} style={{ color: 'var(--fg-dim)' }} />
-                  <span style={{ fontSize: 12.5, fontWeight: 550, color: 'var(--fg-subtle)' }}>No Invoices Yet</span>
-                  <span style={{ fontSize: 11, color: 'var(--fg-dim)', maxWidth: 220 }}>Upgrade to a paid tier to generate invoice history.</span>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {loadingInvoices ? (
-                    <div style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      padding: '24px 20px', background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-                      borderRadius: 10
-                    }}>
-                      <Icon.Loader size={16} className="spin" style={{ color: 'var(--accent)' }} />
-                      <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>Retrieving Creem billing history...</span>
+                  {(userPlan === 'pro' || userPlan === 'api') && (
+                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <div>
+                        <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">
+                          {isCanceling ? 'Access Expires' : 'Next Billing Date'}
+                        </span>
+                        <span style={{ fontSize: 13, color: 'white', fontWeight: 500 }}>{nextStr}</span>
+                      </div>
+                      {!isCanceling && (
+                        <div>
+                          <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">Payment Partner</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--fg-muted)' }}>
+                            <Icon.CreditCard size={14} style={{ color: 'var(--accent)' }} />
+                            <span>Creem Payment Hub</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  ) : invoices.length > 0 ? (
-                    invoices.map((order) => {
-                      const orderDate = new Date(order.createdAt);
-                      const formattedOrderDate = formatter.format(orderDate);
-                      const displayAmount = `$${(order.amount / 100).toFixed(2)}`;
-                      const invId = `INV-${order.id.substring(0, 8).toUpperCase()}`;
+                  )}
 
-                      return (
-                        <div key={order.id} style={{
+                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto' }}>
+                    {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                        {!isCanceling && (
+                          <button onClick={onShowPaywall} className="reset" style={{
+                            width: '100%', padding: '10px 14px', borderRadius: 8,
+                            background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
+                            border: '1px solid var(--border)',
+                            color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                            textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                          }}>
+                            <Icon.Sparkles size={14} style={{ color: 'white' }} />
+                            <span>Change Plan</span>
+                          </button>
+                        )}
+                        <div style={{ display: 'flex', gap: 10, width: '100%' }}>
+                          <button onClick={handleManageBilling} className="reset" style={{
+                            flex: 1, padding: '10px 14px', borderRadius: 8,
+                            background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
+                            color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                            textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                          }}>
+                            <Icon.Grid size={14} />
+                            <span>Manage Billing</span>
+                          </button>
+                          {isCanceling ? (
+                            <button onClick={handleResumeSubscription} disabled={isResumingSub} className="reset" style={{
+                              flex: 1, padding: '10px 14px', borderRadius: 8,
+                              background: 'oklch(0.18 0.010 145 / 0.15)', border: '1px solid oklch(0.70 0.16 145 / 0.3)',
+                              color: 'oklch(0.78 0.16 145)', fontWeight: 600, fontSize: 12.5, cursor: isResumingSub ? 'not-allowed' : 'pointer',
+                            }}>{isResumingSub ? 'Resuming...' : 'Resume Subscription'}</button>
+                          ) : (
+                            <button onClick={() => setCancelModalOpen(true)} className="reset" style={{
+                              flex: 1, padding: '10px 14px', borderRadius: 8,
+                              background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
+                              color: 'oklch(0.78 0.16 15)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                            }}>Cancel Subscription</button>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                        <button onClick={onShowPaywall} className="reset" style={{
+                          width: '100%', padding: '10px 14px', borderRadius: 8,
+                          background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
+                          border: '1px solid var(--border)',
+                          color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
+                          textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
+                        }}>
+                          <Icon.Sparkles size={14} style={{ color: 'white' }} />
+                          <span>Upgrade to Premium</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Right Side: Invoice History */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  <div>
+                    <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }} className="mono">Invoice History</span>
+                    <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '0 0 12px' }}>View your payment history here. Download legally valid tax invoices directly in your secure Creem Portal.</p>
+                  </div>
+
+                  {userPlan === 'free' ? (
+                    <div style={{
+                      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                      padding: '24px 20px', background: 'var(--bg-elev-1)', border: '1px dashed var(--border)',
+                      borderRadius: 12, textAlign: 'center', gap: 8
+                    }}>
+                      <Icon.FileText size={24} style={{ color: 'var(--fg-dim)' }} />
+                      <span style={{ fontSize: 12.5, fontWeight: 555, color: 'var(--fg-subtle)' }}>No Invoices Yet</span>
+                      <span style={{ fontSize: 11, color: 'var(--fg-dim)', maxWidth: 220 }}>Upgrade to a paid tier to generate invoice history.</span>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {loadingInvoices ? (
+                        <div style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                          padding: '24px 20px', background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
+                          borderRadius: 10
+                        }}>
+                          <Icon.Loader size={16} className="spin" style={{ color: 'var(--accent)' }} />
+                          <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>Retrieving Creem billing history...</span>
+                        </div>
+                      ) : invoices.length > 0 ? (
+                        invoices.map((order) => {
+                          const orderDate = new Date(order.createdAt);
+                          const formattedOrderDate = formatter.format(orderDate);
+                          const displayAmount = `$${(order.amount / 100).toFixed(2)}`;
+                          const invId = `INV-${order.id.substring(0, 8).toUpperCase()}`;
+
+                          return (
+                            <div key={order.id} style={{
+                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                              padding: '12px 14px', background: 'var(--bg-elev-1)',
+                              border: '1px solid var(--border)', borderRadius: 10,
+                            }}>
+                              <div>
+                                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>
+                                  {formattedOrderDate}
+                                </div>
+                                <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>
+                                  {invId} • {planName}
+                                </div>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{displayAmount}</span>
+                                <span style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 4,
+                                  padding: '4px 8px', borderRadius: 6,
+                                  background: 'oklch(0.70 0.16 145 / 0.12)', border: '1px solid oklch(0.70 0.16 145 / 0.3)',
+                                  color: 'oklch(0.78 0.16 145)', fontSize: 11, fontWeight: 555
+                                }}>
+                                  <Icon.Check size={11} />
+                                  <span>Paid</span>
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        /* Fallback to computed dynamic billing row if empty */
+                        <div style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                           padding: '12px 14px', background: 'var(--bg-elev-1)',
                           border: '1px solid var(--border)', borderRadius: 10,
                         }}>
                           <div>
                             <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>
-                              {formattedOrderDate}
+                              {(() => {
+                                const invoiceDate = currentPeriodEnd 
+                                  ? new Date(new Date(currentPeriodEnd).getTime() - 30 * 24 * 60 * 60 * 1000)
+                                  : new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
+                                return formatter.format(invoiceDate);
+                              })()}
                             </div>
                             <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>
-                              {invId} • {planName}
+                              {subscriptionId ? `INV-${subscriptionId.substring(0, 8).toUpperCase()}` : `INV-SANDBOX-${customerId?.substring(0, 6).toUpperCase() || 'NEW'}`} • {planName}
                             </div>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{displayAmount}</span>
+                            <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{planPrice}</span>
                             <span style={{
                               display: 'inline-flex', alignItems: 'center', gap: 4,
                               padding: '4px 8px', borderRadius: 6,
@@ -5562,286 +5815,402 @@ function AccountPage({
                             </span>
                           </div>
                         </div>
-                      );
-                    })
-                  ) : (
-                    /* Fallback to computed dynamic billing row if empty */
-                    <div style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      padding: '12px 14px', background: 'var(--bg-elev-1)',
-                      border: '1px solid var(--border)', borderRadius: 10,
-                    }}>
-                      <div>
-                        <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>
-                          {(() => {
-                            const invoiceDate = currentPeriodEnd 
-                              ? new Date(new Date(currentPeriodEnd).getTime() - 30 * 24 * 60 * 60 * 1000)
-                              : new Date(today.getTime() - 2 * 24 * 60 * 60 * 1000);
-                            return formatter.format(invoiceDate);
-                          })()}
-                        </div>
-                        <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>
-                          {subscriptionId ? `INV-${subscriptionId.substring(0, 8).toUpperCase()}` : `INV-SANDBOX-${customerId?.substring(0, 6).toUpperCase() || 'NEW'}`} • {planName}
-                        </div>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{planPrice}</span>
-                        <span style={{
-                          display: 'inline-flex', alignItems: 'center', gap: 4,
-                          padding: '4px 8px', borderRadius: 6,
-                          background: 'oklch(0.70 0.16 145 / 0.12)', border: '1px solid oklch(0.70 0.16 145 / 0.3)',
-                          color: 'oklch(0.78 0.16 145)', fontSize: 11, fontWeight: 555
-                        }}>
-                          <Icon.Check size={11} />
-                          <span>Paid</span>
-                        </span>
-                      </div>
+                      )}
+
+                      {/* Portal Integration Button */}
+                      <button 
+                        onClick={handleManageBilling}
+                        className="reset"
+                        style={{
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                          padding: '10px 14px', borderRadius: 10,
+                          background: 'oklch(0.70 0.18 265 / 0.08)',
+                          border: '1px dashed oklch(0.70 0.18 265 / 0.3)',
+                          color: 'oklch(0.80 0.15 265)',
+                          fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                          transition: 'all 0.15s',
+                          marginTop: 4
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.70 0.18 265 / 0.15)'}
+                        onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.70 0.18 265 / 0.08)'}
+                      >
+                        <Icon.Globe size={12} />
+                        <span>View & Download Official Tax Invoices in Creem Portal →</span>
+                      </button>
                     </div>
                   )}
-
-                  {/* Portal Integration Button */}
-                  <button 
-                    onClick={handleManageBilling}
-                    className="reset"
-                    style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      padding: '10px 14px', borderRadius: 10,
-                      background: 'oklch(0.70 0.18 265 / 0.08)',
-                      border: '1px dashed oklch(0.70 0.18 265 / 0.3)',
-                      color: 'oklch(0.80 0.15 265)',
-                      fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                      transition: 'all 0.15s',
-                      marginTop: 4
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'oklch(0.70 0.18 265 / 0.15)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'oklch(0.70 0.18 265 / 0.08)'}
-                  >
-                    <Icon.Globe size={12} />
-                    <span>View & Download Official Tax Invoices in Creem Portal →</span>
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Section 7: Developer API Access Keys Details */}
-        <div id="api-keys" className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 195 / 0.15)',
-              border: '1px solid oklch(0.70 0.16 195 / 0.3)',
-              color: 'oklch(0.70 0.16 195)',
-            }}>
-              <Icon.Database size={16} />
-            </span>
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Developer API Keys</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Manage your secure API keys for programmatically integrating formats, translations, and PDF renders.</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {/* Access Tier Row */}
-            <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', paddingBottom: 12, borderBottom: '1px solid var(--border)' }}>
-              <div>
-                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">Account Access Tier</div>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' || userPlan === 'api' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
-                  <span style={{ fontWeight: 600, textTransform: 'uppercase', fontSize: 12.5, color: 'white' }}>
-                    {planName}
-                  </span>
                 </div>
               </div>
-              <div style={{ textAlign: 'right' }}>
-                <div style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 2 }} className="mono">Rate Limit Quota</div>
-                <span style={{ fontSize: 12.5, color: 'var(--fg-muted)', fontWeight: 550 }}>
-                  {userPlan === 'api' ? '100 requests / min' : userPlan === 'pro' ? '20 requests / min' : '10 requests / min'}
-                </span>
-              </div>
             </div>
+          )}
 
-            {/* API Keys Table/Card Row */}
-            <div style={{
-              background: 'oklch(0.12 0.005 250 / 0.5)',
-              border: '1px solid oklch(0.18 0.008 250)',
-              borderRadius: 10,
-              padding: 16,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 12
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>Default Secret Key</span>
-                <span style={{ 
-                  fontSize: 10, 
-                  background: (userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin') ? 'oklch(0.78 0.16 145 / 0.12)' : 'oklch(0.70 0.15 195 / 0.12)', 
-                  border: (userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin') ? '1px solid oklch(0.78 0.16 145 / 0.3)' : '1px solid oklch(0.70 0.15 195 / 0.3)',
-                  color: (userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin') ? 'oklch(0.78 0.16 145)' : 'oklch(0.70 0.15 195)',
-                  padding: '2px 8px', 
-                  borderRadius: 4,
-                  textTransform: 'uppercase',
-                  fontWeight: 600,
-                  fontFamily: 'monospace'
-                }}>
-                  {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? 'Production' : 'Sandbox'}
-                </span>
-              </div>
+          {activeTab === 'api-keys' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }} className="fade-in">
+              
+              {/* Credentials Console Card */}
+              <div style={{
+                background: 'oklch(0.14 0.006 250)',
+                border: '1px solid oklch(0.20 0.008 250)',
+                borderRadius: 16,
+                padding: 24,
+                display: 'flex', flexDirection: 'column', gap: 20
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid oklch(0.20 0.008 250)', paddingBottom: 14 }}>
+                  <Icon.Database size={16} style={{ color: 'oklch(0.68 0.18 265)' }} />
+                  <div>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>API Credentials</h3>
+                    <p style={{ fontSize: 11.5, color: 'oklch(0.50 0.01 250)', margin: 0 }}>Access tokens targeting formatting and media pipelines.</p>
+                  </div>
+                </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#0e0f12', border: '1px solid #1c1d22', padding: '10px 12px', borderRadius: 8 }}>
-                <div style={{ flex: 1, fontFamily: 'monospace', fontSize: 12, color: '#a5b4fc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {apiKey ? (
-                    isKeyRevealed ? apiKey : `${apiKey.slice(0, 14)}${'•'.repeat(Math.max(1, apiKey.length - 14))}`
-                  ) : (
-                    'No Key Generated. Please contact support.'
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                  {/* Account Details Row */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid oklch(0.16 0.006 250)', paddingBottom: 12 }}>
+                    <div>
+                      <span style={{ fontSize: 9, color: 'oklch(0.50 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Access Tier</span>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'white', marginTop: 2 }}>{planName}</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                      <span style={{ fontSize: 9, color: 'oklch(0.50 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Rate Limit</span>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: 'white', marginTop: 2 }}>
+                        {userPlan === 'api' ? '120 / min' : userPlan === 'pro' ? '30 / min' : isAnonUser ? '3 / min' : '10 / min'}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Key block */}
+                  <div style={{
+                    background: 'oklch(0.12 0.005 250 / 0.6)', border: '1px solid oklch(0.18 0.008 250)',
+                    borderRadius: 10, padding: 16, display: 'flex', flexDirection: 'column', gap: 12
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: 'white' }}>Default Secret Key</span>
+                      <span style={{
+                        fontSize: 8.5, fontWeight: 700, fontFamily: 'monospace',
+                        background: isAnonUser ? 'oklch(0.72 0.18 25 / 0.12)' : 'oklch(0.78 0.16 145 / 0.12)',
+                        border: isAnonUser ? '1px solid oklch(0.72 0.18 25 / 0.3)' : '1px solid oklch(0.78 0.16 145 / 0.3)',
+                        color: isAnonUser ? 'oklch(0.72 0.18 25)' : 'oklch(0.78 0.16 145)',
+                        padding: '1px 6px', borderRadius: 4, textTransform: 'uppercase'
+                      }}>
+                        {isAnonUser ? 'Sandbox' : 'Production'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#0e0f12', border: '1px solid #1c1d22', padding: '8px 12px', borderRadius: 6 }}>
+                      <code style={{ flex: 1, fontFamily: 'monospace', fontSize: 11.5, color: '#a5b4fc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {apiKey ? (
+                          isKeyRevealed ? apiKey : `${apiKey.slice(0, 12)}${'•'.repeat(Math.max(1, apiKey.length - 12))}`
+                        ) : (
+                          'ms_sandbox_unassigned_key'
+                        )}
+                      </code>
+                      
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        {apiKey && (
+                          <button
+                            type="button"
+                            onClick={() => setIsKeyRevealed(!isKeyRevealed)}
+                            className="reset"
+                            style={{ color: 'oklch(0.50 0.01 250)', cursor: 'pointer', display: 'flex', padding: 4 }}
+                            title={isKeyRevealed ? "Hide Secret Key" : "Reveal Secret Key"}
+                          >
+                            {isKeyRevealed ? <Icon.EyeOff size={13} /> : <Icon.Eye size={13} />}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={handleCopyUUID}
+                          className="reset"
+                          style={{ color: uuidCopied ? 'oklch(0.78 0.16 145)' : 'white', cursor: 'pointer', display: 'flex', padding: 4 }}
+                          title="Copy Key to Clipboard"
+                        >
+                          {uuidCopied ? <Icon.Check size={13} /> : <Icon.Copy size={13} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'oklch(0.50 0.01 250)' }}>
+                      <span>Scope: Read & Write</span>
+                      <span>Created: Active Session</span>
+                    </div>
+                  </div>
+
+                  {/* Regenerate Key trigger */}
+                  {!isAnonUser && (
+                    <button
+                      type="button"
+                      onClick={handleRegenerateKey}
+                      disabled={isRegenerating}
+                      className="reset"
+                      style={{
+                        padding: '10px 0', border: '1px dashed oklch(0.24 0.01 250)', borderRadius: 8,
+                        fontSize: 12, fontWeight: 600, color: 'oklch(0.70 0.01 250)', cursor: isRegenerating ? 'not-allowed' : 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s',
+                        background: 'transparent'
+                      }}
+                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'white'; e.currentTarget.style.color = 'white'; }}
+                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'oklch(0.24 0.01 250)'; e.currentTarget.style.color = 'oklch(0.70 0.01 250)'; }}
+                    >
+                      {isRegenerating ? <Icon.Loader size={12} className="spin" /> : <Icon.RefreshCw size={11} />}
+                      {isRegenerating ? 'Rotating Token...' : 'Rotate API Key'}
+                    </button>
                   )}
                 </div>
-
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button 
-                    type="button" 
-                    onClick={() => setIsKeyRevealed(!isKeyRevealed)} 
-                    className="reset" 
-                    style={{ padding: 6, borderRadius: 6, border: '1px solid #1c1d22', cursor: 'pointer', display: 'flex', alignItems: 'center', background: '#1c1d22', color: 'var(--fg-dim)' }}
-                    title={isKeyRevealed ? "Hide API Key" : "Reveal API Key"}
-                  >
-                    {isKeyRevealed ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={handleCopyUUID} 
-                    className="reset" 
-                    style={{ padding: 6, borderRadius: 6, border: '1px solid #1c1d22', cursor: 'pointer', display: 'flex', alignItems: 'center', background: '#1c1d22', color: 'white' }}
-                    title="Copy to Clipboard"
-                  >
-                    {uuidCopied ? <Icon.Check size={14} style={{ color: 'oklch(0.78 0.16 145)' }} /> : <Icon.Copy size={14} />}
-                  </button>
-                </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--fg-dim)' }}>
-                <span>Scope: All Operations (Read/Write)</span>
-                <span>Created: Active Session</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Section 8: Danger Zone (Step 4 Collapsible deactivation) */}
-        <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20, border: '1px solid oklch(0.60 0.20 20 / 0.25)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid oklch(0.60 0.20 20 / 0.2)', paddingBottom: 14 }}>
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-              width: 32, height: 32, borderRadius: 8,
-              background: 'oklch(0.18 0.010 20 / 0.15)',
-              border: '1px solid oklch(0.60 0.20 20 / 0.3)',
-              color: 'oklch(0.65 0.22 20)',
-            }}>
-              <Icon.Shield size={16} />
-            </span>
-            <div>
-              <h3 style={{ fontSize: 15, fontWeight: 600, color: 'oklch(0.65 0.22 20)', margin: 0 }}>Danger Zone</h3>
-              <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Deactivate your workspace account permanently.</p>
-            </div>
-          </div>
-
-          {!showDeactivateFields ? (
-            <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', padding: '8px 0' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                <span style={{ fontSize: 13, fontWeight: 550, color: 'oklch(0.65 0.22 20)' }}>Deactivate Workspace Account</span>
-                <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Initiate permanent deletion protocol. Grace window applies.</span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowDeactivateFields(true)}
-                className="reset"
-                style={{
-                  padding: '8px 16px', borderRadius: 8,
-                  background: 'oklch(0.18 0.010 20 / 0.15)', border: '1px solid oklch(0.60 0.20 20 / 0.3)',
-                  color: 'oklch(0.65 0.22 20)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
-                }}
-              >
-                Deactivate Account...
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
+              {/* Advanced CORS Settings Card */}
               <div style={{
-                background: 'oklch(0.18 0.010 20 / 0.1)', border: '1px solid oklch(0.60 0.20 20 / 0.3)',
-                padding: '14px 18px', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 10
+                background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)',
+                borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 12
               }}>
-                <div style={{ fontSize: 13, color: 'oklch(0.65 0.22 20)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <Icon.Shield size={14} />
-                  <span>Immediate Deactivation Warning</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'white', fontWeight: 600, fontSize: 13 }}>
+                  <Icon.Globe size={14} style={{ color: 'oklch(0.68 0.18 265)' }} />
+                  <span>Allowed Web Origins (CORS)</span>
                 </div>
-                <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
-                  Deactivating your account will freeze your Pro API keys and restrict workspace access immediately. As per global privacy compliance, all associated data is queued for absolute purging.
+                <p style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', margin: 0, lineHeight: 1.45 }}>
+                  Restrict browser requests to specific domains (e.g. `https://my-domain.com`). Leave `*` to permit all.
                 </p>
-                <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
-                  <strong>20-Day Restoration Grace Window</strong>: Your account metadata and database records will remain in a soft-deleted state in our backend for exactly 20 days. If you return and log back in within 20 days, all configurations will be automatically restored. If you do not return, it will be permanently deleted.
-                </p>
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }} className="mono">
-                  To confirm deactivation, please type "SAYONARA" below:
-                </label>
                 <input
                   type="text"
-                  placeholder="Type SAYONARA to confirm"
-                  value={deleteConfirmation}
-                  onChange={e => setDeleteConfirmation(e.target.value)}
+                  value={allowedOrigins}
+                  onChange={e => handleSaveOrigins(e.target.value)}
                   style={{
-                    width: '100%', padding: '10px 12px', borderRadius: 8,
-                    background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                    color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                    width: '100%', background: '#0e0f12', border: '1px solid oklch(0.20 0.008 250)',
+                    borderRadius: 8, padding: '8px 12px', color: 'white', fontSize: 13, outline: 'none',
+                    boxSizing: 'border-box'
                   }}
                 />
               </div>
 
-              {deactivateError && (
-                <div style={{ fontSize: 12, color: 'oklch(0.65 0.22 20)', fontWeight: 500 }}>
-                  {deactivateError}
+              {/* Quota details meter */}
+              <div style={{
+                background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)',
+                padding: 24, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid oklch(0.20 0.008 250)', paddingBottom: 12 }}>
+                  <Icon.Sparkles size={16} style={{ color: 'oklch(0.68 0.18 265)' }} />
+                  <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>Monthly Quota details</span>
                 </div>
-              )}
-              {deactivateSuccess && (
-                <div style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)', fontWeight: 555 }}>
-                  ✓ SAYONARA! Deactivation successful. Redirecting to landing page...
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: 12.5, color: 'oklch(0.70 0.01 250)' }}>Metered Calls</span>
+                    <span style={{ fontSize: 12.5, fontWeight: 700, color: 'oklch(0.68 0.18 265)' }} className="mono">
+                      {`${dailyUsageCount} / ${dailyLimitMax} used today`}
+                    </span>
+                  </div>
+                  <div style={{ height: 8, width: '100%', background: 'oklch(0.18 0.005 250)', borderRadius: 4, overflow: 'hidden', border: '1px solid oklch(0.20 0.008 250)' }}>
+                    <div style={{
+                      height: '100%',
+                      width: `${Math.min((dailyUsageCount / dailyLimitMax) * 100, 100)}%`,
+                      background: 'linear-gradient(90deg, oklch(0.68 0.18 265) 0%, oklch(0.78 0.16 75) 100%)',
+                      transition: 'width 0.4s ease-out'
+                    }} />
+                  </div>
                 </div>
-              )}
-
-              <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-                <button
-                  type="button"
-                  onClick={() => { setShowDeactivateFields(false); setDeleteConfirmation(''); setDeactivateError(null); }}
-                  className="reset"
-                  style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={deleteConfirmation !== 'SAYONARA' || isDeleting}
-                  onClick={handleDeleteAccount}
-                  className="reset"
-                  style={{
-                    padding: '10px 20px', borderRadius: 8,
-                    background: deleteConfirmation === 'SAYONARA' ? 'oklch(0.65 0.22 20)' : 'oklch(0.18 0.010 20 / 0.1)',
-                    border: deleteConfirmation === 'SAYONARA' ? 'none' : '1px solid var(--border)',
-                    color: deleteConfirmation === 'SAYONARA' ? 'white' : 'var(--fg-dim)',
-                    fontWeight: 600, fontSize: 13,
-                    cursor: deleteConfirmation === 'SAYONARA' && !isDeleting ? 'pointer' : 'not-allowed'
-                  }}
-                >
-                  {isDeleting ? 'Deactivating...' : 'Confirm Workspace Deactivation'}
-                </button>
               </div>
+
+              {/* Integration Snippets Card */}
+              <div style={{
+                background: 'oklch(0.14 0.006 250)',
+                border: '1px solid oklch(0.20 0.008 250)',
+                borderRadius: 16,
+                padding: 24,
+                display: 'flex', flexDirection: 'column', gap: 16
+              }}>
+                <div>
+                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>API Integration Snippets</h3>
+                  <p style={{ fontSize: 11.5, color: 'oklch(0.50 0.01 250)', margin: '4px 0 0' }}>Authenticate your programs using standard HTTP request headers.</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: 6, background: '#0e0f12', border: '1px solid #1c1d22', padding: '6px', borderRadius: 10, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                  {(['curl', 'js', 'python', 'go', 'rust', 'csharp', 'java', 'php', 'ruby'] as const).map(tab => (
+                    <button
+                      key={tab}
+                      type="button"
+                      onClick={() => setSnippetTab(tab as any)}
+                      className="reset mono"
+                      style={{
+                        padding: '6px 12px', borderRadius: 6,
+                        fontSize: 11, fontWeight: 600, cursor: 'pointer',
+                        background: snippetTab === tab ? 'oklch(0.20 0.01 250)' : 'transparent',
+                        border: snippetTab === tab ? '1px solid oklch(0.28 0.01 250)' : '1px solid transparent',
+                        color: snippetTab === tab ? 'white' : 'oklch(0.50 0.01 250)',
+                        textAlign: 'center', transition: 'all 0.15s'
+                      }}
+                    >
+                      {tab === 'curl' ? 'cURL' : tab === 'js' ? 'JS Fetch' : tab === 'csharp' ? 'C#' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                  <pre style={{
+                    background: '#07080a', border: '1px solid #16181d', borderRadius: 10,
+                    padding: 16, margin: 0, fontSize: 11.5, lineHeight: 1.5,
+                    color: '#a5b4fc', overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all',
+                    fontFamily: 'monospace', textAlign: 'left', maxHeight: 220
+                  }}>
+                    {codeSnippets[snippetTab]}
+                  </pre>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigator.clipboard.writeText(codeSnippets[snippetTab]);
+                      alert("Snippet copied to clipboard!");
+                    }}
+                    className="reset"
+                    style={{
+                      position: 'absolute', top: 10, right: 10,
+                      background: 'oklch(0.14 0.006 250 / 0.8)', border: '1px solid oklch(0.24 0.01 250)',
+                      color: 'white', padding: '4px 8px', borderRadius: 6,
+                      fontSize: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
+                    }}
+                  >
+                    <Icon.Copy size={10} />
+                    <span>Copy</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* OpenAPI spec sheet download */}
+              <div style={{
+                background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)',
+                padding: 24, borderRadius: 16, display: 'flex', alignItems: 'center', gap: 16
+              }}>
+                <Icon.Server size={28} style={{ color: 'oklch(0.70 0.15 195)', flexShrink: 0 }} />
+                <div>
+                  <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'white' }}>OpenAPI Spec Specifications</h4>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'oklch(0.50 0.01 250)', lineHeight: 1.45 }}>
+                    Download our OpenAPI 3.0 specs to instantly generate types, API clients, and mock servers.
+                  </p>
+                  <a href="/api/openapi.json" download="openapi.json" style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600,
+                    color: 'oklch(0.70 0.15 195)', textDecoration: 'none', marginTop: 10
+                  }}>
+                    Download openapi.json <Icon.ArrowRight size={11} />
+                  </a>
+                </div>
+              </div>
+
             </div>
           )}
-        </div>
 
+          {activeTab === 'danger' && (
+            <div className="glass-card fade-in" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20, border: '1px solid oklch(0.60 0.20 20 / 0.25)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid oklch(0.60 0.20 20 / 0.2)', paddingBottom: 14 }}>
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  width: 32, height: 32, borderRadius: 8,
+                  background: 'oklch(0.18 0.010 20 / 0.15)',
+                  border: '1px solid oklch(0.60 0.20 20 / 0.3)',
+                  color: 'oklch(0.65 0.22 20)',
+                }}>
+                  <Icon.Shield size={16} />
+                </span>
+                <div>
+                  <h3 style={{ fontSize: 15, fontWeight: 600, color: 'oklch(0.65 0.22 20)', margin: 0 }}>Danger Zone</h3>
+                  <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Deactivate your workspace account permanently.</p>
+                </div>
+              </div>
+
+              {!showDeactivateFields ? (
+                <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', padding: '8px 0' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <span style={{ fontSize: 13, fontWeight: 550, color: 'oklch(0.65 0.22 20)' }}>Deactivate Workspace Account</span>
+                    <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Initiate permanent deletion protocol. Grace window applies.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowDeactivateFields(true)}
+                    className="reset"
+                    style={{
+                      padding: '8px 16px', borderRadius: 8,
+                      background: 'oklch(0.18 0.010 20 / 0.15)', border: '1px solid oklch(0.60 0.20 20 / 0.3)',
+                      color: 'oklch(0.65 0.22 20)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
+                    }}
+                  >
+                    Deactivate Account...
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
+                  <div style={{
+                    background: 'oklch(0.18 0.010 20 / 0.1)', border: '1px solid oklch(0.60 0.20 20 / 0.3)',
+                    padding: '14px 18px', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 10
+                  }}>
+                    <div style={{ fontSize: 13, color: 'oklch(0.65 0.22 20)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Icon.Shield size={14} />
+                      <span>Immediate Deactivation Warning</span>
+                    </div>
+                    <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
+                      Deactivating your account will freeze your Pro API keys and restrict workspace access immediately. As per global privacy compliance, all associated data is queued for absolute purging.
+                    </p>
+                    <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
+                      <strong>20-Day Restoration Grace Window</strong>: Your account metadata and database records will remain in a soft-deleted state in our backend for exactly 20 days. If you return and log back in within 20 days, all configurations will be automatically restored. If you do not return, it will be permanently deleted.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }} className="mono">
+                      To confirm deactivation, please type "SAYONARA" below:
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Type SAYONARA to confirm"
+                      value={deleteConfirmation}
+                      onChange={e => setDeleteConfirmation(e.target.value)}
+                      style={{
+                        width: '100%', padding: '10px 12px', borderRadius: 8,
+                        background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
+                        color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+
+                  {deactivateError && (
+                    <div style={{ fontSize: 12, color: 'oklch(0.65 0.22 20)', fontWeight: 500 }}>
+                      {deactivateError}
+                    </div>
+                  )}
+                  {deactivateSuccess && (
+                    <div style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)', fontWeight: 555 }}>
+                      ✓ SAYONARA! Deactivation successful. Redirecting to landing page...
+                    </div>
+                  )}
+
+                  <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+                    <button
+                      type="button"
+                      onClick={() => { setShowDeactivateFields(false); setDeleteConfirmation(''); setDeactivateError(null); }}
+                      className="reset"
+                      style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      disabled={deleteConfirmation !== 'SAYONARA' || isDeleting}
+                      onClick={handleDeleteAccount}
+                      className="reset"
+                      style={{
+                        padding: '10px 20px', borderRadius: 8,
+                        background: deleteConfirmation === 'SAYONARA' ? 'oklch(0.65 0.22 20)' : 'oklch(0.18 0.010 20 / 0.1)',
+                        border: deleteConfirmation === 'SAYONARA' ? 'none' : '1px solid var(--border)',
+                        color: deleteConfirmation === 'SAYONARA' ? 'white' : 'var(--fg-dim)',
+                        fontWeight: 600, fontSize: 13,
+                        cursor: deleteConfirmation === 'SAYONARA' && !isDeleting ? 'pointer' : 'not-allowed'
+                      }}
+                    >
+                      {isDeleting ? 'Deactivating...' : 'Confirm Workspace Deactivation'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+        </div>
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
@@ -5920,7 +6289,7 @@ function AccountPage({
                   color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
                   textAlign: 'center'
                 }}
-              >
+                >
                 {isCancelingSub ? 'Canceling...' : 'Yes, Cancel Plan'}
               </button>
             </div>
