@@ -2,7 +2,13 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { marked } from 'marked';
 
-function compileThemeHtml(rawText: string, theme: string): string {
+function compileThemeHtml(
+  rawText: string,
+  theme: string,
+  customHeader?: string,
+  customFooter?: string,
+  isPremium: boolean = false
+): string {
   const htmlBody = marked.parse(rawText);
   let themeCss = "";
   if (theme === 'academic') {
@@ -100,6 +106,123 @@ function compileThemeHtml(rawText: string, theme: string): string {
     `;
   }
 
+  // Add high-fidelity printing properties to ensure background colors, layout margins, and text print perfectly!
+  themeCss += `
+    .pdf-header, .pdf-footer {
+      display: none;
+    }
+    @media print {
+      body {
+        margin: 0 !important;
+        padding: 0 !important;
+        background: white !important;
+        color: black !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+      }
+      tr {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      pre, blockquote {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+      pre {
+        background-color: oklch(0.93 0.005 250) !important;
+        color: #1e293b !important;
+        border-color: oklch(0.90 0.005 250) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      code {
+        background-color: oklch(0.92 0.005 250) !important;
+        color: #0f172a !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      blockquote {
+        background-color: oklch(0.94 0.006 250) !important;
+        border-left-color: oklch(0.62 0.18 265) !important;
+        color: #475569 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      th {
+        background-color: oklch(0.95 0.005 250) !important;
+        color: #0f172a !important;
+        border-color: oklch(0.90 0.005 250) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      td {
+        border-color: oklch(0.90 0.005 250) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      tr:nth-child(even) {
+        background-color: oklch(0.98 0.002 250) !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      .pdf-header {
+        display: block !important;
+        position: fixed;
+        top: -0.65in;
+        left: 0;
+        right: 0;
+        font-size: 8pt;
+        color: #888;
+        text-align: center;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 4px;
+        font-family: 'Inter', -apple-system, sans-serif;
+      }
+      .pdf-footer {
+        display: block !important;
+        position: fixed;
+        bottom: -0.65in;
+        left: 0;
+        right: 0;
+        font-size: 8pt;
+        color: #888;
+        text-align: center;
+        border-top: 1px solid #eee;
+        padding-top: 4px;
+        font-family: 'Inter', -apple-system, sans-serif;
+      }
+    }
+    @page {
+      size: A4;
+      margin-top: 1.0in;
+      margin-bottom: 1.0in;
+      margin-left: 1.2in;
+      margin-right: 1.2in;
+    }
+  `;
+
+  // running headers / footers logic
+  let headerHtml = "";
+  let footerHtml = "";
+
+  if (customHeader) {
+    headerHtml = `<div class="pdf-header">${customHeader}</div>`;
+  }
+
+  let footerText = customFooter || "";
+  if (!isPremium) {
+    if (footerText) footerText += " | ";
+    footerText += `Formatted using MySaaS`;
+  }
+
+  if (footerText) {
+    footerHtml = `<div class="pdf-footer">${footerText}</div>`;
+  }
+
   return `<!DOCTYPE html>
 <html>
 <head>
@@ -109,7 +232,9 @@ function compileThemeHtml(rawText: string, theme: string): string {
   </style>
 </head>
 <body>
+  ${headerHtml}
   ${htmlBody}
+  ${footerHtml}
 </body>
 </html>`;
 }
@@ -147,8 +272,16 @@ export async function POST(req: Request) {
     }
 
     const content = body.content || body.text;
-    const style = body.style || 'modern';
+    let style = body.style || 'modern';
     const tool = body.tool || 'ai-formatter';
+    const customHeader = body.customHeader || '';
+    const customFooter = body.customFooter || '';
+
+    // Backwards compatibility mappings for older API integrations
+    if (style === 'report') style = 'modern';
+    else if (style === 'clean') style = 'academic';
+    else if (style === 'email') style = 'minimalist';
+
     if (!content) {
       return NextResponse.json(
         { status: 'error', message: 'Missing "text" (or "content") parameter in request body.' },
@@ -349,8 +482,8 @@ export async function POST(req: Request) {
     }
 
     // Default: AI / Document formatting tool
-    const formattedMarkdown = `# Formatted Document Report\n\n${rawText}\n\n---\n*Formatted programmatically via Developer API.*`;
-    const formattedHtml = compileThemeHtml(formattedMarkdown, style);
+    const formattedMarkdown = rawText;
+    const formattedHtml = compileThemeHtml(formattedMarkdown, style, customHeader, customFooter, isPaidOrAdmin);
     const formattedText = stripMarkdown(formattedMarkdown);
 
     // 8. Return JSON payload response

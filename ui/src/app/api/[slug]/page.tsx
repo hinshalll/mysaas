@@ -27,7 +27,7 @@ export default function ApiDetailPage() {
   
   // Formatter sandbox states
   const [formatterText, setFormatterText] = useState('Clean this up and present it as a structured review.');
-  const [formatterStyle, setFormatterStyle] = useState('report');
+  const [formatterStyle, setFormatterStyle] = useState('modern');
   
   // HEIC sandbox states
   const [heicFile, setHeicFile] = useState<File | null>(null);
@@ -76,12 +76,14 @@ export default function ApiDetailPage() {
       },
       params: [
         { name: 'text', type: 'string', required: true, desc: 'The unformatted raw transcription or text payload.' },
-        { name: 'style', type: 'string', required: false, desc: 'Formatting target template: "report", "clean", "email", etc.' }
+        { name: 'style', type: 'string', required: false, desc: 'Formatting target layout theme: "modern", "academic", or "minimalist" (defaults to "modern").' },
+        { name: 'customHeader', type: 'string', required: false, desc: 'Optional running header text for print/PDF output.' },
+        { name: 'customFooter', type: 'string', required: false, desc: 'Optional running footer text for print/PDF output.' }
       ],
       curlCode: `curl -X POST https://mysaastools.vercel.app/api/v1/format \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{"text": "messy text here", "style": "report"}'`,
+  -d '{"text": "messy text here", "style": "modern"}'`,
       jsCode: `fetch('https://mysaastools.vercel.app/api/v1/format', {
   method: 'POST',
   headers: {
@@ -90,7 +92,7 @@ export default function ApiDetailPage() {
   },
   body: JSON.stringify({
     text: 'messy text here',
-    style: 'report'
+    style: 'modern'
   })
 })
 .then(res => res.json())
@@ -104,7 +106,7 @@ headers = {
 }
 payload = {
     "text": "messy text here",
-    "style": "report"
+    "style": "modern"
 }
 
 response = requests.post(url, json=payload, headers=headers)
@@ -176,12 +178,14 @@ with open("converted.jpg", "wb") as f:
       },
       params: [
         { name: 'html', type: 'string', required: true, desc: 'Raw HTML structure payload to format.' },
-        { name: 'margin', type: 'string', required: false, desc: 'Page print borders, e.g. "0.75in", "1in".' }
+        { name: 'filename', type: 'string', required: false, desc: 'Optional target filename for download attachment.' },
+        { name: 'customHeader', type: 'string', required: false, desc: 'Optional running header text for the PDF page.' },
+        { name: 'customFooter', type: 'string', required: false, desc: 'Optional running footer text for the PDF page.' }
       ],
       curlCode: `curl -X POST https://mysaastools.vercel.app/api/v1/export-pdf \\
   -H "Authorization: Bearer YOUR_API_KEY" \\
   -H "Content-Type: application/json" \\
-  -d '{"html": "<h1>My Document</h1>", "margin": "1in"}' \\
+  -d '{"html": "<h1>My Document</h1>", "filename": "document.pdf"}' \\
   --output document.pdf`,
       jsCode: `fetch('https://mysaastools.vercel.app/api/v1/export-pdf', {
   method: 'POST',
@@ -191,7 +195,7 @@ with open("converted.jpg", "wb") as f:
   },
   body: JSON.stringify({
     html: '<h1>My Document</h1>',
-    margin: '1in'
+    filename: 'document.pdf'
   })
 })
 .then(res => res.blob())
@@ -208,7 +212,7 @@ headers = {
 }
 payload = {
     "html": "<h1>My Document</h1>",
-    "margin": "1in"
+    "filename": "document.pdf"
 }
 
 response = requests.post(url, json=payload, headers=headers)
@@ -307,8 +311,7 @@ with open("document.pdf", "wb") as f:
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            html: pdfHtml,
-            margin: '0.75in'
+            html: pdfHtml
           })
         });
         setResStatus(res.status);
@@ -591,9 +594,9 @@ with open("document.pdf", "wb") as f:
                       borderRadius: 8, padding: 8, color: 'white', fontSize: 12.5, outline: 'none'
                     }}
                   >
-                    <option value="report">Structured Report</option>
-                    <option value="clean">Clean Transcription</option>
-                    <option value="email">Formal Email</option>
+                    <option value="modern">Modern Editorial</option>
+                    <option value="academic">Academic Serif</option>
+                    <option value="minimalist">Minimalist Mono</option>
                   </select>
                 </div>
               </div>
