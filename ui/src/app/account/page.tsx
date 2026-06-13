@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { App } from "../page";
+import AccountClient from "./AccountClient";
 
 export const metadata: Metadata = {
   title: "Account Settings & Preferences - Premium SaaS Tools Hub",
@@ -7,5 +7,6 @@ export const metadata: Metadata = {
 };
 
 export default function AccountPageRoute() {
-  return <App initialSlug="account" />;
+  return <AccountClient />;
 }
+

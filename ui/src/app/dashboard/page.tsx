@@ -1,11 +1,11 @@
-import { Metadata } from "next";
-import { App } from "../page";
+import { Metadata } from 'next';
+import DashboardClient from './DashboardClient';
 
 export const metadata: Metadata = {
-  title: "Dashboard & Workspace - Premium SaaS Tools Hub",
-  description: "Access all formatted data, conversion, text-processing, and file-parsing utilities in one keyboard-driven workspace.",
+  title: "Console Dashboard",
+  description: "Access your dashboard workspace, manage tool runs, check subscription usage stats, and quickly search through 20+ specialized utility modules.",
 };
 
-export default function DashboardRoute() {
-  return <App initialSlug="dashboard" />;
+export default function DashboardPage() {
+  return <DashboardClient />;
 }

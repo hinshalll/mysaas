@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { App } from "../page";
+import ChangelogClient from "./ChangelogClient";
 
 export const metadata: Metadata = {
   title: "Changelog & Product Updates - Premium SaaS Tools Hub",
@@ -7,5 +7,6 @@ export const metadata: Metadata = {
 };
 
 export default function ChangelogRoute() {
-  return <App initialSlug="changelog" />;
+  return <ChangelogClient />;
 }
+

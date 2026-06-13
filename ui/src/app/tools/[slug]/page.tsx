@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { App } from "../../page";
+import DynamicToolClient from "./DynamicToolClient";
 import { ALL_TOOLS } from "../../config";
 
 interface Props {
@@ -20,7 +20,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     };
   }
 
-  if (slug === 'heic-to-jpg') {
+  if (slug === 'heic' || slug === 'heic-to-jpg-converter') {
     return {
       title: "HEIC to JPG Converter - 100% Free & Safe Browser Tool",
       description: "Batch convert HEIC images to JPG directly in your browser. Visual previews, no file uploads, 100% private on-device processing.",
@@ -55,5 +55,5 @@ export default async function DynamicToolStubPage({ params }: Props) {
     redirect('/tools/heic-to-jpg-converter');
   }
   
-  return <App initialSlug={slug} />;
+  return <DynamicToolClient slug={slug} />;
 }

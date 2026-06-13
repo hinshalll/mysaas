@@ -1,11 +1,11 @@
-import { Metadata } from "next";
-import { App } from "../page";
+import { Metadata } from 'next';
+import DocsClient from './DocsClient';
 
 export const metadata: Metadata = {
-  title: "Developer Documentation & Technical Guide - Premium SaaS Tools Hub",
-  description: "Check the API endpoints, rate limits guidelines, and security compliance records for our tools catalog.",
+  title: "API & Technical Docs",
+  description: "Read documentation on utilizing our serverless AI formatting API, sandbox limits, response formats, and client integrations.",
 };
 
 export default function DocsPage() {
-  return <App initialSlug="docs" />;
+  return <DocsClient />;
 }

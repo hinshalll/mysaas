@@ -1,10 +1,6 @@
 import { Metadata } from "next";
-import { App } from "../../page";
+import HeicToJpgConverterClient from "./HeicToJpgConverterClient";
 import { ALL_TOOLS } from "../../config";
-
-interface Props {
-  params: Promise<{}>;
-}
 
 export async function generateMetadata(): Promise<Metadata> {
   const matchedTool = ALL_TOOLS.find(t => t.id === "heic-to-jpg-converter");
@@ -18,5 +14,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
-  return <App initialSlug="heic-to-jpg-converter" />;
+  return <HeicToJpgConverterClient />;
 }
+

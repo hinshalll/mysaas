@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { App } from "../../page";
+import CategoryHubClient from "./CategoryHubClient";
 import { CATEGORIES } from "../../config";
 
 interface Props {
@@ -25,5 +25,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DynamicCategoryPage({ params }: Props) {
   const { id } = await params;
   
-  return <App initialSlug={`category_${id}`} />;
+  return <CategoryHubClient categoryId={id} />;
 }
+

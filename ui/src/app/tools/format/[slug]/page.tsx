@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { App } from "../../../page";
+import FormatRedirectClient from "./FormatRedirectClient";
 import { AI_SOURCES, FORMATS } from "../../../config";
 
 interface Props {
@@ -36,5 +36,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function DynamicToolPage({ params }: Props) {
   const { slug } = await params;
   
-  return <App initialSlug={slug} />;
+  return <FormatRedirectClient slug={slug} />;
 }
+

@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { App } from "../../page";
+import JsonFormatterValidatorClient from "./JsonFormatterValidatorClient";
 import { ALL_TOOLS } from "../../config";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -14,5 +14,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
-  return <App initialSlug="json" />;
+  return <JsonFormatterValidatorClient />;
 }
+

@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import { App } from "../../page";
+import DynamicToolClient from "../[slug]/DynamicToolClient";
 import { ALL_TOOLS } from "../../config";
 
 interface Props {
@@ -18,5 +18,5 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Page() {
-  return <App initialSlug="mime-file-type-detector" />;
+  return <DynamicToolClient slug="mime-file-type-detector" />;
 }
