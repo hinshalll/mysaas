@@ -136,7 +136,9 @@ body::after {
 }
 
 /* Resets / utilities */
-.reset { all: unset; }
+@layer base {
+  .reset { all: unset; }
+}
 .mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
 :focus-visible {
   outline: 2px solid var(--accent);
