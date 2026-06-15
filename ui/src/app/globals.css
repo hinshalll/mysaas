@@ -46,6 +46,28 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --color-bg: var(--bg);
+  --color-bg-elev-1: var(--bg-elev-1);
+  --color-bg-elev-2: var(--bg-elev-2);
+  --color-bg-hover: var(--bg-hover);
+  --color-bg-topbar: var(--bg-topbar);
+  --color-bg-overlay: var(--bg-overlay);
+  --color-bg-overlay-sticky: var(--bg-overlay-sticky);
+  --color-bg-overlay-modal: var(--bg-overlay-modal);
+  --color-bg-modal: var(--bg-modal);
+  --color-border-strong: var(--border-strong);
+  --color-fg-muted: var(--fg-muted);
+  --color-fg-subtle: var(--fg-subtle);
+  --color-fg-dim: var(--fg-dim);
+  --color-pro: var(--pro);
+
+  --animate-gradient-shift: gradient-shift 8s ease-in-out infinite;
+
+  @keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
 }
 
 :root {

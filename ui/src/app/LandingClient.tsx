@@ -28,31 +28,13 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
   const [isEditingBrand, setIsEditingBrand] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
-    <header style={{
-      position: 'sticky', top: 0, zIndex: 30,
-      height: 64,
-      display: 'flex', alignItems: 'center',
-      padding: '0 32px',
-      gap: 18,
-      background: scrolled ? 'var(--bg-topbar)' : 'transparent',
-      borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'transparent'}`,
-      backdropFilter: scrolled ? 'blur(20px) saturate(140%)' : 'none',
-      transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
-    }} className="landing-nav">
+    <header className={`sticky top-0 z-30 h-16 flex items-center px-8 gap-[18px] transition-all duration-250 ${scrolled ? 'bg-bg-topbar border-b border-border backdrop-blur-md saturate-140' : 'bg-transparent border-b border-transparent backdrop-blur-none'}`}>
       {/* Brand Logo */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        textDecoration: 'none', color: 'inherit'
-      }}>
+      <div className="flex items-center gap-2.5 text-inherit no-underline">
         {isEditingBrand ? (
           <>
-            <div style={{
-              width: 30, height: 30, borderRadius: 8,
-              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
-            }}>
-              <Icon.Command size={16} strokeWidth={2.2} style={{ color: 'white' }} />
+            <div className="w-[30px] h-[30px] rounded-lg bg-gradient-to-br from-[oklch(0.70_0.18_265)] to-[oklch(0.62_0.20_305)] flex items-center justify-center shadow-[0_0_0_1px_rgba(128,64,200,0.5),0_4px_14px_rgba(128,64,200,0.4)]">
+              <Icon.Command size={16} strokeWidth={2.2} className="text-white" />
             </div>
             <input
               type="text"
@@ -72,19 +54,9 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
                   localStorage.setItem('brandName', newVal);
                 }
               }}
+              className="bg-transparent border-none text-fg font-sans text-base font-semibold tracking-[-0.02em] outline-none cursor-text p-0 m-0"
               style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--fg)',
-                fontFamily: 'inherit',
-                fontSize: 16,
-                fontWeight: 600,
-                letterSpacing: '-0.02em',
                 width: `${Math.max(brandName.length, 1)}ch`,
-                outline: 'none',
-                cursor: 'text',
-                padding: 0,
-                margin: 0,
               }}
               title="Enter new brand name and click away"
             />
@@ -96,23 +68,11 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
               e.preventDefault(); 
               onLaunch(); 
             }} 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              textDecoration: 'none', 
-              color: 'inherit',
-              gap: 10
-            }}
+            className="flex items-center text-inherit no-underline gap-2.5"
             title="Return to Home Screen"
           >
-            <div style={{
-              width: 30, height: 30, borderRadius: 8,
-              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
-              cursor: 'pointer',
-            }}>
-              <Icon.Command size={16} strokeWidth={2.2} style={{ color: 'white' }} />
+            <div className="w-[30px] h-[30px] rounded-lg bg-gradient-to-br from-[oklch(0.70_0.18_265)] to-[oklch(0.62_0.20_305)] flex items-center justify-center shadow-[0_0_0_1px_rgba(128,64,200,0.5),0_4px_14px_rgba(128,64,200,0.4)] cursor-pointer">
+              <Icon.Command size={16} strokeWidth={2.2} className="text-white" />
             </div>
             <span
               onDoubleClick={(e) => {
@@ -120,14 +80,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
                 e.preventDefault();
                 setIsEditingBrand(true);
               }}
-              style={{
-                color: 'var(--fg)',
-                fontSize: 16,
-                fontWeight: 600,
-                letterSpacing: '-0.02em',
-                cursor: 'pointer',
-                userSelect: 'none',
-              }}
+              className="text-fg text-base font-semibold tracking-[-0.02em] cursor-pointer select-none"
               title="Double-click to rename SaaS"
             >
               {brandName}
@@ -136,7 +89,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
         )}
       </div>
 
-      <nav style={{ display: 'flex', gap: 2, marginLeft: 24 }} className="landing-nav-links">
+      <nav className="flex gap-0.5 ml-6 landing-nav-links">
         {[
           { label: 'Tools', path: '/dashboard' },
           { label: 'Pricing', path: '/pricing' },
@@ -144,76 +97,40 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
           { label: 'Docs', path: '/docs' },
           { label: 'APIs', path: '/api' },
         ].map(item => (
-          <Link key={item.label} href={item.path} className="reset top-link" style={{
-            fontSize: 13, color: 'var(--fg-muted)',
-            padding: '7px 12px', borderRadius: 6,
-            textDecoration: 'none', cursor: 'pointer',
-          }}>{item.label}</Link>
+          <Link key={item.label} href={item.path} className="reset top-link text-[13px] text-fg-muted py-[7px] px-3 rounded-md no-underline cursor-pointer transition-colors duration-155 hover:bg-bg-hover hover:text-fg">{item.label}</Link>
         ))}
       </nav>
 
-      <div style={{ flex: 1 }} />
+      <div className="flex-1" />
 
       {/* Auth State (Same as TopBar) */}
       {sessionUser && !isAnonUser ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginRight: 8 }}>
+        <div className="flex items-center gap-2.5 mr-2">
           {(() => {
             const userDisplayName = sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0];
             return (
-              <Link href="/account" className="reset top-link" style={{ 
-                fontSize: 12.5, 
-                color: 'var(--fg)', 
-                display: 'inline-flex', 
-                alignItems: 'center', 
-                gap: 6,
-                background: 'var(--bg-elev-1)',
-                border: '1px solid var(--border)',
-                padding: '5px 12px',
-                borderRadius: 20,
-                textDecoration: 'none',
-              }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+              <Link href="/account" className="reset top-link text-[12.5px] text-fg inline-flex items-center gap-1.5 bg-bg-elev-1 border border-border py-1.25 px-3 rounded-full no-underline transition-colors duration-155 hover:bg-bg-hover">
+                <span className={`w-1.5 h-1.5 rounded-full ${userPlan === 'pro' ? 'bg-pro' : 'bg-[oklch(0.70_0.16_145)]'}`} />
                 <span>Account ({userDisplayName})</span>
-                {userPlan === 'pro' && <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}>PRO</span>}
+                {userPlan === 'pro' && <span className="mono text-[9px] bg-pro text-black py-0.25 px-1 rounded font-bold">PRO</span>}
               </Link>
             );
           })()}
-          <button onClick={onSignOut} className="reset top-link" style={{ fontSize: 13, color: 'var(--fg-muted)', cursor: 'pointer', background: 'none', border: 'none' }}>Sign Out</button>
+          <button onClick={onSignOut} className="reset top-link text-[13px] text-fg-muted cursor-pointer bg-none border-none hover:text-fg">Sign Out</button>
         </div>
       ) : (
-        <button onClick={onOpenAuthModal} className="reset top-link" style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 600, padding: '8px 12px', borderRadius: 7, cursor: 'pointer', marginRight: 8 }}>Sign In / Up</button>
+        <button onClick={onOpenAuthModal} className="reset top-link text-[13px] text-accent font-semibold py-2 px-3 rounded-[7px] cursor-pointer mr-2 hover:bg-bg-hover transition-colors duration-155">Sign In / Up</button>
       )}
 
       {/* Theme Toggle Switch */}
-      <button onClick={onToggleTheme} className="reset theme-toggle-btn" style={{
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        width: 32, height: 32, borderRadius: 8,
-        cursor: 'pointer',
-        fontSize: 13, color: 'var(--fg-muted)',
-        background: 'var(--bg-elev-1)',
-        border: '1px solid var(--border)',
-        transition: 'background 0.15s, color 0.15s, transform 0.15s',
-      }}
-      onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-      onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-1)'}
-      title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
+      <button onClick={onToggleTheme} className="reset theme-toggle-btn inline-flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer text-[13px] text-fg-muted bg-bg-elev-1 border border-border transition-all duration-155 hover:bg-bg-hover hover:text-fg hover:scale-[1.03] active:scale-[0.97]" title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
         {theme === 'dark' ? <Icon.Sun size={15} /> : <Icon.Moon size={15} />}
       </button>
 
       {/* Mobile Menu Toggle Button for LandingNav */}
       <button 
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="reset mobile-menu-btn"
-        style={{
-          display: 'none', // Hidden on desktop, shown on mobile via CSS
-          alignItems: 'center', justifyContent: 'center',
-          width: 32, height: 32, borderRadius: 8,
-          cursor: 'pointer',
-          background: mobileMenuOpen ? 'var(--bg-hover)' : 'var(--bg-elev-1)',
-          border: '1px solid var(--border)',
-          color: 'var(--fg)',
-          transition: 'all 0.2s',
-        }}
+        className={`reset mobile-menu-btn items-center justify-center w-8 h-8 rounded-lg cursor-pointer border border-border text-fg transition-all duration-200 ${mobileMenuOpen ? 'bg-bg-hover' : 'bg-bg-elev-1'}`}
         title="Toggle Menu"
       >
         {mobileMenuOpen ? <Icon.X size={15} /> : <Icon.Menu size={15} />}
@@ -221,21 +138,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
 
       {/* Mobile Menu Panel for LandingNav */}
       {mobileMenuOpen && (
-        <div style={{
-          position: 'absolute',
-          top: 64, left: 0, right: 0,
-          background: 'oklch(0.145 0 0 / 0.95)',
-          backdropFilter: 'blur(20px) saturate(140%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-          borderBottom: '1px solid var(--border)',
-          padding: '16px 20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-          zIndex: 40,
-          boxShadow: '0 20px 40px oklch(0 0 0 / 0.5)',
-          animation: 'slideDownMenu 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}>
+        <div className="absolute top-16 left-0 right-0 bg-[oklch(0.145_0_0_/_0.95)] backdrop-blur-md saturate-140 border-b border-border p-[16px_20px] flex flex-col gap-3 z-40 shadow-[0_20px_40px_rgba(0,0,0,0.5)] animate-[slideDownMenu_0.2s_cubic-bezier(0.16,1,0.3,1)]">
           <style>{`
             @keyframes slideDownMenu {
               from { transform: translateY(-10px); opacity: 0; }
@@ -243,8 +146,8 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
             }
           `}</style>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Navigation</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] text-fg-dim font-semibold uppercase tracking-wider mb-1 mono">Navigation</span>
             <Link 
               href="/dashboard" 
               onClick={(e) => {
@@ -252,73 +155,64 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
                 onLaunch();
                 setMobileMenuOpen(false);
               }}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)' }}
+              className="text-sm text-fg p-2.5 rounded-lg no-underline bg-bg-elev-1 border border-border transition-colors hover:bg-bg-hover"
             >
               Launch App
             </Link>
             <Link 
               href="/pricing" 
               onClick={() => setMobileMenuOpen(false)}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+              className="text-sm text-fg p-2.5 rounded-lg no-underline bg-bg-elev-1 border border-border mt-2 transition-colors hover:bg-bg-hover"
             >
               Pricing
             </Link>
             <Link 
               href="/changelog" 
               onClick={() => setMobileMenuOpen(false)}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+              className="text-sm text-fg p-2.5 rounded-lg no-underline bg-bg-elev-1 border border-border mt-2 transition-colors hover:bg-bg-hover"
             >
               Changelog
             </Link>
             <Link 
               href="/docs" 
               onClick={() => setMobileMenuOpen(false)}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+              className="text-sm text-fg p-2.5 rounded-lg no-underline bg-bg-elev-1 border border-border mt-2 transition-colors hover:bg-bg-hover"
             >
               Docs
             </Link>
             <Link 
               href="/api" 
               onClick={() => setMobileMenuOpen(false)}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+              className="text-sm text-fg p-2.5 rounded-lg no-underline bg-bg-elev-1 border border-border mt-2 transition-colors hover:bg-bg-hover"
             >
               APIs
             </Link>
           </div>
 
-          <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+          <div className="h-[1px] bg-border my-1" />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Account Workspace</span>
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] text-fg-dim font-semibold uppercase tracking-wider mb-1 mono">Account Workspace</span>
             
             {sessionUser && !isAnonUser ? (
               <>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: 10,
-                  padding: '10px 12px', borderRadius: 8,
-                  background: 'var(--bg-elev-1)', border: '1px solid var(--border)'
-                }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: 13.5, fontWeight: 500, color: 'white' }}>
+                <div className="flex items-center gap-2.5 p-2.5 rounded-lg bg-bg-elev-1 border border-border">
+                  <span className={`w-2 h-2 rounded-full ${userPlan === 'pro' ? 'bg-pro' : 'bg-[oklch(0.70_0.16_145)]'}`} />
+                  <div className="flex flex-col">
+                    <span className="text-[13.5px] font-medium text-white">
                       {sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0]}
                     </span>
-                    <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>
-                      Active Plan: <span className="mono" style={{ color: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)', fontWeight: 700 }}>{userPlan.toUpperCase()}</span>
+                    <span className="text-[11px] text-fg-muted">
+                      Active Plan: <span className="mono font-bold" style={{ color: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }}>{userPlan.toUpperCase()}</span>
                     </span>
                   </div>
                 </div>
                 
-                <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
+                <div className="flex gap-2.5 mt-1">
                   <Link 
                     href="/account"
                     onClick={() => setMobileMenuOpen(false)}
-                    style={{
-                      flex: 1, padding: '10px', textAlign: 'center',
-                      background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                      borderRadius: 8, color: 'white', fontWeight: 500, fontSize: 13,
-                      textDecoration: 'none'
-                    }}
+                    className="flex-1 p-2.5 text-center bg-bg-elev-2 border border-border rounded-lg text-white font-medium text-sm no-underline transition-colors hover:bg-bg-hover"
                   >
                     Account Settings
                   </Link>
@@ -327,12 +221,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
                       onSignOut();
                       setMobileMenuOpen(false);
                     }}
-                    style={{
-                      padding: '10px 16px',
-                      background: 'oklch(0.60 0.15 20 / 0.1)', border: '1px solid oklch(0.60 0.15 20 / 0.3)',
-                      borderRadius: 8, color: 'oklch(0.75 0.15 20)', fontWeight: 500, fontSize: 13,
-                      cursor: 'pointer'
-                    }}
+                    className="p-2.5 bg-[oklch(0.60_0.15_20_/_0.1)] border border-[oklch(0.60_0.15_20_/_0.3)] rounded-lg text-[oklch(0.75_0.15_20)] font-medium text-sm cursor-pointer transition-colors hover:bg-[oklch(0.60_0.15_20_/_0.2)]"
                   >
                     Sign Out
                   </button>
@@ -344,14 +233,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
                   onOpenAuthModal();
                   setMobileMenuOpen(false);
                 }}
-                style={{
-                  padding: '10px',
-                  background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 305))',
-                  border: 'none', borderRadius: 8,
-                  color: 'white', fontWeight: 600, fontSize: 13.5,
-                  cursor: 'pointer',
-                  boxShadow: '0 4px 12px oklch(0.50 0.20 280 / 0.2)'
-                }}
+                className="p-2.5 bg-gradient-to-b from-[oklch(0.72_0.18_265)] to-[oklch(0.62_0.20_305)] border-none rounded-lg text-white font-semibold text-[13.5px] cursor-pointer shadow-[0_4px_12px_rgba(128,64,200,0.2)] hover:brightness-115 transition-all"
               >
                 Sign In / Up
               </button>
@@ -377,147 +259,93 @@ function HeroDemo() {
   const t = themes.find(x => x.id === tab)!;
 
   return (
-    <div style={{
-      borderRadius: 16,
-      overflow: 'hidden',
-      background: 'oklch(0.175 0.008 250 / 0.7)',
-      border: '1px solid var(--border)',
-      boxShadow: '0 32px 100px oklch(0 0 0 / 0.5), 0 0 0 1px oklch(0 0 0 / 0.3), inset 0 1px 0 oklch(1 0 0 / 0.05)',
-    }}>
+    <div className="rounded-2xl overflow-hidden bg-[oklch(0.175_0.008_250_/_0.7)] border border-border shadow-[0_32px_100px_rgba(0,0,0,0.5),0_0_0_1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.05)]">
       {/* Window chrome */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        padding: '12px 16px',
-        borderBottom: '1px solid var(--border)',
-        background: 'oklch(0.19 0.008 250 / 0.7)',
-      }}>
-        <div style={{ display: 'flex', gap: 5 }}>
-          <span style={dot('oklch(0.62 0.18 25)')} />
-          <span style={dot('oklch(0.78 0.16 90)')} />
-          <span style={dot('oklch(0.70 0.16 145)')} />
+      <div className="flex items-center gap-2.5 p-[12px_16px] border-b border-border bg-[oklch(0.19_0.008_250_/_0.7)]">
+        <div className="flex gap-1.25">
+          <span className="w-[11px] h-[11px] rounded-full opacity-60 bg-[oklch(0.62_0.18_25)]" />
+          <span className="w-[11px] h-[11px] rounded-full opacity-60 bg-[oklch(0.78_0.16_90)]" />
+          <span className="w-[11px] h-[11px] rounded-full opacity-60 bg-[oklch(0.70_0.16_145)]" />
         </div>
-        <span className="mono" style={{ fontSize: 11, color: 'var(--fg-dim)', marginLeft: 6 }}>
-          mysaas / universal-ai-formatter <span style={{ color: 'var(--fg-subtle)' }}>· live</span>
+        <span className="mono text-[11px] text-fg-dim ml-1.5">
+          mysaas / universal-ai-formatter <span className="text-fg-subtle">· live</span>
         </span>
-        <div style={{ flex: 1 }} />
-        <span style={{
-          fontSize: 10.5,
-          padding: '2px 8px',
-          borderRadius: 999,
-          background: 'oklch(0.30 0.12 145 / 0.35)',
-          color: 'oklch(0.85 0.14 145)',
-          border: '1px solid oklch(0.45 0.10 145 / 0.4)',
-          display: 'flex', alignItems: 'center', gap: 5,
-          fontWeight: 500,
-        }}>
-          <span style={{
-            width: 5, height: 5, borderRadius: '50%',
-            background: 'oklch(0.78 0.16 145)',
-            boxShadow: '0 0 6px oklch(0.78 0.16 145)',
-          }} />
+        <div className="flex-1" />
+        <span className="text-[10.5px] py-0.5 px-2 rounded-full bg-[oklch(0.30_0.12_145_/_0.35)] text-[oklch(0.85_0.14_145)] border border-[oklch(0.45_0.10_145_/_0.4)] flex items-center gap-1.25 font-medium">
+          <span className="w-1.25 h-1.25 rounded-full bg-[oklch(0.78_0.16_145)] shadow-[0_0_6px_oklch(0.78_0.16_145)]" />
           rendering
         </span>
       </div>
 
       {/* Split */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', minHeight: 340 }} className="demo-split">
+      <div className="grid grid-cols-2 min-h-[340px] demo-split">
         {/* Input */}
-        <div style={{
-          padding: '18px 20px',
-          borderRight: '1px solid var(--border)',
-          fontFamily: '"JetBrains Mono", monospace',
-          fontSize: 11.5,
-          lineHeight: 1.65,
-          color: 'var(--fg-muted)',
-          background: 'oklch(0.155 0.006 250 / 0.55)',
-          position: 'relative',
-        }}>
-          <div style={{ fontSize: 10, color: 'var(--fg-dim)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 12 }}>
+        <div className="p-[18px_20px] border-r border-border font-mono text-[11.5px] leading-1.65 text-fg-muted bg-[oklch(0.155_0.006_250_/_0.55)] relative">
+          <div className="text-[10px] text-fg-dim tracking-widest uppercase mb-3">
             input · markdown
           </div>
-          <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>
-            <span style={{ color: 'oklch(0.75 0.14 265)' }}># </span>
-            <span style={{ color: 'var(--fg)' }}>Context Switching: The Hidden Tax</span>{'\n\n'}
-            Engineers report losing <span style={{ color: 'oklch(0.80 0.14 90)' }}>**23 minutes**</span> on average to recover focus after a single interruption. Teams that batch communication into 2-3 windows per day ship features 31% faster.{'\n\n'}
-            <span style={{ color: 'oklch(0.75 0.14 265)' }}>## </span>
-            <span style={{ color: 'var(--fg)' }}>Three rules</span>{'\n\n'}
-            <span style={{ color: 'oklch(0.78 0.14 145)' }}>1.</span> Default chat to DND outside two review windows.{'\n'}
-            <span style={{ color: 'oklch(0.78 0.14 145)' }}>2.</span> Replace standups with async written updates.{'\n'}
-            <span style={{ color: 'oklch(0.78 0.14 145)' }}>3.</span> Reserve mornings for deep work only.{'\n\n'}
-            <span style={{ color: 'oklch(0.68 0.14 25)' }}>{'> '}</span>
-            <span style={{ color: 'var(--fg-muted)', fontStyle: 'italic' }}>"The most expensive thing you can give an engineer is a 15-minute meeting."</span>
+          <pre className="m-0 whitespace-pre-wrap break-all">
+            <span className="text-[oklch(0.75_0.14_265)]"># </span>
+            <span className="text-fg">Context Switching: The Hidden Tax</span>{'\n\n'}
+            Engineers report losing <span className="text-[oklch(0.80_0.14_90)]">**23 minutes**</span> on average to recover focus after a single interruption. Teams that batch communication into 2-3 windows per day ship features 31% faster.{'\n\n'}
+            <span className="text-[oklch(0.75_0.14_265)]">## </span>
+            <span className="text-fg">Three rules</span>{'\n\n'}
+            <span className="text-[oklch(0.78_0.14_145)]">1.</span> Default chat to DND outside two review windows.{'\n'}
+            <span className="text-[oklch(0.78_0.14_145)]">2.</span> Replace standups with async written updates.{'\n'}
+            <span className="text-[oklch(0.78_0.14_145)]">3.</span> Reserve mornings for deep work only.{'\n\n'}
+            <span className="text-[oklch(0.68_0.14_25)]">{'> '}</span>
+            <span className="text-fg-muted italic">"The most expensive thing you can give an engineer is a 15-minute meeting."</span>
           </pre>
         </div>
 
         {/* Output */}
-        <div style={{
-          padding: 22,
-          background: 'oklch(0.97 0.005 250)',
-          color: 'oklch(0.18 0.008 250)',
-          fontFamily: t.font,
-          fontSize: 11,
-          lineHeight: 1.6,
-          position: 'relative',
-        }}>
-          <div style={{
-            fontSize: t.id === 'minimalist' ? 13 : 17,
-            fontWeight: t.serifTitle ? 700 : 600,
-            letterSpacing: t.id === 'minimalist' ? '-0.01em' : '-0.018em',
-            marginBottom: 6,
-            fontFamily: t.serifTitle ? '"Source Serif Pro", Georgia, serif' : 'inherit',
-          }}>Context Switching: The Hidden Tax</div>
-          <div style={{ fontSize: 8.5, color: 'oklch(0.50 0.005 250)', marginBottom: 12, letterSpacing: '0.04em', textTransform: t.id === 'academic' ? 'none' : 'uppercase' }}>
+        <div 
+          className="p-5.5 bg-[oklch(0.97_0.005_250)] text-[oklch(0.18_0.008_250)] text-[11px] leading-1.6 relative"
+          style={{ fontFamily: t.font }}
+        >
+          <div 
+            className={`mb-1.5 ${t.id === 'minimalist' ? 'text-[13px] tracking-tight' : 'text-[17px] tracking-[-0.018em]'} ${t.serifTitle ? 'font-serif font-bold' : 'font-semibold'}`}
+            style={{ fontFamily: t.serifTitle ? '"Source Serif Pro", Georgia, serif' : 'inherit' }}
+          >
+            Context Switching: The Hidden Tax
+          </div>
+          <div className={`text-[8.5px] text-[oklch(0.50_0.005_250)] mb-3 tracking-wider ${t.id === 'academic' ? 'normal-case' : 'uppercase'}`}>
             {t.id === 'academic' ? 'Submitted · May 2026' : `${t.label} theme · 2 pages`}
           </div>
-          <div style={{
-            height: t.id === 'minimalist' ? 0 : 1,
-            background: 'oklch(0.88 0.005 250)',
-            marginBottom: 10,
-          }} />
-          <p style={{ margin: '0 0 8px' }}>
+          <div className={`bg-[oklch(0.88_0.005_250)] mb-2.5 ${t.id === 'minimalist' ? 'h-0' : 'h-[1px]'}`} />
+          <p className="m-0 mb-2">
             Engineers report losing <b>23 minutes</b> on average to recover focus after a single interruption. Teams that batch communication into 2-3 windows per day ship features 31% faster.
           </p>
-          <div style={{ fontWeight: 600, fontSize: t.id === 'minimalist' ? 11 : 12, marginTop: 12, marginBottom: 6 }}>
+          <div className={`font-semibold mt-3 mb-1.5 ${t.id === 'minimalist' ? 'text-[11px]' : 'text-xs'}`}>
             {t.id === 'academic' ? '1. Three rules' : 'Three rules'}
           </div>
-          <ol style={{ margin: 0, paddingLeft: 16 }}>
+          <ol className="m-0 pl-4">
             <li>Default chat to DND outside two review windows.</li>
             <li>Replace standups with async written updates.</li>
             <li>Reserve mornings for deep work only.</li>
           </ol>
-          <blockquote style={{
-            margin: '12px 0 0',
-            paddingLeft: 10,
-            borderLeft: t.id === 'minimalist' ? '1px solid oklch(0.40 0.005 250)' : '2px solid oklch(0.62 0.18 265)',
-            color: 'oklch(0.35 0.008 250)',
-            fontStyle: t.id === 'minimalist' ? 'normal' : 'italic',
-            fontSize: 10,
-          }}>
+          <blockquote 
+            className={`mt-3 pl-2.5 text-[oklch(0.35_0.008_250)] text-[10px] ${t.id === 'minimalist' ? 'border-l border-[oklch(0.40_0.005_250)] not-italic' : 'border-l-2 border-[oklch(0.62_0.18_265)] italic'}`}
+          >
             "The most expensive thing you can give an engineer is a 15-minute meeting."
           </blockquote>
         </div>
       </div>
 
       {/* Theme switcher */}
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 8,
-        padding: '12px 16px',
-        borderTop: '1px solid var(--border)',
-        background: 'oklch(0.16 0.006 250 / 0.6)',
-      }}>
-        <span style={{ fontSize: 11, color: 'var(--fg-dim)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Theme</span>
+      <div className="flex items-center gap-2 p-[12px_16px] border-t border-border bg-[oklch(0.16_0.006_250_/_0.6)]">
+        <span className="text-[11px] text-fg-dim tracking-wider uppercase">Theme</span>
         {themes.map(th => (
-          <button key={th.id} onClick={() => setTab(th.id)} className="reset" style={{
-            padding: '4px 10px',
-            fontSize: 11.5, fontWeight: 500,
-            borderRadius: 6, cursor: 'pointer',
-            background: tab === th.id ? 'oklch(0.30 0.05 265 / 0.5)' : 'transparent',
-            color: tab === th.id ? 'oklch(0.92 0.04 265)' : 'var(--fg-muted)',
-            border: `1px solid ${tab === th.id ? 'oklch(0.45 0.08 265 / 0.4)' : 'transparent'}`,
-          }}>{th.label}</button>
+          <button 
+            key={th.id} 
+            onClick={() => setTab(th.id)} 
+            className={`reset py-1 px-2.5 text-[11.5px] font-medium rounded-md cursor-pointer border transition-colors ${tab === th.id ? 'bg-[oklch(0.30_0.05_265_/_0.5)] text-[oklch(0.92_0.04_265)] border-[oklch(0.45_0.08_265_/_0.4)]' : 'bg-transparent text-fg-muted border-transparent hover:text-fg hover:bg-bg-hover'}`}
+          >
+            {th.label}
+          </button>
         ))}
-        <div style={{ flex: 1 }} />
-        <span className="mono" style={{ fontSize: 10.5, color: 'var(--fg-dim)' }}>
+        <div className="flex-1" />
+        <span className="mono text-[10.5px] text-fg-dim">
           .pdf · 184 KB · 2 pages
         </span>
       </div>
@@ -540,132 +368,55 @@ interface LandingHeroProps {
 
 function LandingHero({ onLaunch }: LandingHeroProps) {
   return (
-    <section style={{
-      position: 'relative',
-      padding: '88px 32px 56px',
-      maxWidth: 1200,
-      margin: '0 auto',
-      width: '100%', boxSizing: 'border-box',
-      textAlign: 'center',
-    }} className="landing-hero">
+    <section className="landing-hero relative py-[88px] px-8 max-w-[1200px] mx-auto w-full text-center">
       {/* Eyebrow */}
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 8,
-        padding: '6px 14px 6px 8px',
-        borderRadius: 999,
-        background: 'oklch(0.22 0.04 265 / 0.45)',
-        border: '1px solid oklch(0.40 0.08 265 / 0.4)',
-        fontSize: 12, fontWeight: 500,
-        color: 'oklch(0.88 0.08 265)',
-        marginBottom: 32,
-        backdropFilter: 'blur(8px)',
-      }}>
-        <span style={{
-          width: 20, height: 20, borderRadius: 6,
-          background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-          display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        }}>
+      <div className="inline-flex items-center gap-2 p-[6px_14px_6px_8px] rounded-full bg-[oklch(0.22_0.04_265_/_0.45)] border border-[oklch(0.40_0.08_265_/_0.4)] text-xs font-medium text-[oklch(0.88_0.08_265)] mb-8 backdrop-blur-md">
+        <span className="w-5 h-5 rounded-[6px] bg-gradient-to-br from-[oklch(0.70_0.18_265)] to-[oklch(0.62_0.20_305)] inline-flex items-center justify-center">
           <Icon.Sparkles size={11} strokeWidth={2.2} style={{ color: 'white' }} />
         </span>
         <span>One workspace · now in public beta</span>
       </div>
 
       {/* Headline — display sans + serif italic accent */}
-      <h1 style={{
-        margin: 0,
-        fontSize: 'clamp(48px, 8vw, 96px)',
-        lineHeight: 0.98,
-        letterSpacing: '-0.04em',
-        fontWeight: 600,
-        color: 'var(--fg)',
-        textWrap: 'balance',
-      }}>
+      <h1 className="m-0 text-[clamp(48px,8vw,96px)] leading-[0.98] tracking-[-0.04em] font-semibold text-fg text-balance">
         Every annoying<br />
         file,{' '}
-        <span style={{
-          fontFamily: '"Source Serif Pro", Georgia, serif',
-          fontStyle: 'italic',
-          fontWeight: 400,
-          letterSpacing: '-0.025em',
-          background: 'linear-gradient(110deg, oklch(0.92 0.04 265), oklch(0.78 0.16 285) 45%, oklch(0.82 0.14 200))',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          color: 'transparent',
-          backgroundSize: '200% 100%',
-          animation: 'gradient-shift 8s ease-in-out infinite',
-        }}>solved.</span>
+        <span className="font-serif italic font-normal tracking-[-0.025em] bg-gradient-to-r from-[oklch(0.92_0.04_265)] via-[oklch(0.78_0.16_285)] to-[oklch(0.82_0.14_200)] bg-clip-text text-transparent bg-[size:200%_100%] animate-gradient-shift">
+          solved.
+        </span>
       </h1>
-      <style>{`
-        @keyframes gradient-shift {
-          0%, 100% { background-position: 0% 50%; }
-          50%      { background-position: 100% 50%; }
-        }
-      `}</style>
 
-      <p style={{
-        margin: '28px auto 0',
-        maxWidth: 620,
-        fontSize: 'clamp(16px, 1.8vw, 19px)',
-        lineHeight: 1.5,
-        color: 'var(--fg-muted)',
-        textWrap: 'pretty',
-      }}>
+      <p className="mt-7 mx-auto mb-0 max-w-[620px] text-[clamp(16px,1.8vw,19px)] leading-1.5 text-fg-muted text-pretty">
         The small utilities you keep googling — formatters, converters, OCR, redactors, diff checkers — in one keyboard-driven workspace. Built for the people who hit <kbd className="kbd-inline">⌘K</kbd> a hundred times a day.
       </p>
 
-      <div style={{
-        display: 'flex', gap: 12, marginTop: 36,
-        justifyContent: 'center', flexWrap: 'wrap',
-      }}>
-        <button onClick={onLaunch} className="reset" style={{
-          display: 'inline-flex', alignItems: 'center', gap: 9,
-          padding: '14px 22px',
-          background: 'linear-gradient(180deg, oklch(0.97 0.005 250), oklch(0.86 0.005 250))',
-          color: 'oklch(0.14 0.008 250)',
-          fontWeight: 500, fontSize: 15,
-          borderRadius: 11,
-          cursor: 'pointer',
-          boxShadow: '0 1px 0 oklch(1 0 0 / 0.5) inset, 0 4px 14px oklch(0 0 0 / 0.4), 0 0 0 1px oklch(0 0 0 / 0.5)',
-          letterSpacing: '-0.005em',
-          transition: 'transform 0.12s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+      <div className="flex gap-3 mt-9 justify-center flex-wrap">
+        <button 
+          onClick={onLaunch} 
+          className="reset inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-11 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)] tracking-[-0.005em] transition-transform duration-120 hover:-translate-y-0.5 active:translate-y-0"
         >
           Launch app <Icon.ArrowRight size={15} strokeWidth={2.2}/>
         </button>
-        <button onClick={(e) => {
-          e.preventDefault();
-          document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
-          window.history.pushState(null, '', '#pricing');
-        }} className="reset" style={{
-          display: 'inline-flex', alignItems: 'center', gap: 7,
-          padding: '14px 18px',
-          background: 'oklch(0.20 0.008 250 / 0.5)',
-          border: '1px solid var(--border)',
-          color: 'var(--fg)',
-          fontWeight: 500, fontSize: 15,
-          borderRadius: 11,
-          cursor: 'pointer',
-          backdropFilter: 'blur(8px)',
-        }}>
+        <button 
+          onClick={(e) => {
+            e.preventDefault();
+            document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+            window.history.pushState(null, '', '#pricing');
+          }} 
+          className="reset inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-11 cursor-pointer backdrop-blur-md transition-all hover:bg-bg-hover active:scale-[0.98]"
+        >
           See pricing
         </button>
       </div>
 
-      <div style={{
-        display: 'flex', alignItems: 'center', gap: 22, marginTop: 36,
-        justifyContent: 'center',
-        fontSize: 12, color: 'var(--fg-dim)',
-        flexWrap: 'wrap',
-      }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div className="flex items-center gap-5.5 mt-9 justify-center text-xs text-fg-dim flex-wrap">
+        <span className="flex items-center gap-1.5">
           <Icon.Check size={12} style={{ color: 'oklch(0.78 0.16 145)' }} /> Runs in-browser, on-device
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span className="flex items-center gap-1.5">
           <Icon.Check size={12} style={{ color: 'oklch(0.78 0.16 145)' }} /> Zero data leaves your machine
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+        <span className="flex items-center gap-1.5">
           <Icon.Check size={12} style={{ color: 'oklch(0.78 0.16 145)' }} /> Free forever tier
         </span>
       </div>
@@ -683,95 +434,82 @@ interface SuitePreviewProps {
 
 function SuitePreview({ onLaunch }: SuitePreviewProps) {
   return (
-    <section id="tools" style={{
-      maxWidth: 1200, margin: '0 auto',
-      padding: '96px 32px 64px',
-    }}>
-      <div style={{ textAlign: 'center', marginBottom: 48 }}>
-        <div style={eyebrow}>The suite</div>
-        <h2 style={sectionTitle}>
+    <section id="tools" className="max-w-[1200px] mx-auto py-24 px-8 pb-16">
+      <div className="text-center mb-12">
+        <div className="inline-block text-[11px] font-semibold text-[oklch(0.78_0.12_265)] tracking-[0.18em] uppercase mb-[18px]">The suite</div>
+        <h2 className="m-0 text-[clamp(34px,5vw,52px)] leading-[1.05] tracking-[-0.03em] font-semibold text-pretty">
           Every utility you need.<br/>
-          <span style={italicAccent}>One keyboard shortcut.</span>
+          <span className="font-serif italic font-normal tracking-[-0.025em] bg-gradient-to-r from-[oklch(0.92_0.04_265)] via-[oklch(0.78_0.16_285)] to-[oklch(0.82_0.14_200)] bg-clip-text text-transparent bg-[size:200%_100%] animate-gradient-shift">
+            One keyboard shortcut.
+          </span>
         </h2>
-        <p style={sectionSubtitle}>
+        <p className="mt-5 mx-auto mb-0 max-w-[560px] text-base text-fg-muted leading-1.5 text-pretty">
           Each utility is its own focused workbench, but they all share the same launcher, history, and exports.
         </p>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: 14,
-      }}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3.5">
         {CATEGORIES.map(cat => (
-          <div key={cat.id} style={{
-            padding: 22,
-            background: cat.pro
-              ? `linear-gradient(180deg, ${tint(cat.hue, 0.30, 0.08, 0.15)}, ${tint(cat.hue, 0.20, 0.04, 0.05)})`
-              : 'oklch(0.175 0.008 250 / 0.6)',
-            border: `1px solid ${cat.pro ? tintBorder(cat.hue) : 'var(--border)'}`,
-            borderRadius: 14,
-            transition: 'transform 0.25s, border-color 0.25s, background 0.25s',
-            position: 'relative', overflow: 'hidden',
-            display: 'flex', flexDirection: 'column', gap: 12,
-          }}
-          className="suite-card"
-          onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.borderColor = tintBorder(cat.hue); }}
-          onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; if (!cat.pro) e.currentTarget.style.borderColor = 'var(--border)'; }}
+          <div 
+            key={cat.id} 
+            className="p-5.5 border rounded-14 relative overflow-hidden flex flex-col gap-3 transition-all duration-250 hover:-translate-y-0.5 suite-card"
+            style={{
+              background: cat.pro
+                ? `linear-gradient(180deg, ${tint(cat.hue, 0.30, 0.08, 0.15)}, ${tint(cat.hue, 0.20, 0.04, 0.05)})`
+                : 'oklch(0.175 0.008 250 / 0.6)',
+              borderColor: cat.pro ? tintBorder(cat.hue) : 'var(--border)',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = tintBorder(cat.hue); }}
+            onMouseLeave={e => { if (!cat.pro) e.currentTarget.style.borderColor = 'var(--border)'; }}
           >
             {/* Category header link */}
-            <Link href={`/category/${cat.id}`} className="reset" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                <span style={{
-                  width: 7, height: 7, borderRadius: '50%',
-                  background: tintFg(cat.hue),
-                  boxShadow: `0 0 10px ${tintFg(cat.hue)}`,
-                }} />
-                <span style={{
-                  fontSize: 11, fontWeight: 600,
-                  color: cat.pro ? tintFg(cat.hue) : 'var(--fg-dim)',
-                  letterSpacing: '0.10em', textTransform: 'uppercase',
-                }}>{cat.label}</span>
-                <div style={{ flex: 1 }} />
+            <Link href={`/category/${cat.id}`} className="no-underline text-inherit block">
+              <div className="flex items-center gap-2 mb-3">
+                <span 
+                  className="w-1.75 h-1.75 rounded-full shrink-0"
+                  style={{
+                    background: tintFg(cat.hue),
+                    boxShadow: `0 0 10px ${tintFg(cat.hue)}`,
+                  }} 
+                />
+                <span 
+                  className="text-[11px] font-semibold tracking-wider uppercase"
+                  style={{ color: cat.pro ? tintFg(cat.hue) : 'var(--fg-dim)' }}
+                >
+                  {cat.label}
+                </span>
+                <div className="flex-1" />
               </div>
-              <div style={{
-                fontSize: 17, fontWeight: 600,
-                color: 'var(--fg)', letterSpacing: '-0.015em',
-                marginBottom: 8,
-                lineHeight: 1.25,
-                textWrap: 'pretty',
-              }}>{cat.tagline}</div>
+              <div className="text-[17px] font-semibold text-fg tracking-[-0.015em] mb-2 leading-1.25 text-pretty">
+                {cat.tagline}
+              </div>
             </Link>
 
             {/* Crawlable list of individual tools */}
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <ul className="m-0 p-0 list-none flex flex-col gap-1">
               {cat.tools.slice(0, 4).map(t => {
                 const Ico = Icon[t.icon] || Icon.Sparkles;
                 return (
                   <li key={t.id}>
-                    <Link href={`/tools/${t.id}`} className="reset" style={{
-                      display: 'flex', alignItems: 'center', gap: 8,
-                      padding: '5px 0',
-                      fontSize: 12.5, color: 'var(--fg-muted)',
-                      textDecoration: 'none',
-                      transition: 'color 0.15s',
-                    }}
-                    onMouseEnter={e => { e.currentTarget.style.color = tintFg(cat.hue); }}
-                    onMouseLeave={e => { e.currentTarget.style.color = 'var(--fg-muted)'; }}
+                    <Link 
+                      href={`/tools/${t.id}`} 
+                      className="flex items-center gap-2 py-1.25 text-[12.5px] no-underline transition-colors duration-150"
+                      style={{ color: 'var(--fg-muted)' }}
+                      onMouseEnter={e => { e.currentTarget.style.color = tintFg(cat.hue); }}
+                      onMouseLeave={e => { e.currentTarget.style.color = 'var(--fg-muted)'; }}
                     >
-                      <Ico size={11} strokeWidth={1.8} style={{ color: 'var(--fg-subtle)', flexShrink: 0 }}/>
-                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</span>
+                      <Ico size={11} strokeWidth={1.8} className="text-fg-subtle shrink-0" />
+                      <span className="overflow-hidden text-ellipsis whitespace-nowrap">{t.name}</span>
                     </Link>
                   </li>
                 );
               })}
               {cat.tools.length > 4 && (
-                <li style={{ marginTop: 4 }}>
-                  <Link href={`/category/${cat.id}`} className="reset" style={{
-                    fontSize: 11, color: 'var(--fg-subtle)',
-                    display: 'flex', alignItems: 'center', gap: 5,
-                    textDecoration: 'none',
-                  }}>
+                <li className="mt-1">
+                  <Link 
+                    href={`/category/${cat.id}`} 
+                    className="text-[11px] text-fg-subtle flex items-center gap-1.25 no-underline hover:text-fg transition-colors"
+                  >
                     <span>and more</span>
                     <Icon.ArrowRight size={10} />
                   </Link>
@@ -799,51 +537,35 @@ interface PricingProps {
 
 function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall }: PricingProps) {
   return (
-    <section id="pricing" style={{
-      maxWidth: 1080, margin: '0 auto',
-      padding: '96px 32px 64px',
-    }}>
-      <div style={{ textAlign: 'center', marginBottom: 56 }}>
-        <div style={eyebrow}>Pricing</div>
-        <h2 style={sectionTitle}>
+    <section id="pricing" className="max-w-[1080px] mx-auto py-24 px-8 pb-16">
+      <div className="text-center mb-14">
+        <div className="inline-block text-[11px] font-semibold text-[oklch(0.78_0.12_265)] tracking-[0.18em] uppercase mb-[18px]">Pricing</div>
+        <h2 className="m-0 text-[clamp(34px,5vw,52px)] leading-[1.05] tracking-[-0.03em] font-semibold text-pretty">
           Free for everything small.<br/>
-          <span style={italicAccent}>{pricingData.currency}{pricingData.monthly} a month for everything else.</span>
+          <span className="font-serif italic font-normal tracking-[-0.025em] bg-gradient-to-r from-[oklch(0.92_0.04_265)] via-[oklch(0.78_0.16_285)] to-[oklch(0.82_0.14_200)] bg-clip-text text-transparent bg-[size:200%_100%] animate-gradient-shift">
+            {pricingData.currency}{pricingData.monthly} a month for everything else.
+          </span>
         </h2>
-        <p style={sectionSubtitle}>
+        <p className="mt-5 mx-auto mb-0 max-w-[560px] text-base text-fg-muted leading-1.5 text-pretty">
           No seats, no per-tool gating, no trial timers. Dynamic plans tailored for your region.
         </p>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-        gap: 16,
-        alignItems: 'stretch',
-      }} className="pricing-grid">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-stretch pricing-grid" aria-label="Pricing Tiers">
         {/* Free */}
-        <div style={{
-          padding: 32,
-          background: 'oklch(0.175 0.008 250 / 0.55)',
-          border: '1px solid var(--border)',
-          borderRadius: 16,
-          display: 'flex', flexDirection: 'column', gap: 22,
-        }}>
+        <article className="p-8 bg-[oklch(0.175_0.008_250_/_0.55)] border border-border rounded-2xl flex flex-col gap-5.5 hover:scale-[1.01] transition-all duration-200">
           <div>
-            <div style={{
-              fontSize: 11.5, fontWeight: 600,
-              color: 'var(--fg-dim)', letterSpacing: '0.10em',
-              textTransform: 'uppercase', marginBottom: 14,
-            }}>Free</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.03em' }}>$0</span>
-              <span style={{ color: 'var(--fg-subtle)', fontSize: 14 }}>forever</span>
+            <div className="text-[11.5px] font-semibold text-fg-dim tracking-wider uppercase mb-3.5 mono">Free</div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[48px] font-semibold tracking-[-0.03em]">$0</span>
+              <span className="text-fg-subtle text-sm">forever</span>
             </div>
-            <p style={{ margin: '12px 0 0', color: 'var(--fg-muted)', fontSize: 14, lineHeight: 1.5 }}>
+            <p className="m-0 mt-3 text-fg-muted text-sm leading-1.5">
               For occasional use and weekend projects.
             </p>
           </div>
 
-          <ul style={listStyle}>
+          <ul className="m-0 p-0 list-none flex flex-col gap-1 flex-1">
             {[
               ['All standard tools', true],
               ['10 free API requests / day', true],
@@ -855,52 +577,30 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
             ].map(([f, on]) => <Feature key={f as string} on={on as boolean}>{f as string}</Feature>)}
           </ul>
 
-          <button onClick={onLaunch} className="reset" style={{
-            padding: '12px 18px',
-            background: 'oklch(0.21 0.010 250)',
-            border: '1px solid var(--border)',
-            color: 'var(--fg)',
-            fontWeight: 500, fontSize: 14,
-            borderRadius: 9, cursor: 'pointer',
-            textAlign: 'center',
-            display: 'block',
-          }}>Start free →</button>
-        </div>
+          <button 
+            onClick={onLaunch} 
+            className="reset py-3 px-4.5 bg-[oklch(0.21_0.010_250)] border border-border text-fg font-medium text-sm rounded-lg cursor-pointer text-center block w-full hover:bg-bg-hover active:scale-[0.98] transition-all"
+          >
+            Start free →
+          </button>
+        </article>
 
         {/* Pro */}
-        <div style={{
-          padding: 32,
-          background: 'linear-gradient(180deg, oklch(0.21 0.04 265 / 0.6), oklch(0.18 0.03 265 / 0.4))',
-          border: '1px solid oklch(0.45 0.10 265 / 0.5)',
-          borderRadius: 16,
-          display: 'flex', flexDirection: 'column', gap: 22,
-          position: 'relative',
-          boxShadow: '0 24px 80px oklch(0.30 0.18 265 / 0.18), inset 0 1px 0 oklch(1 0 0 / 0.05)',
-        }}>
-          <span style={{
-            position: 'absolute', top: 16, right: 16,
-            fontSize: 10, fontWeight: 600, letterSpacing: '0.10em',
-            padding: '4px 10px', borderRadius: 999,
-            background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-            color: 'white', textTransform: 'uppercase',
-          }}>Most popular</span>
+        <article className="p-8 bg-gradient-to-b from-[oklch(0.21_0.04_265_/_0.6)] to-[oklch(0.18_0.03_265_/_0.4)] border border-[oklch(0.45_0.10_265_/_0.5)] rounded-2xl flex flex-col gap-5.5 relative shadow-[0_24px_80px_rgba(108,68,265,0.18),inset_0_1px_0_rgba(255,255,255,0.05)] hover:scale-[1.01] transition-all duration-200">
+          <span className="absolute top-4 right-4 text-[10px] font-semibold tracking-wider py-1 px-2.5 rounded-full bg-gradient-to-br from-[oklch(0.70_0.18_265)] to-[oklch(0.62_0.20_305)] text-white uppercase">Most popular</span>
 
           <div>
-            <div style={{
-              fontSize: 11.5, fontWeight: 600,
-              color: 'oklch(0.85 0.10 265)', letterSpacing: '0.10em',
-              textTransform: 'uppercase', marginBottom: 14,
-            }}>Pro</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.03em' }}>{pricingData.currency}{pricingData.monthly}</span>
-              <span style={{ color: 'var(--fg-subtle)', fontSize: 14 }}>{pricingData.suffix}</span>
+            <div className="text-[11.5px] font-semibold text-[oklch(0.85_0.10_265)] tracking-wider uppercase mb-3.5 mono">Pro</div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[48px] font-semibold tracking-[-0.03em]">{pricingData.currency}{pricingData.monthly}</span>
+              <span className="text-fg-subtle text-sm">{pricingData.suffix}</span>
             </div>
-            <p style={{ margin: '12px 0 0', color: 'var(--fg-muted)', fontSize: 14, lineHeight: 1.5 }}>
+            <p className="m-0 mt-3 text-fg-muted text-sm leading-1.5">
               For people who live in their tools.
             </p>
           </div>
 
-          <ul style={listStyle}>
+          <ul className="m-0 p-0 list-none flex flex-col gap-1 flex-1">
             {[
               ['Everything in Free, plus:', true, true],
               ['All Pro Vault tools (Diff, Print PDF, Batch, History)', true],
@@ -914,41 +614,28 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
             ].map(([f, on, em]) => <Feature key={f as string} on={on as boolean} em={em as boolean}>{f as string}</Feature>)}
           </ul>
 
-          <button onClick={onShowPaywall} className="reset" style={{
-            padding: '12px 18px',
-            background: 'linear-gradient(180deg, oklch(0.97 0.005 250), oklch(0.86 0.005 250))',
-            color: 'oklch(0.14 0.008 250)',
-            fontWeight: 500, fontSize: 14,
-            borderRadius: 9, cursor: 'pointer',
-            textAlign: 'center', display: 'block',
-            boxShadow: '0 1px 0 oklch(1 0 0 / 0.4) inset, 0 1px 3px oklch(0 0 0 / 0.5)',
-          }}>Upgrade to Pro →</button>
-        </div>
+          <button 
+            onClick={onShowPaywall} 
+            className="reset py-3 px-4.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-sm rounded-lg cursor-pointer text-center block w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_1px_3px_rgba(0,0,0,0.5)] hover:brightness-110 active:scale-[0.98] transition-all"
+          >
+            Upgrade to Pro →
+          </button>
+        </article>
 
         {/* Developer API */}
-        <div style={{
-          padding: 32,
-          background: 'oklch(0.175 0.008 250 / 0.55)',
-          border: '1px solid var(--border)',
-          borderRadius: 16,
-          display: 'flex', flexDirection: 'column', gap: 22,
-        }}>
+        <article className="p-8 bg-[oklch(0.175_0.008_250_/_0.55)] border border-border rounded-2xl flex flex-col gap-5.5 hover:scale-[1.01] transition-all duration-200">
           <div>
-            <div style={{
-              fontSize: 11.5, fontWeight: 600,
-              color: 'oklch(0.78 0.16 145)', letterSpacing: '0.10em',
-              textTransform: 'uppercase', marginBottom: 14,
-            }}>Developer API</div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-              <span style={{ fontSize: 48, fontWeight: 600, letterSpacing: '-0.03em' }}>{pricingData.currency}29</span>
-              <span style={{ color: 'var(--fg-subtle)', fontSize: 14 }}>{pricingData.suffix}</span>
+            <div className="text-[11.5px] font-semibold text-[oklch(0.78_0.16_145)] tracking-wider uppercase mb-3.5 mono">Developer API</div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-[48px] font-semibold tracking-[-0.03em]">{pricingData.currency}29</span>
+              <span className="text-fg-subtle text-sm">{pricingData.suffix}</span>
             </div>
-            <p style={{ margin: '12px 0 0', color: 'var(--fg-muted)', fontSize: 14, lineHeight: 1.5 }}>
+            <p className="m-0 mt-3 text-fg-muted text-sm leading-1.5">
               For high-volume programmatic access.
             </p>
           </div>
 
-          <ul style={listStyle}>
+          <ul className="m-0 p-0 list-none flex flex-col gap-1 flex-1">
             {[
               ['Everything in Pro Plan', true, true],
               ['2,000 API requests / day', true],
@@ -958,23 +645,24 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
             ].map(([f, on, em]) => <Feature key={f as string} on={on as boolean} em={em as boolean}>{f as string}</Feature>)}
           </ul>
 
-          <button onClick={onShowPaywall} className="reset" style={{
-            padding: '12px 18px',
-            background: 'var(--bg-elev-2)',
-            border: '1px solid var(--border)',
-            color: 'var(--fg)',
-            fontWeight: 500, fontSize: 14,
-            borderRadius: 9, cursor: 'pointer',
-            textAlign: 'center', display: 'block',
-          }}>Get API Keys →</button>
-        </div>
+          <button 
+            onClick={onShowPaywall} 
+            className="reset py-3 px-4.5 bg-bg-elev-2 border border-border text-fg font-medium text-sm rounded-lg cursor-pointer text-center block w-full hover:bg-bg-hover active:scale-[0.98] transition-all"
+          >
+            Get API Keys →
+          </button>
+        </article>
       </div>
 
-      <p style={{
-        textAlign: 'center', marginTop: 28,
-        fontSize: 12.5, color: 'var(--fg-dim)',
-      }}>
-        Need SOC2, SSO, or on-prem? <a href="#" onClick={(e) => { e.preventDefault(); onEnterprise(); }} style={{ color: 'var(--fg-muted)', textDecoration: 'underline', textDecorationColor: 'var(--border-strong)' }}>Talk to us about Enterprise</a>.
+      <p className="text-center mt-7 text-[12.5px] text-fg-dim">
+        Need SOC2, SSO, or on-prem?{' '}
+        <a 
+          href="#" 
+          onClick={(e) => { e.preventDefault(); onEnterprise(); }} 
+          className="text-fg-muted underline decoration-border-strong hover:text-fg transition-colors duration-150"
+        >
+          Talk to us about Enterprise
+        </a>.
       </p>
     </section>
   );
@@ -988,20 +676,8 @@ interface FeatureProps {
 
 function Feature({ children, on, em }: FeatureProps) {
   return (
-    <li style={{
-      display: 'flex', alignItems: 'flex-start', gap: 10,
-      padding: '4px 0',
-      fontSize: 13.5,
-      color: on ? 'var(--fg)' : 'var(--fg-dim)',
-      fontWeight: em ? 600 : 400,
-    }}>
-      <span style={{
-        width: 18, height: 18, borderRadius: '50%',
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-        flexShrink: 0, marginTop: 1,
-        background: on ? 'oklch(0.32 0.10 145 / 0.4)' : 'oklch(0.22 0.010 250)',
-        color: on ? 'oklch(0.85 0.16 145)' : 'var(--fg-dim)',
-      }}>
+    <li className={`flex items-start gap-2.5 py-1 text-[13.5px] ${on ? 'text-fg' : 'text-fg-dim'} ${em ? 'font-semibold' : 'font-normal'}`}>
+      <span className={`w-[18px] h-[18px] rounded-full inline-flex items-center justify-center shrink-0 mt-0.5 ${on ? 'bg-[oklch(0.32_0.10_145_/_0.4)] text-[oklch(0.85_0.16_145)]' : 'bg-[oklch(0.22_0.010_250)] text-fg-dim'}`}>
         {on ? <Icon.Check size={11} strokeWidth={2.5}/> : <Icon.X size={10} strokeWidth={2.2}/>}
       </span>
       <span>{children}</span>
@@ -1020,69 +696,37 @@ interface ClosingCTAProps {
 
 function ClosingCTA({ onLaunch, onBrowseTools }: ClosingCTAProps) {
   return (
-    <section style={{
-      padding: '96px 32px',
-      maxWidth: 1200, margin: '0 auto',
-      width: '100%', boxSizing: 'border-box',
-    }}>
-      <div style={{
-        position: 'relative',
-        padding: 'clamp(48px, 7vw, 88px) 40px',
-        borderRadius: 24,
-        textAlign: 'center',
-        overflow: 'hidden',
-        background: 'linear-gradient(180deg, oklch(0.20 0.04 265 / 0.55), oklch(0.16 0.02 265 / 0.35))',
-        border: '1px solid oklch(0.40 0.08 265 / 0.4)',
-        boxShadow: '0 30px 100px oklch(0.25 0.15 265 / 0.20), inset 0 1px 0 oklch(1 0 0 / 0.04)',
-      }}>
+    <section className="py-24 px-8 max-w-[1200px] mx-auto w-full">
+      <div className="relative py-[clamp(48px,7vw,88px)] px-10 rounded-3xl text-center overflow-hidden bg-gradient-to-b from-[oklch(0.20_0.04_265_/_0.55)] to-[oklch(0.16_0.02_265_/_0.35)] border border-[oklch(0.40_0.08_265_/_0.4)] shadow-[0_30px_100px_rgba(108,68,265,0.20),inset_0_1px_0_rgba(255,255,255,0.04)]">
         {/* Aurora layers */}
-        <div style={{
-          position: 'absolute', inset: 0, pointerEvents: 'none',
-          background:
-            'radial-gradient(500px 250px at 20% 0%, oklch(0.55 0.18 265 / 0.35), transparent 60%),' +
-            'radial-gradient(500px 250px at 80% 100%, oklch(0.55 0.18 305 / 0.30), transparent 60%)',
-        }}/>
+        <div 
+          className="absolute inset-0 pointer-events-none" 
+          style={{ 
+            background: 'radial-gradient(500px 250px at 20% 0%, oklch(0.55 0.18 265 / 0.35), transparent 60%), radial-gradient(500px 250px at 80% 100%, oklch(0.55 0.18 305 / 0.30), transparent 60%)' 
+          }}
+        />
 
-        <div style={{ position: 'relative' }}>
-          <h2 style={{
-            margin: 0,
-            fontSize: 'clamp(34px, 5vw, 56px)',
-            lineHeight: 1.02,
-            letterSpacing: '-0.03em',
-            fontWeight: 600,
-            textWrap: 'balance',
-          }}>
+        <div className="relative">
+          <h2 className="m-0 text-[clamp(34px,5vw,56px)] leading-1.02 tracking-[-0.03em] font-semibold text-balance text-fg">
             Stop googling tiny tools.{' '}
-            <span style={italicAccent}>Start finishing.</span>
+            <span className="font-serif italic font-normal tracking-[-0.025em] bg-gradient-to-r from-[oklch(0.92_0.04_265)] via-[oklch(0.78_0.16_285)] to-[oklch(0.82_0.14_200)] bg-clip-text text-transparent bg-[size:200%_100%] animate-gradient-shift">
+              Start finishing.
+            </span>
           </h2>
-          <p style={{
-            margin: '20px auto 0', maxWidth: 540,
-            fontSize: 16, color: 'var(--fg-muted)',
-            lineHeight: 1.5,
-          }}>
+          <p className="mt-5 mx-auto mb-0 max-w-[540px] text-base text-fg-muted leading-1.5">
             Free forever for the basics. $9/mo when you outgrow it. Cancel any time, export everything.
           </p>
-          <div style={{ display: 'flex', gap: 12, marginTop: 32, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <button onClick={onLaunch} className="reset" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 9,
-              padding: '14px 22px',
-              background: 'linear-gradient(180deg, oklch(0.97 0.005 250), oklch(0.86 0.005 250))',
-              color: 'oklch(0.14 0.008 250)',
-              fontWeight: 500, fontSize: 15,
-              borderRadius: 11, cursor: 'pointer',
-              boxShadow: '0 1px 0 oklch(1 0 0 / 0.5) inset, 0 4px 14px oklch(0 0 0 / 0.4), 0 0 0 1px oklch(0 0 0 / 0.5)',
-            }}>
+          <div className="flex gap-3 mt-8 justify-center flex-wrap">
+            <button 
+              onClick={onLaunch} 
+              className="reset inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-11 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)]"
+            >
               Launch app <Icon.ArrowRight size={15} strokeWidth={2.2}/>
             </button>
-            <button onClick={onBrowseTools} className="reset" style={{
-              display: 'inline-flex', alignItems: 'center', gap: 7,
-              padding: '14px 18px',
-              background: 'oklch(0.20 0.008 250 / 0.5)',
-              border: '1px solid var(--border)',
-              color: 'var(--fg)',
-              fontWeight: 500, fontSize: 15,
-              borderRadius: 11, cursor: 'pointer',
-            }}>
+            <button 
+              onClick={onBrowseTools} 
+              className="reset inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-11 cursor-pointer transition-colors hover:bg-bg-hover active:scale-[0.98]"
+            >
               Browse every tool
             </button>
           </div>
@@ -1101,76 +745,47 @@ function ApiShowcase({ onLaunch, brandName }: { onLaunch: () => void; brandName:
   const displayDomain = cleanBrandDomain ? `${cleanBrandDomain}.com` : 'mysaas.com';
 
   return (
-    <section id="developer-api" style={{
-      maxWidth: 1100, margin: '0 auto',
-      padding: '40px 32px 64px',
-      position: 'relative',
-    }}>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-        gap: 40,
-        alignItems: 'center',
-      }} className="pricing-grid">
+    <section id="developer-api" className="max-w-[1100px] mx-auto py-[40px] px-8 pb-16 relative">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
         {/* Info Column */}
         <div>
-          <span style={{
-            ...eyebrow,
-            color: 'oklch(0.78 0.16 195)', // Cyan text
-            border: '1px solid oklch(0.78 0.16 195 / 0.3)',
-            background: 'oklch(0.18 0.010 195 / 0.1)',
-            padding: '4px 10px',
-            borderRadius: 20,
-            fontSize: 10.5,
-            fontWeight: 600,
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em',
-            display: 'inline-block',
-            marginBottom: 16,
-          }} className="mono">⚡ Developer API Integration</span>
-          <h2 style={{ ...sectionTitle, textAlign: 'left', fontSize: 32, lineHeight: 1.15, margin: '0 0 16px' }}>
+          <span className="mono text-[10.5px] font-semibold uppercase tracking-wider inline-block mb-4 py-1 px-2.5 rounded-full text-[oklch(0.78_0.16_195)] border border-[oklch(0.78_0.16_195_/_0.3)] bg-[oklch(0.18_0.010_195_/_0.1)]">⚡ Developer API Integration</span>
+          <h2 className="m-0 text-3xl font-semibold leading-1.15 mb-4 text-left">
             Integrate formatters<br/>
-            <span style={italicAccent}>directly into your scripts.</span>
+            <span className="font-serif italic font-normal tracking-[-0.025em] bg-gradient-to-r from-[oklch(0.92_0.04_265)] via-[oklch(0.78_0.16_285)] to-[oklch(0.82_0.14_200)] bg-clip-text text-transparent bg-[size:200%_100%] animate-gradient-shift">
+              directly into your scripts.
+            </span>
           </h2>
-          <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6, marginBottom: 24 }}>
+          <p className="text-[14.5px] text-fg-muted leading-1.6 mb-6">
             Integrate {brandName}'s enterprise-grade JSON, text, and data parser engines directly into your applications, scripts, and workflows. Generate secure keys, test endpoints instantly, and scale.
           </p>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <Link href="/account" className="reset" style={{
-              padding: '10px 18px', borderRadius: 8,
-              background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
-              color: 'white', fontWeight: 600, fontSize: 13, textDecoration: 'none', cursor: 'pointer',
-              boxShadow: '0 4px 12px oklch(0.50 0.20 195 / 0.25)',
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-            }}>
+          <div className="flex gap-3">
+            <Link 
+              href="/account" 
+              className="reset py-2.5 px-4.5 rounded-lg bg-gradient-to-b from-[oklch(0.72_0.18_195)] to-[oklch(0.62_0.20_195)] text-white font-semibold text-xs no-underline cursor-pointer shadow-[0_4px_12px_rgba(108,68,265,0.25)] inline-flex items-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all"
+            >
               <span>Get API Key</span>
               <Icon.ArrowRight size={13} strokeWidth={2.5} />
             </Link>
-            <Link href="/docs" className="reset" style={{
-              padding: '10px 18px', borderRadius: 8,
-              background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-              color: 'var(--fg)', fontWeight: 500, fontSize: 13, textDecoration: 'none', cursor: 'pointer',
-              display: 'inline-flex', alignItems: 'center',
-            }}>
+            <Link 
+              href="/docs" 
+              className="reset py-2.5 px-4.5 rounded-lg bg-bg-elev-1 border border-border text-fg font-medium text-xs no-underline cursor-pointer inline-flex items-center hover:bg-bg-hover active:scale-[0.98] transition-all"
+            >
               Read Technical Docs
             </Link>
           </div>
         </div>
 
         {/* Preview Code Terminal Column */}
-        <div className="glass-card" style={{ padding: 24, background: '#0e0f12', border: '1px solid #1c1d22', display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 16 }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ef4444' }} />
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#f59e0b' }} />
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10b981' }} />
-            <span style={{ flex: 1 }} />
-            <span style={{ fontSize: 11, color: 'var(--fg-dim)', fontWeight: 600 }} className="mono">cURL REQUEST</span>
+        <div className="glass-card p-6 bg-[#0e0f12] border border-[#1c1d22] flex flex-col">
+          <div className="flex items-center gap-1.5 mb-4">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ef4444]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#10b981]" />
+            <span className="flex-1" />
+            <span className="mono text-[11px] text-fg-dim font-semibold">cURL REQUEST</span>
           </div>
-          <pre style={{
-            margin: 0, padding: 0, overflowX: 'auto',
-            fontSize: 11.5, color: 'oklch(0.80 0.10 195)', lineHeight: 1.5,
-            whiteSpace: 'pre-wrap', wordBreak: 'break-all',
-          }} className="mono">
+          <pre className="mono m-0 p-0 overflow-x-auto text-[11.5px] text-[oklch(0.80_0.10_195)] leading-1.5 whitespace-pre-wrap break-all">
 {`curl -X POST https://api.${displayDomain}/v1/format \\
   -H "Authorization: Bearer ms_live_prod_active_key" \\
   -H "Content-Type: application/json" \\
@@ -1186,46 +801,7 @@ function ApiShowcase({ onLaunch, brandName }: { onLaunch: () => void; brandName:
   );
 }
 
-/* =========================================================================
-   Shared styles
-   ========================================================================= */
 
-const eyebrow: React.CSSProperties = {
-  display: 'inline-block',
-  fontSize: 11, fontWeight: 600,
-  color: 'oklch(0.78 0.12 265)',
-  letterSpacing: '0.18em', textTransform: 'uppercase',
-  marginBottom: 18,
-};
-
-const sectionTitle: React.CSSProperties = {
-  margin: 0,
-  fontSize: 'clamp(34px, 5vw, 52px)',
-  lineHeight: 1.05,
-  letterSpacing: '-0.03em',
-  fontWeight: 600,
-  textWrap: 'balance',
-};
-
-const italicAccent: React.CSSProperties = {
-  fontFamily: '"Source Serif Pro", Georgia, serif',
-  fontStyle: 'italic', fontWeight: 400,
-  background: 'linear-gradient(110deg, oklch(0.92 0.04 265), oklch(0.78 0.16 285))',
-  WebkitBackgroundClip: 'text', backgroundClip: 'text',
-  color: 'transparent',
-};
-
-const sectionSubtitle: React.CSSProperties = {
-  margin: '20px auto 0', maxWidth: 560,
-  fontSize: 16, color: 'var(--fg-muted)',
-  lineHeight: 1.5, textWrap: 'pretty',
-};
-
-const listStyle: React.CSSProperties = {
-  margin: 0, padding: 0, listStyle: 'none',
-  display: 'flex', flexDirection: 'column', gap: 4,
-  flex: 1,
-};
 
 /* =========================================================================
    Main Entry Component
