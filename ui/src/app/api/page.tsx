@@ -207,7 +207,7 @@ puts res.body`
           </div>
           <button
             onClick={handleCopy}
-            className="reset"
+            className=""
             style={{
               color: copiedCode ? '#4ade80' : '#8b949e',
               cursor: copiedCode ? 'default' : 'pointer',
@@ -229,7 +229,7 @@ puts res.body`
             <button
               key={lang.id}
               onClick={() => setActiveLang(lang.id)}
-              className="reset"
+              className=""
               style={{
                 background: activeLang === lang.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                 color: activeLang === lang.id ? '#ffffff' : '#8b949e',

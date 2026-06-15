@@ -40,7 +40,7 @@ export default function PricingClient() {
           </ul>
           <button 
             onClick={launchApp} 
-            className="reset w-full py-3 rounded-lg bg-bg-elev-2 border border-border text-fg font-medium text-[13.5px] cursor-pointer text-center mt-auto hover:bg-bg-hover active:scale-[0.98] transition-all duration-150"
+            className="w-full py-3 rounded-lg bg-bg-elev-2 border border-border text-fg font-medium text-[13.5px] cursor-pointer text-center mt-auto hover:bg-bg-hover active:scale-[0.98] transition-all duration-150"
           >
             Get Started Free
           </button>
@@ -70,7 +70,7 @@ export default function PricingClient() {
           </ul>
           <button 
             onClick={launchApp} 
-            className="reset w-full py-3 rounded-lg bg-gradient-to-b from-[oklch(0.72_0.18_265)] to-[oklch(0.62_0.20_265)] text-white font-medium text-[13.5px] cursor-pointer text-center mt-auto shadow-[0_4px_14px_rgba(108,68,265,0.3)] hover:brightness-110 active:scale-[0.98] transition-all duration-150"
+            className="w-full py-3 rounded-lg bg-gradient-to-b from-[oklch(0.72_0.18_265)] to-[oklch(0.62_0.20_265)] text-white font-medium text-[13.5px] cursor-pointer text-center mt-auto shadow-[0_4px_14px_rgba(108,68,265,0.3)] hover:brightness-110 active:scale-[0.98] transition-all duration-150"
           >
             Unlock Pro Vault
           </button>
@@ -91,7 +91,7 @@ export default function PricingClient() {
           </ul>
           <button 
             onClick={launchApp} 
-            className="reset w-full py-3 rounded-lg bg-bg-elev-2 border border-border text-fg font-medium text-[13.5px] cursor-pointer text-center mt-auto hover:bg-bg-hover active:scale-[0.98] transition-all duration-150"
+            className="w-full py-3 rounded-lg bg-bg-elev-2 border border-border text-fg font-medium text-[13.5px] cursor-pointer text-center mt-auto hover:bg-bg-hover active:scale-[0.98] transition-all duration-150"
           >
             Get API Vault Keys
           </button>

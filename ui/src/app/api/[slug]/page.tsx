@@ -355,7 +355,7 @@ const data = await response.json();`;
               <span style={{ fontSize: 13, fontFamily: 'monospace', color: 'white' }}>https://mysaastools.vercel.app{api.endpoint}</span>
               <button 
                 onClick={() => { navigator.clipboard.writeText(`https://mysaastools.vercel.app${api.endpoint}`); setCopiedEndpoint(true); setTimeout(() => setCopiedEndpoint(false), 2000); }}
-                className="reset" style={{ background: 'none', border: 'none', color: copiedEndpoint ? '#4ade80' : '#94a3b8', cursor: 'pointer', display: 'flex', marginLeft: 8 }}
+                className="" style={{ background: 'none', border: 'none', color: copiedEndpoint ? '#4ade80' : '#94a3b8', cursor: 'pointer', display: 'flex', marginLeft: 8 }}
               >
                 {copiedEndpoint ? <CheckCircle2 size={14} /> : <Copy size={14} />}
               </button>
@@ -494,7 +494,7 @@ const data = await response.json();`;
               </div>
             )}
 
-            <button onClick={executeSandbox} disabled={loading} className="reset" style={{
+            <button onClick={executeSandbox} disabled={loading} className="" style={{
               width: '100%', padding: '16px', fontSize: 15, fontWeight: 700, borderRadius: 12,
               background: api.color, color: 'white', cursor: loading ? 'not-allowed' : 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
@@ -517,7 +517,7 @@ const data = await response.json();`;
                     {resTime && <span style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'monospace' }}>Time: {resTime}ms</span>}
                   </div>
                   {resBody && (
-                    <button onClick={() => { navigator.clipboard.writeText(JSON.stringify(resBody, null, 2)); setCopiedResponse(true); setTimeout(() => setCopiedResponse(false), 2000); }} className="reset" style={{ color: copiedResponse ? '#4ade80' : '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
+                    <button onClick={() => { navigator.clipboard.writeText(JSON.stringify(resBody, null, 2)); setCopiedResponse(true); setTimeout(() => setCopiedResponse(false), 2000); }} className="" style={{ color: copiedResponse ? '#4ade80' : '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
                       {copiedResponse ? <CheckCircle2 size={14} /> : <Copy size={14} />} {copiedResponse ? 'Copied' : 'Copy Response'}
                     </button>
                   )}
@@ -565,7 +565,7 @@ const data = await response.json();`;
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 16px', flexWrap: 'wrap', gap: 12, background: 'rgba(0,0,0,0.3)' }}>
               <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', overflowX: 'auto', scrollbarWidth: 'none' }}>
                 {['curl', 'js', 'python', 'go', 'rust', 'csharp', 'java', 'php', 'ruby'].map(lang => (
-                  <button key={lang} onClick={() => setActiveLang(lang as any)} className="reset mono" style={{
+                  <button key={lang} onClick={() => setActiveLang(lang as any)} className="mono" style={{
                     padding: '6px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6,
                     background: activeLang === lang ? 'rgba(255,255,255,0.1)' : 'transparent',
                     color: activeLang === lang ? 'white' : '#8b949e', cursor: 'pointer', transition: 'all 0.2s'
@@ -574,7 +574,7 @@ const data = await response.json();`;
                   </button>
                 ))}
               </div>
-              <button onClick={handleCopyCode} className="reset" style={{ color: copiedCode ? '#4ade80' : '#8b949e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
+              <button onClick={handleCopyCode} className="" style={{ color: copiedCode ? '#4ade80' : '#8b949e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
                 {copiedCode ? <CheckCircle2 size={14} /> : <Copy size={14} />} {copiedCode ? 'Copied!' : 'Copy'}
               </button>
             </div>

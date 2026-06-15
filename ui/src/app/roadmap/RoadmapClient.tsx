@@ -112,7 +112,7 @@ export default function RoadmapClient() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
-        <button onClick={launchApp} className="reset" style={{
+        <button onClick={launchApp} className="" style={{
           padding: '11px 24px', borderRadius: 9,
           background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
           color: 'var(--fg)', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',

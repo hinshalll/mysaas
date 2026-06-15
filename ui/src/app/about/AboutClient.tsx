@@ -57,7 +57,7 @@ export default function AboutClient() {
           <div className="mt-6 flex justify-center">
             <button 
               onClick={launchApp} 
-              className="reset py-3 px-7 rounded-[9px] bg-gradient-to-b from-[oklch(0.72_0.18_265)] to-[oklch(0.62_0.20_265)] text-white font-semibold text-sm cursor-pointer shadow-[0_4px_14px_rgba(108,68,265,0.3)] transition-transform active:scale-95"
+              className="py-3 px-7 rounded-[9px] bg-gradient-to-b from-[oklch(0.72_0.18_265)] to-[oklch(0.62_0.20_265)] text-white font-semibold text-sm cursor-pointer shadow-[0_4px_14px_rgba(108,68,265,0.3)] transition-transform active:scale-95"
             >
               Launch Dashboard
             </button>

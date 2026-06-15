@@ -595,7 +595,7 @@ export default function HeicTool({
                 <button
                   onClick={() => setTargetFormat('jpg')}
                   disabled={convertingActive || isAllConverted}
-                  className="reset mono"
+                  className="mono"
                   style={{
                     flex: 1, padding: '10px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8,
                     background: targetFormat === 'jpg' ? (lightMode ? 'white' : tint(activeHue, lightMode, 0.8, 0.08, 0.95)) : 'transparent',
@@ -611,7 +611,7 @@ export default function HeicTool({
                 <button
                   onClick={() => setTargetFormat('png')}
                   disabled={convertingActive || isAllConverted}
-                  className="reset mono"
+                  className="mono"
                   style={{
                     flex: 1, padding: '10px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8,
                     background: targetFormat === 'png' ? (lightMode ? 'white' : tint(activeHue, lightMode, 0.8, 0.08, 0.95)) : 'transparent',
@@ -669,7 +669,7 @@ export default function HeicTool({
                 <button
                   onClick={handleClear}
                   disabled={convertingActive}
-                  className="reset mono"
+                  className="mono"
                   style={{
                     padding: '6px 12px', fontSize: 11, fontWeight: 500, borderRadius: 6,
                     color: 'oklch(0.70 0.12 15)', border: '1px solid oklch(0.70 0.12 15 / 0.15)',
@@ -682,7 +682,7 @@ export default function HeicTool({
                 <div style={{ display: 'inline-flex', gap: 4, background: lightMode ? 'oklch(0.96 0.002 250)' : 'oklch(0.12 0.004 250)', padding: 3, borderRadius: 6, border: '1px solid var(--border)' }}>
                   <button
                     onClick={() => setViewMode('grid')}
-                    className="reset"
+                    className=""
                     style={{
                       padding: 6, borderRadius: 4,
                       background: viewMode === 'grid' ? (lightMode ? 'white' : 'var(--bg-elev-2)') : 'transparent',
@@ -696,7 +696,7 @@ export default function HeicTool({
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className="reset"
+                    className=""
                     style={{
                       padding: 6, borderRadius: 4,
                       background: viewMode === 'list' ? (lightMode ? 'white' : 'var(--bg-elev-2)') : 'transparent',
@@ -756,7 +756,7 @@ export default function HeicTool({
                           display: 'flex', alignItems: 'center',
                           transition: 'all 0.2s',
                         }}
-                        className="reset remove-btn"
+                        className="remove-btn"
                       >
                         <X size={11} />
                       </button>
@@ -885,7 +885,7 @@ export default function HeicTool({
                       {item.status === 'success' && (
                         <button
                           onClick={() => handleDownloadSingle(item, idx)}
-                          className="reset mono"
+                          className="mono"
                           style={{
                             width: '100%', padding: '6px 0', fontSize: 11, fontWeight: 600, borderRadius: 6,
                             background: tint(activeHue, lightMode, 0.9, 0.08, 0.9), border: `1px solid ${tintBorder(activeHue, lightMode)}`,
@@ -1023,7 +1023,7 @@ export default function HeicTool({
                               {item.status === 'success' && (
                                 <button
                                   onClick={() => handleDownloadSingle(item, idx)}
-                                  className="reset"
+                                  className=""
                                   style={{
                                     padding: '4px 10px', borderRadius: 6,
                                     background: tint(activeHue, lightMode, 0.9, 0.08, 0.9), border: `1px solid ${tintBorder(activeHue, lightMode)}`,
@@ -1037,7 +1037,7 @@ export default function HeicTool({
                               <button
                                 onClick={() => handleRemoveFile(item.id)}
                                 disabled={convertingActive}
-                                className="reset"
+                                className=""
                                 style={{
                                   padding: 5, borderRadius: 6, background: 'transparent',
                                   color: 'oklch(0.70 0.12 15)', cursor: convertingActive ? 'not-allowed' : 'pointer',
@@ -1091,7 +1091,7 @@ export default function HeicTool({
                   <button
                     onClick={handleConvertAll}
                     disabled={convertingActive}
-                    className="reset"
+                    className=""
                     style={{
                       padding: '11px 24px', borderRadius: 10,
                       background: tint(activeHue, lightMode, 0.45, 0.15, 0.95),
@@ -1121,7 +1121,7 @@ export default function HeicTool({
                   <button
                     onClick={handleDownloadAllZip}
                     disabled={zipping}
-                    className="reset"
+                    className=""
                     style={{
                       padding: '11px 24px', borderRadius: 10,
                       background: `linear-gradient(180deg, ${tint(activeHue, lightMode, 0.45, 0.15, 0.95)}, ${tint(activeHue, lightMode, 0.55, 0.17, 0.95)})`,
@@ -1194,7 +1194,7 @@ export default function HeicTool({
             >
               <button
                 onClick={() => toggleFaq(idx)}
-                className="reset"
+                className=""
                 style={{
                   width: '100%', display: 'flex', justifySelf: 'space-between', alignItems: 'center',
                   padding: '6px 0', cursor: 'pointer', textAlign: 'left', color: 'var(--fg)', fontWeight: 600,

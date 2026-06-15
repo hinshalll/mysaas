@@ -466,7 +466,7 @@ func main() {
             <button
               key={tabId}
               onClick={() => setActiveConsoleTab(tabId as any)}
-              className="reset"
+              className=""
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -584,7 +584,7 @@ func main() {
                     <button 
                       onClick={() => sessionUser && fetchLogs(sessionUser.id)}
                       disabled={loadingLogs}
-                      className="reset" 
+                      className="" 
                       style={{ color: 'oklch(0.50 0.01 250)', cursor: 'pointer', display: 'flex', padding: 4, background: 'none', border: 'none' }}
                       title="Reload Logs"
                     >
@@ -662,7 +662,7 @@ func main() {
             <div style={{ display: 'flex', gap: 10, borderBottom: '1px solid oklch(0.16 0.006 250)', paddingBottom: 8 }}>
               <button
                 onClick={() => setPlaygroundSubTab('formatter')}
-                className="reset mono"
+                className="mono"
                 style={{
                   padding: '8px 16px',
                   fontSize: 12.5,
@@ -682,7 +682,7 @@ func main() {
               </button>
               <button
                 onClick={() => setPlaygroundSubTab('heic')}
-                className="reset mono"
+                className="mono"
                 style={{
                   padding: '8px 16px',
                   fontSize: 12.5,
@@ -732,7 +732,7 @@ func main() {
                   <button
                     onClick={runSandboxTest}
                     disabled={sandboxLoading}
-                    className="reset"
+                    className=""
                     style={{
                       width: '100%',
                       padding: '12px 18px',
@@ -841,7 +841,7 @@ func main() {
                   <button
                     onClick={runHeicSandboxTest}
                     disabled={heicSandboxLoading}
-                    className="reset"
+                    className=""
                     style={{
                       width: '100%',
                       padding: '12px 18px',
@@ -997,7 +997,7 @@ func main() {
                           <button
                             type="button"
                             onClick={() => setIsKeyRevealed(!isKeyRevealed)}
-                            className="reset"
+                            className=""
                             style={{ color: 'oklch(0.50 0.01 250)', cursor: 'pointer', display: 'flex', padding: 4, background: 'none', border: 'none' }}
                             title={isKeyRevealed ? "Hide Secret Key" : "Reveal Secret Key"}
                           >
@@ -1007,7 +1007,7 @@ func main() {
                         <button
                           type="button"
                           onClick={handleCopyKey}
-                          className="reset"
+                          className=""
                           style={{ color: uuidCopied ? 'oklch(0.78 0.16 145)' : 'white', cursor: 'pointer', display: 'flex', padding: 4, background: 'none', border: 'none' }}
                           title="Copy Key to Clipboard"
                         >
@@ -1027,7 +1027,7 @@ func main() {
                       type="button"
                       onClick={handleRegenerateKey}
                       disabled={isRegenerating}
-                      className="reset"
+                      className=""
                       style={{
                         padding: '10px 0',
                         border: '1px dashed oklch(0.24 0.01 250)',
@@ -1109,7 +1109,7 @@ func main() {
                       key={tab}
                       type="button"
                       onClick={() => setSnippetTab(tab)}
-                      className="reset"
+                      className=""
                       style={{
                         flex: 1,
                         padding: '6px 8px',
@@ -1155,7 +1155,7 @@ func main() {
                       navigator.clipboard.writeText(codeSnippets[snippetTab]);
                       alert("Snippet copied to clipboard!");
                     }}
-                    className="reset"
+                    className=""
                     style={{
                       position: 'absolute',
                       top: 10,
@@ -1214,7 +1214,7 @@ func main() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40, position: 'relative', zIndex: 1 }}>
-        <button onClick={launchApp} className="reset" style={{
+        <button onClick={launchApp} className="" style={{
           padding: '11px 24px',
           borderRadius: 9,
           background: 'var(--bg-elev-2)',

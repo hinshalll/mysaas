@@ -112,7 +112,7 @@ export default function ChangelogClient() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 48, position: 'relative', zIndex: 1 }}>
-        <button onClick={launchApp} className="reset" style={{
+        <button onClick={launchApp} className="" style={{
           padding: '12px 24px', borderRadius: 9,
           background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
           color: 'var(--fg)', fontWeight: 500, fontSize: 14, cursor: 'pointer',

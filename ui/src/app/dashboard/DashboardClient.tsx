@@ -84,7 +84,7 @@ function WelcomeStrip({ onOpenLauncher, onOpenPalette }: WelcomeStripProps) {
 
         {/* Inline quick actions */}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button onClick={onOpenPalette} className="reset" style={quickBtn as React.CSSProperties}>
+          <button onClick={onOpenPalette} className="" style={quickBtn as React.CSSProperties}>
             <Search size={13} />
             <span>Quick find</span>
             <kbd className="kbd" style={{ marginLeft: 4 }}>⌘K</kbd>
@@ -146,7 +146,7 @@ function FeaturedTool({ onPick }: FeaturedToolProps) {
       margin: '0 auto',
       padding: '12px 32px 32px',
     }}>
-      <button onClick={() => onPick(featured.id)} className="reset" style={{
+      <button onClick={() => onPick(featured.id)} className="" style={{
         cursor: 'pointer',
         width: '100%',
         display: 'block',

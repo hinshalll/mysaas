@@ -241,13 +241,13 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
             {/* Input Selection Header */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
               <div style={{ display: 'flex', gap: 6, background: 'oklch(0.12 0.004 250)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
-                <button onClick={() => setInputMethod('paste')} className="reset mono" style={{
+                <button onClick={() => setInputMethod('paste')} className="mono" style={{
                   padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
                   background: inputMethod === 'paste' ? 'oklch(0.20 0.008 250)' : 'transparent',
                   color: inputMethod === 'paste' ? 'white' : 'var(--fg-muted)',
                   cursor: 'pointer',
                 }}>Paste Text</button>
-                <button onClick={() => setInputMethod('upload')} className="reset mono" style={{
+                <button onClick={() => setInputMethod('upload')} className="mono" style={{
                   padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
                   background: inputMethod === 'upload' ? 'oklch(0.20 0.008 250)' : 'transparent',
                   color: inputMethod === 'upload' ? 'white' : 'var(--fg-muted)',
@@ -256,7 +256,7 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
               </div>
 
               <div>
-                <button onClick={handleClear} className="reset mono" style={{
+                <button onClick={handleClear} className="mono" style={{
                   padding: '6px 12px', fontSize: 11.5, fontWeight: 500, borderRadius: 6,
                   color: 'oklch(0.70 0.12 15)', border: '1px solid oklch(0.70 0.12 15 / 0.2)',
                   cursor: 'pointer',
@@ -328,7 +328,7 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
             <button
               onClick={() => handleAction('Format')}
               disabled={loading}
-              className="reset"
+              className=""
               style={{
                 width: '100%', padding: '14px', borderRadius: 10,
                 background: tint(tool.hue),
@@ -349,7 +349,7 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
               <button
                 onClick={() => handleAction('Auto-Repair')}
                 disabled={loading}
-                className="reset"
+                className=""
                 style={{
                   padding: '12px', borderRadius: 10,
                   background: 'oklch(0.20 0.008 75 / 0.25)',
@@ -366,7 +366,7 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
               <button
                 onClick={() => handleAction('Minify')}
                 disabled={loading}
-                className="reset"
+                className=""
                 style={{
                   padding: '12px', borderRadius: 10,
                   background: 'oklch(0.18 0.008 250 / 0.6)',
@@ -457,7 +457,7 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
               
               {outputText && (
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }} className="fade-in">
-                  <button onClick={handleCopy} className="reset mono" style={{
+                  <button onClick={handleCopy} className="mono" style={{
                     padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
                     border: '1px solid var(--border)', background: 'oklch(0.12 0.004 250)',
                     color: copying ? 'oklch(0.78 0.16 145)' : 'white', cursor: 'pointer',
@@ -465,7 +465,7 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
                   }}>
                     {copying ? <><Icon.Check size={12} /> Copied!</> : <><Icon.Copy size={12} /> Copy JSON</>}
                   </button>
-                  <button onClick={handleDownload} className="reset mono" style={{
+                  <button onClick={handleDownload} className="mono" style={{
                     padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
                     border: '1px solid var(--border)', background: 'oklch(0.12 0.004 250)',
                     color: 'white', cursor: 'pointer',

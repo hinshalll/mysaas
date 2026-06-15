@@ -549,7 +549,7 @@ export default function AccountClient() {
         <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
           You are currently visiting as a guest. Sign in or create a free account to customize workspace layout settings, manage subscriptions, and configure profile parameters.
         </p>
-        <button onClick={() => setAuthOpen(true)} className="reset" style={{
+        <button onClick={() => setAuthOpen(true)} className="" style={{
           padding: '12px 28px', borderRadius: 9,
           background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
           color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer',
@@ -635,7 +635,7 @@ export default function AccountClient() {
               <button
                 key={tab.id}
                 onClick={() => changeTab(tab.id)}
-                className="reset"
+                className=""
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -723,7 +723,7 @@ export default function AccountClient() {
                   {profileSuccess && "✓ Profile details updated successfully!"}
                   {profileError && profileError}
                 </span>
-                <button type="submit" disabled={isSavingProfile} className="reset" style={{
+                <button type="submit" disabled={isSavingProfile} className="" style={{
                   padding: '10px 20px', borderRadius: 8,
                   background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
                   color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 13, cursor: 'pointer',
@@ -762,7 +762,7 @@ export default function AccountClient() {
                   <button
                     type="button"
                     onClick={() => setShowPasswordFields(true)}
-                    className="reset"
+                    className=""
                     style={{
                       padding: '8px 16px', borderRadius: 8,
                       background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
@@ -790,7 +790,7 @@ export default function AccountClient() {
                             color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
                           }}
                         />
-                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="reset" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
+                        <button type="button" onClick={() => setShowNewPassword(!showNewPassword)} className="" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
                           {showNewPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
                         </button>
                       </div>
@@ -811,7 +811,7 @@ export default function AccountClient() {
                             color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
                           }}
                         />
-                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="reset" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
+                        <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="" style={{ position: 'absolute', right: 10, background: 'none', border: 'none', color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 4 }}>
                           {showConfirmPassword ? <Icon.EyeOff size={14} /> : <Icon.Eye size={14} />}
                         </button>
                       </div>
@@ -826,7 +826,7 @@ export default function AccountClient() {
                       <button
                         type="button"
                         onClick={() => { setShowPasswordFields(false); setNewPassword(''); setConfirmPassword(''); setPasswordMessage(null); }}
-                        className="reset"
+                        className=""
                         style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
                       >
                         Cancel
@@ -834,7 +834,7 @@ export default function AccountClient() {
                       <button
                         type="submit"
                         disabled={isUpdatingPassword}
-                        className="reset"
+                        className=""
                         style={{
                           padding: '8px 16px', borderRadius: 8,
                           background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
@@ -872,7 +872,7 @@ export default function AccountClient() {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-                  <button onClick={() => handleLayoutChange('standard')} className="reset layout-card" style={{
+                  <button onClick={() => handleLayoutChange('standard')} className="layout-card" style={{
                     textAlign: 'left', padding: '16px 20px', borderRadius: 12,
                     background: editorLayout === 'standard' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
                     border: editorLayout === 'standard' ? '1px solid var(--accent)' : '1px solid var(--border)',
@@ -882,7 +882,7 @@ export default function AccountClient() {
                     <span style={{ fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.4 }}>Dual comparison pane: Markdown text editor on the left and visual document outputs on the right.</span>
                   </button>
 
-                  <button onClick={() => handleLayoutChange('reversed')} className="reset layout-card" style={{
+                  <button onClick={() => handleLayoutChange('reversed')} className="layout-card" style={{
                     textAlign: 'left', padding: '16px 20px', borderRadius: 12,
                     background: editorLayout === 'reversed' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
                     border: editorLayout === 'reversed' ? '1px solid var(--accent)' : '1px solid var(--border)',
@@ -949,7 +949,7 @@ export default function AccountClient() {
                   <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)' }}>
                     {locSuccess && "✓ Localization saved successfully!"}
                   </span>
-                  <button type="submit" disabled={isSavingLoc} className="reset" style={{
+                  <button type="submit" disabled={isSavingLoc} className="" style={{
                     padding: '8px 16px', borderRadius: 8,
                     background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
                     color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
@@ -1033,7 +1033,7 @@ export default function AccountClient() {
                   fontSize: 12.5
                 }}>
                   <span>{billingMessage}</span>
-                  <button onClick={() => setBillingMessage(null)} className="reset" style={{
+                  <button onClick={() => setBillingMessage(null)} className="" style={{
                     color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
                     padding: 4, background: 'none', border: 'none'
                   }}>
@@ -1123,7 +1123,7 @@ export default function AccountClient() {
                     {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
                         {!isCanceling && (
-                          <button onClick={() => handleShowPaywall()} className="reset" style={{
+                          <button onClick={() => handleShowPaywall()} className="" style={{
                             width: '100%', padding: '10px 14px', borderRadius: 8,
                             background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
                             border: '1px solid var(--border)',
@@ -1135,7 +1135,7 @@ export default function AccountClient() {
                           </button>
                         )}
                         <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-                          <button onClick={handleManageBilling} className="reset" style={{
+                          <button onClick={handleManageBilling} className="" style={{
                             flex: 1, padding: '10px 14px', borderRadius: 8,
                             background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
                             color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
@@ -1145,13 +1145,13 @@ export default function AccountClient() {
                             <span>Manage Billing</span>
                           </button>
                           {isCanceling ? (
-                            <button onClick={handleResumeSubscription} disabled={isResumingSub} className="reset" style={{
+                            <button onClick={handleResumeSubscription} disabled={isResumingSub} className="" style={{
                               flex: 1, padding: '10px 14px', borderRadius: 8,
                               background: 'oklch(0.18 0.010 145 / 0.15)', border: '1px solid oklch(0.70 0.16 145 / 0.3)',
                               color: 'oklch(0.78 0.16 145)', fontWeight: 600, fontSize: 12.5, cursor: isResumingSub ? 'not-allowed' : 'pointer',
                             }}>{isResumingSub ? 'Resuming...' : 'Resume Subscription'}</button>
                           ) : (
-                            <button onClick={() => setCancelModalOpen(true)} className="reset" style={{
+                            <button onClick={() => setCancelModalOpen(true)} className="" style={{
                               flex: 1, padding: '10px 14px', borderRadius: 8,
                               background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
                               color: 'oklch(0.78 0.16 15)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
@@ -1161,7 +1161,7 @@ export default function AccountClient() {
                       </div>
                     ) : (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-                        <button onClick={() => handleShowPaywall()} className="reset" style={{
+                        <button onClick={() => handleShowPaywall()} className="" style={{
                           width: '100%', padding: '10px 14px', borderRadius: 8,
                           background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
                           border: '1px solid var(--border)',
@@ -1278,7 +1278,7 @@ export default function AccountClient() {
                       {/* Portal Integration Button */}
                       <button 
                         onClick={handleManageBilling}
-                        className="reset"
+                        className=""
                         style={{
                           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                           padding: '10px 14px', borderRadius: 10,
@@ -1368,7 +1368,7 @@ export default function AccountClient() {
                           <button
                             type="button"
                             onClick={() => setIsKeyRevealed(!isKeyRevealed)}
-                            className="reset"
+                            className=""
                             style={{ color: 'oklch(0.50 0.01 250)', cursor: 'pointer', display: 'flex', padding: 4 }}
                             title={isKeyRevealed ? "Hide Secret Key" : "Reveal Secret Key"}
                           >
@@ -1378,7 +1378,7 @@ export default function AccountClient() {
                         <button
                           type="button"
                           onClick={handleCopyUUID}
-                          className="reset"
+                          className=""
                           style={{ color: uuidCopied ? 'oklch(0.78 0.16 145)' : 'white', cursor: 'pointer', display: 'flex', padding: 4 }}
                           title="Copy Key to Clipboard"
                         >
@@ -1399,7 +1399,7 @@ export default function AccountClient() {
                       type="button"
                       onClick={handleRegenerateKey}
                       disabled={isRegenerating}
-                      className="reset"
+                      className=""
                       style={{
                         padding: '10px 0', border: '1px dashed oklch(0.24 0.01 250)', borderRadius: 8,
                         fontSize: 12, fontWeight: 600, color: 'oklch(0.70 0.01 250)', cursor: isRegenerating ? 'not-allowed' : 'pointer',
@@ -1486,7 +1486,7 @@ export default function AccountClient() {
                       key={tab}
                       type="button"
                       onClick={() => setSnippetTab(tab as any)}
-                      className="reset mono"
+                      className="mono"
                       style={{
                         padding: '6px 12px', borderRadius: 6,
                         fontSize: 11, fontWeight: 600, cursor: 'pointer',
@@ -1517,7 +1517,7 @@ export default function AccountClient() {
                       navigator.clipboard.writeText(codeSnippets[snippetTab]);
                       alert("Snippet copied to clipboard!");
                     }}
-                    className="reset"
+                    className=""
                     style={{
                       position: 'absolute', top: 10, right: 10,
                       background: 'oklch(0.14 0.006 250 / 0.8)', border: '1px solid oklch(0.24 0.01 250)',
@@ -1581,7 +1581,7 @@ export default function AccountClient() {
                   <button
                     type="button"
                     onClick={() => setShowDeactivateFields(true)}
-                    className="reset"
+                    className=""
                     style={{
                       padding: '8px 16px', borderRadius: 8,
                       background: 'oklch(0.18 0.010 20 / 0.15)', border: '1px solid oklch(0.60 0.20 20 / 0.3)',
@@ -1641,7 +1641,7 @@ export default function AccountClient() {
                     <button
                       type="button"
                       onClick={() => { setShowDeactivateFields(false); setDeleteConfirmation(''); setDeactivateError(null); }}
-                      className="reset"
+                      className=""
                       style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
                     >
                       Cancel
@@ -1650,7 +1650,7 @@ export default function AccountClient() {
                       type="button"
                       disabled={deleteConfirmation !== 'SAYONARA' || isDeleting}
                       onClick={handleDeleteAccount}
-                      className="reset"
+                      className=""
                       style={{
                         padding: '10px 20px', borderRadius: 8,
                         background: deleteConfirmation === 'SAYONARA' ? 'oklch(0.65 0.22 20)' : 'oklch(0.18 0.010 20 / 0.1)',
@@ -1672,7 +1672,7 @@ export default function AccountClient() {
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
-        <button onClick={launchApp} className="reset" style={{
+        <button onClick={launchApp} className="" style={{
           padding: '11px 24px', borderRadius: 9,
           background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
           color: 'var(--fg)', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
@@ -1726,7 +1726,7 @@ export default function AccountClient() {
               <button
                 type="button"
                 onClick={() => setCancelModalOpen(false)}
-                className="reset"
+                className=""
                 style={{
                   flex: 1, padding: '10px 14px', borderRadius: 8,
                   background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
@@ -1740,7 +1740,7 @@ export default function AccountClient() {
                 type="button"
                 disabled={isCancelingSub}
                 onClick={handleCancelSubscription}
-                className="reset"
+                className=""
                 style={{
                   flex: 1, padding: '10px 14px', borderRadius: 8,
                   background: 'oklch(0.65 0.22 20)',

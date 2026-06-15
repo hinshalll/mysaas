@@ -90,7 +90,7 @@ function Select({ value, options, onChange, label, compact }: SelectProps) {
         }}>{label}</label>
       )}
       <div ref={ref} style={{ position: 'relative' }}>
-        <button onClick={() => setOpen(o => !o)} className="reset" style={{
+        <button onClick={() => setOpen(o => !o)} className="" style={{
           width: '100%', boxSizing: 'border-box', cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 10,
           padding: compact ? '8px 12px' : '10px 12px',
@@ -127,7 +127,7 @@ function Select({ value, options, onChange, label, compact }: SelectProps) {
             {options.map(opt => {
               const active = opt.value === value.value;
               return (
-                <button key={opt.value} onClick={() => { onChange(opt); setOpen(false); }} className="reset" style={{
+                <button key={opt.value} onClick={() => { onChange(opt); setOpen(false); }} className="" style={{
                   cursor: 'pointer',
                   display: 'flex', alignItems: 'flex-start', gap: 10,
                   width: '100%', boxSizing: 'border-box',
@@ -176,7 +176,7 @@ function TBButton({ children, onClick, active, title }: TBButtonProps) {
       title={title}
       onMouseDown={(e: React.MouseEvent) => e.preventDefault()}
       onClick={onClick}
-      className="reset"
+      className=""
       style={{
         cursor: 'pointer',
         width: 30, height: 30, borderRadius: 6,
@@ -774,7 +774,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           measureContainer.innerHTML = pristineHtmlBody;
           const untruncatedHeight = measureContainer.scrollHeight;
           estimatedTotalPages = Math.ceil(untruncatedHeight / 930) || 1;
-          measureContainer.innerHTML = ''; // reset for slicing
+          measureContainer.innerHTML = ''; // for slicing
 
           const children = Array.from(tempDiv.children);
           for (const child of children) {
@@ -1130,11 +1130,11 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
             Source · markdown
           </span>
           <div style={{ flex: 1 }} />
-          <button onClick={() => { setText(SAMPLE); taRef.current?.focus(); }} className="reset" style={miniBtn}>Sample</button>
+          <button onClick={() => { setText(SAMPLE); taRef.current?.focus(); }} className="" style={miniBtn}>Sample</button>
           <button onClick={() => {
             navigator.clipboard?.readText?.().then(t => setText(t || text)).catch(() => {});
-          }} className="reset" style={miniBtn}>Paste</button>
-          <button onClick={() => { setText(''); taRef.current?.focus(); }} className="reset" style={{ ...miniBtn, color: text ? 'var(--fg-muted)' : 'var(--fg-dim)' }}>Clear</button>
+          }} className="" style={miniBtn}>Paste</button>
+          <button onClick={() => { setText(''); taRef.current?.focus(); }} className="" style={{ ...miniBtn, color: text ? 'var(--fg-muted)' : 'var(--fg-dim)' }}>Clear</button>
         </div>
 
         {/* AI Source Auto-detection Recommendation Banner */}
@@ -1160,7 +1160,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                 if (matched) setAiSource(matched);
                 setDetectedAi(null);
               }}
-              className="reset"
+              className=""
               style={{
                 cursor: 'pointer',
                 padding: '4px 10px',
@@ -1175,7 +1175,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
             </button>
             <button
               onClick={() => setDetectedAi(null)}
-              className="reset"
+              className=""
               style={{
                 cursor: 'pointer',
                 fontSize: 11.5, color: 'var(--fg-dim)',
@@ -1227,7 +1227,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           <button
             onClick={handleGenerate}
             disabled={!text.trim() || generating}
-            className="reset"
+            className=""
             style={{
               cursor: !text.trim() || generating ? 'not-allowed' : 'pointer',
               opacity: !text.trim() ? 0.5 : 1,
@@ -1293,7 +1293,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
             <div style={{ flex: 1 }} />
             {generated && (
               <>
-                <button onClick={rerender} className="reset" style={{
+                <button onClick={rerender} className="" style={{
                   cursor: 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '7px 10px',
@@ -1307,7 +1307,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                   <Icon.Loader size={11} strokeWidth={2}/> Re-render
                 </button>
 
-                <button onClick={handleCopy} disabled={copying} className="reset" style={{
+                <button onClick={handleCopy} disabled={copying} className="" style={{
                   cursor: copying ? 'wait' : 'pointer',
                   display: 'inline-flex', alignItems: 'center', gap: 6,
                   padding: '7px 12px',
@@ -1328,7 +1328,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                   )}
                 </button>
                 
-                <button onClick={handleDownload} disabled={downloading} className="reset" style={{
+                <button onClick={handleDownload} disabled={downloading} className="" style={{
                   cursor: downloading ? 'wait' : 'pointer',
                   opacity: downloading ? 0.7 : 1,
                   display: 'inline-flex', alignItems: 'center', gap: 7,
@@ -1379,7 +1379,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                   </select>
 
                   {/* History drawer toggle */}
-                  <button onClick={() => { setHistoryOpen(!historyOpen); loadCloudHistory(); }} className="reset" style={{
+                  <button onClick={() => { setHistoryOpen(!historyOpen); loadCloudHistory(); }} className="" style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px',
                     background: 'var(--bg-elev-2)', border: '1px solid var(--border)', borderRadius: 6,
                     fontSize: 12, color: 'white', cursor: 'pointer'
@@ -1649,7 +1649,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           }} className="fade-in-up">
             <button 
               onClick={() => setTruncationModal(null)} 
-              className="reset" 
+              className="" 
               style={{ position: 'absolute', top: 20, right: 20, cursor: 'pointer', color: 'var(--fg-dim)', transition: 'color 0.15s', border: 'none', background: 'transparent' }}
               onMouseEnter={e => e.currentTarget.style.color = 'white'}
               onMouseLeave={e => e.currentTarget.style.color = 'var(--fg-dim)'}
@@ -1687,7 +1687,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                       // Trigger auth modal via parent window postMessage
                       window.parent?.postMessage?.('open-auth-modal', '*');
                     }}
-                    className="reset"
+                    className=""
                     style={{
                       width: '100%', padding: '12px', borderRadius: 8,
                       background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
@@ -1702,7 +1702,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                       setTruncationModal(null);
                       window.parent?.postMessage?.('show-paywall-modal', '*');
                     }}
-                    className="reset"
+                    className=""
                     style={{
                       width: '100%', padding: '11px', borderRadius: 8,
                       background: 'transparent', border: '1px solid var(--border)',
@@ -1721,7 +1721,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                     setTruncationModal(null);
                     window.parent?.postMessage?.('show-paywall-modal', '*');
                   }}
-                  className="reset"
+                  className=""
                   style={{
                     width: '100%', padding: '12px', borderRadius: 8,
                     background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
@@ -1735,7 +1735,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
               
               <button 
                 onClick={() => setTruncationModal(null)} 
-                className="reset" 
+                className="" 
                 style={{
                   width: '100%', padding: '10px', color: 'var(--fg-dim)', fontWeight: 500,
                   fontSize: 12.5, cursor: 'pointer', textAlign: 'center', border: 'none', background: 'transparent'
@@ -1758,7 +1758,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
         }} className="fade-in">
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <h4 style={{ fontSize: 16, fontWeight: 600, color: 'white', margin: 0 }}>Cloud History (30 Days)</h4>
-            <button onClick={() => setHistoryOpen(false)} className="reset" style={{ cursor: 'pointer', color: 'var(--fg-subtle)' }}><Icon.X size={16} /></button>
+            <button onClick={() => setHistoryOpen(false)} className="" style={{ cursor: 'pointer', color: 'var(--fg-subtle)' }}><Icon.X size={16} /></button>
           </div>
 
           {!sessionUser || sessionUser.is_anonymous ? (

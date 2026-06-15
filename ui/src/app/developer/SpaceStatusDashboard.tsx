@@ -99,7 +99,7 @@ export default function SpaceStatusDashboard() {
         <button
           onClick={() => fetchStatus(true)}
           disabled={loading || refreshing}
-          className="reset mono"
+          className="mono"
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -159,7 +159,7 @@ export default function SpaceStatusDashboard() {
           </p>
           <button
             onClick={() => fetchStatus(true)}
-            className="reset"
+            className=""
             style={{
               padding: '6px 14px', borderRadius: 6,
               background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
@@ -303,7 +303,7 @@ export default function SpaceStatusDashboard() {
                   {!isAwake && (
                     <button
                       onClick={() => fetchStatus(true)}
-                      className="reset mono"
+                      className="mono"
                       style={{
                         padding: '4px 10px',
                         fontSize: 11,

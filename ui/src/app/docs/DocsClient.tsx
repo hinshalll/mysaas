@@ -80,7 +80,7 @@ Body:
           </div>
 
           <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
-            <button onClick={launchApp} className="reset" style={{
+            <button onClick={launchApp} className="" style={{
               padding: '12px 24px',
               borderRadius: 9,
               background: 'var(--bg-elev-2)',

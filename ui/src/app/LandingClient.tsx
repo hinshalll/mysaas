@@ -97,7 +97,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
           { label: 'Docs', path: '/docs' },
           { label: 'APIs', path: '/api' },
         ].map(item => (
-          <Link key={item.label} href={item.path} className="reset top-link text-[13px] text-fg-muted py-[7px] px-3 rounded-md no-underline cursor-pointer transition-colors duration-150 hover:bg-bg-hover hover:text-fg">{item.label}</Link>
+          <Link key={item.label} href={item.path} className="top-link text-[13px] text-fg-muted py-[7px] px-3 rounded-md no-underline cursor-pointer transition-colors duration-150 hover:bg-bg-hover hover:text-fg">{item.label}</Link>
         ))}
       </nav>
 
@@ -109,28 +109,28 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
           {(() => {
             const userDisplayName = sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0];
             return (
-              <Link href="/account" className="reset top-link text-[12.5px] text-fg inline-flex items-center gap-1.5 bg-bg-elev-1 border border-border py-1.25 px-3 rounded-full no-underline transition-colors duration-150 hover:bg-bg-hover">
+              <Link href="/account" className="top-link text-[12.5px] text-fg inline-flex items-center gap-1.5 bg-bg-elev-1 border border-border py-1.25 px-3 rounded-full no-underline transition-colors duration-150 hover:bg-bg-hover">
                 <span className={`w-1.5 h-1.5 rounded-full ${userPlan === 'pro' ? 'bg-pro' : 'bg-[oklch(0.70_0.16_145)]'}`} />
                 <span>Account ({userDisplayName})</span>
                 {userPlan === 'pro' && <span className="mono text-[9px] bg-pro text-black py-0.25 px-1 rounded font-bold">PRO</span>}
               </Link>
             );
           })()}
-          <button onClick={onSignOut} className="reset top-link text-[13px] text-fg-muted cursor-pointer bg-none border-none hover:text-fg">Sign Out</button>
+          <button onClick={onSignOut} className="top-link text-[13px] text-fg-muted cursor-pointer bg-none border-none hover:text-fg">Sign Out</button>
         </div>
       ) : (
-        <button onClick={onOpenAuthModal} className="reset top-link text-[13px] text-accent font-semibold py-2 px-3 rounded-[7px] cursor-pointer mr-2 hover:bg-bg-hover transition-colors duration-150">Sign In / Up</button>
+        <button onClick={onOpenAuthModal} className="top-link text-[13px] text-accent font-semibold py-2 px-3 rounded-[7px] cursor-pointer mr-2 hover:bg-bg-hover transition-colors duration-150">Sign In / Up</button>
       )}
 
       {/* Theme Toggle Switch */}
-      <button onClick={onToggleTheme} className="reset theme-toggle-btn inline-flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer text-[13px] text-fg-muted bg-bg-elev-1 border border-border transition-all duration-150 hover:bg-bg-hover hover:text-fg hover:scale-[1.03] active:scale-[0.97]" title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
+      <button onClick={onToggleTheme} className="theme-toggle-btn inline-flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer text-[13px] text-fg-muted bg-bg-elev-1 border border-border transition-all duration-150 hover:bg-bg-hover hover:text-fg hover:scale-[1.03] active:scale-[0.97]" title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
         {theme === 'dark' ? <Icon.Sun size={15} /> : <Icon.Moon size={15} />}
       </button>
 
       {/* Mobile Menu Toggle Button for LandingNav */}
       <button 
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className={`reset mobile-menu-btn items-center justify-center w-8 h-8 rounded-lg cursor-pointer border border-border text-fg transition-all duration-200 ${mobileMenuOpen ? 'bg-bg-hover' : 'bg-bg-elev-1'}`}
+        className={`mobile-menu-btn items-center justify-center w-8 h-8 rounded-lg cursor-pointer border border-border text-fg transition-all duration-200 ${mobileMenuOpen ? 'bg-bg-hover' : 'bg-bg-elev-1'}`}
         title="Toggle Menu"
       >
         {mobileMenuOpen ? <Icon.X size={15} /> : <Icon.Menu size={15} />}
@@ -339,7 +339,7 @@ function HeroDemo() {
           <button 
             key={th.id} 
             onClick={() => setTab(th.id)} 
-            className={`reset py-1 px-2.5 text-[11.5px] font-medium rounded-md cursor-pointer border transition-colors ${tab === th.id ? 'bg-[oklch(0.30_0.05_265_/_0.5)] text-[oklch(0.92_0.04_265)] border-[oklch(0.45_0.08_265_/_0.4)]' : 'bg-transparent text-fg-muted border-transparent hover:text-fg hover:bg-bg-hover'}`}
+            className={`py-1 px-2.5 text-[11.5px] font-medium rounded-md cursor-pointer border transition-colors ${tab === th.id ? 'bg-[oklch(0.30_0.05_265_/_0.5)] text-[oklch(0.92_0.04_265)] border-[oklch(0.45_0.08_265_/_0.4)]' : 'bg-transparent text-fg-muted border-transparent hover:text-fg hover:bg-bg-hover'}`}
           >
             {th.label}
           </button>
@@ -393,7 +393,7 @@ function LandingHero({ onLaunch }: LandingHeroProps) {
       <div className="flex gap-3 mt-9 justify-center flex-wrap">
         <button 
           onClick={onLaunch} 
-          className="reset inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-[11px] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)] tracking-[-0.005em] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
+          className="inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-[11px] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)] tracking-[-0.005em] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
         >
           Launch app <Icon.ArrowRight size={15} strokeWidth={2.2}/>
         </button>
@@ -403,7 +403,7 @@ function LandingHero({ onLaunch }: LandingHeroProps) {
             document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
             window.history.pushState(null, '', '#pricing');
           }} 
-          className="reset inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-[11px] cursor-pointer backdrop-blur-md transition-all hover:bg-bg-hover active:scale-[0.98]"
+          className="inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-[11px] cursor-pointer backdrop-blur-md transition-all hover:bg-bg-hover active:scale-[0.98]"
         >
           See pricing
         </button>
@@ -579,7 +579,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
 
           <button 
             onClick={onLaunch} 
-            className="reset py-3 px-4.5 bg-[oklch(0.21_0.010_250)] border border-border text-fg font-medium text-sm rounded-lg cursor-pointer text-center block w-full hover:bg-bg-hover active:scale-[0.98] transition-all"
+            className="py-3 px-4.5 bg-[oklch(0.21_0.010_250)] border border-border text-fg font-medium text-sm rounded-lg cursor-pointer text-center block w-full hover:bg-bg-hover active:scale-[0.98] transition-all"
           >
             Start free →
           </button>
@@ -616,7 +616,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
 
           <button 
             onClick={onShowPaywall} 
-            className="reset py-3 px-4.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-sm rounded-lg cursor-pointer text-center block w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_1px_3px_rgba(0,0,0,0.5)] hover:brightness-110 active:scale-[0.98] transition-all"
+            className="py-3 px-4.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-sm rounded-lg cursor-pointer text-center block w-full shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_1px_3px_rgba(0,0,0,0.5)] hover:brightness-110 active:scale-[0.98] transition-all"
           >
             Upgrade to Pro →
           </button>
@@ -647,7 +647,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
 
           <button 
             onClick={onShowPaywall} 
-            className="reset py-3 px-4.5 bg-bg-elev-2 border border-border text-fg font-medium text-sm rounded-lg cursor-pointer text-center block w-full hover:bg-bg-hover active:scale-[0.98] transition-all"
+            className="py-3 px-4.5 bg-bg-elev-2 border border-border text-fg font-medium text-sm rounded-lg cursor-pointer text-center block w-full hover:bg-bg-hover active:scale-[0.98] transition-all"
           >
             Get API Keys →
           </button>
@@ -719,13 +719,13 @@ function ClosingCTA({ onLaunch, onBrowseTools }: ClosingCTAProps) {
           <div className="flex gap-3 mt-8 justify-center flex-wrap">
             <button 
               onClick={onLaunch} 
-              className="reset inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-[11px] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)]"
+              className="inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-[11px] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)]"
             >
               Launch app <Icon.ArrowRight size={15} strokeWidth={2.2}/>
             </button>
             <button 
               onClick={onBrowseTools} 
-              className="reset inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-[11px] cursor-pointer transition-colors hover:bg-bg-hover active:scale-[0.98]"
+              className="inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-[11px] cursor-pointer transition-colors hover:bg-bg-hover active:scale-[0.98]"
             >
               Browse every tool
             </button>
@@ -762,14 +762,14 @@ function ApiShowcase({ onLaunch, brandName }: { onLaunch: () => void; brandName:
           <div className="flex gap-3">
             <Link 
               href="/account" 
-              className="reset py-2.5 px-4.5 rounded-lg bg-gradient-to-b from-[oklch(0.72_0.18_195)] to-[oklch(0.62_0.20_195)] text-white font-semibold text-xs no-underline cursor-pointer shadow-[0_4px_12px_rgba(108,68,265,0.25)] inline-flex items-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all"
+              className="py-2.5 px-4.5 rounded-lg bg-gradient-to-b from-[oklch(0.72_0.18_195)] to-[oklch(0.62_0.20_195)] text-white font-semibold text-xs no-underline cursor-pointer shadow-[0_4px_12px_rgba(108,68,265,0.25)] inline-flex items-center gap-2 hover:brightness-110 active:scale-[0.98] transition-all"
             >
               <span>Get API Key</span>
               <Icon.ArrowRight size={13} strokeWidth={2.5} />
             </Link>
             <Link 
               href="/docs" 
-              className="reset py-2.5 px-4.5 rounded-lg bg-bg-elev-1 border border-border text-fg font-medium text-xs no-underline cursor-pointer inline-flex items-center hover:bg-bg-hover active:scale-[0.98] transition-all"
+              className="py-2.5 px-4.5 rounded-lg bg-bg-elev-1 border border-border text-fg font-medium text-xs no-underline cursor-pointer inline-flex items-center hover:bg-bg-hover active:scale-[0.98] transition-all"
             >
               Read Technical Docs
             </Link>

@@ -74,7 +74,7 @@ export default function ContactClient() {
               onBlur={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-elev-1)'; }}
               />
             </div>
-            <button onClick={() => setSent(true)} className="reset" style={{
+            <button onClick={() => setSent(true)} className="" style={{
               width: '100%', padding: '12px', borderRadius: 8,
               background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
               color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer',
