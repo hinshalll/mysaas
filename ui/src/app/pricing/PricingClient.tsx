@@ -21,7 +21,7 @@ export default function PricingClient() {
       <header className="text-center mb-12 relative z-10">
         <span className="inline-block text-[11px] font-semibold text-[oklch(0.78_0.12_265)] tracking-[0.18em] uppercase mb-[18px]">Monetization & Plans</span>
         <h1 className="m-0 text-[clamp(34px,5vw,52px)] leading-[1.05] tracking-[-0.03em] font-semibold text-pretty mt-3 mb-0 text-fg">Simple, transparent pricing</h1>
-        <p className="mt-5 mx-auto mb-0 max-w-[560px] text-base text-fg-muted leading-1.5 text-pretty">Choose the perfect tier for your workflow. Get high-fidelity documents and parsed datasets instantly.</p>
+        <p className="mt-5 mx-auto mb-0 max-w-[560px] text-base text-fg-muted leading-[1.5] text-pretty">Choose the perfect tier for your workflow. Get high-fidelity documents and parsed datasets instantly.</p>
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch max-w-[1080px] mx-auto relative z-10" aria-label="Pricing Plans">

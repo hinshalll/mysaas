@@ -23,7 +23,7 @@ export default function AboutClient() {
       </header>
 
       <section className="glass-card relative z-10 py-10 px-[clamp(24px,5vw,48px)]">
-        <div className="text-[15px] leading-1.75 text-fg-muted flex flex-col gap-5">
+        <div className="text-[15px] leading-[1.75] text-fg-muted flex flex-col gap-5">
           <p className="text-base">
             Welcome to <strong className="text-fg" suppressHydrationWarning>{brandName}</strong>—a collection of lightweight, blazing-fast, serverless-grade utility tools built directly for developers, creators, and professionals.
           </p>

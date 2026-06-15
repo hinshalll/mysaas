@@ -280,7 +280,7 @@ function HeroDemo() {
       {/* Split */}
       <div className="grid grid-cols-2 min-h-[340px] demo-split">
         {/* Input */}
-        <div className="p-[18px_20px] border-r border-border font-mono text-[11.5px] leading-1.65 text-fg-muted bg-[oklch(0.155_0.006_250_/_0.55)] relative">
+        <div className="p-[18px_20px] border-r border-border font-mono text-[11.5px] leading-[1.65] text-fg-muted bg-[oklch(0.155_0.006_250_/_0.55)] relative">
           <div className="text-[10px] text-fg-dim tracking-widest uppercase mb-3">
             input · markdown
           </div>
@@ -300,7 +300,7 @@ function HeroDemo() {
 
         {/* Output */}
         <div 
-          className="p-5.5 bg-[oklch(0.97_0.005_250)] text-[oklch(0.18_0.008_250)] text-[11px] leading-1.6 relative"
+          className="p-5.5 bg-[oklch(0.97_0.005_250)] text-[oklch(0.18_0.008_250)] text-[11px] leading-[1.6] relative"
           style={{ fontFamily: t.font }}
         >
           <div 
@@ -386,7 +386,7 @@ function LandingHero({ onLaunch }: LandingHeroProps) {
         </span>
       </h1>
 
-      <p className="mt-7 mx-auto mb-0 max-w-[620px] text-[clamp(16px,1.8vw,19px)] leading-1.5 text-fg-muted text-pretty">
+      <p className="mt-7 mx-auto mb-0 max-w-[620px] text-[clamp(16px,1.8vw,19px)] leading-[1.5] text-fg-muted text-pretty">
         The small utilities you keep googling — formatters, converters, OCR, redactors, diff checkers — in one keyboard-driven workspace. Built for the people who hit <kbd className="kbd-inline">⌘K</kbd> a hundred times a day.
       </p>
 
@@ -443,7 +443,7 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
             One keyboard shortcut.
           </span>
         </h2>
-        <p className="mt-5 mx-auto mb-0 max-w-[560px] text-base text-fg-muted leading-1.5 text-pretty">
+        <p className="mt-5 mx-auto mb-0 max-w-[560px] text-base text-fg-muted leading-[1.5] text-pretty">
           Each utility is its own focused workbench, but they all share the same launcher, history, and exports.
         </p>
       </div>
@@ -480,7 +480,7 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
                 </span>
                 <div className="flex-1" />
               </div>
-              <div className="text-[17px] font-semibold text-fg tracking-[-0.015em] mb-2 leading-1.25 text-pretty">
+              <div className="text-[17px] font-semibold text-fg tracking-[-0.015em] mb-2 leading-[1.25] text-pretty">
                 {cat.tagline}
               </div>
             </Link>
@@ -546,7 +546,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
             {pricingData.currency}{pricingData.monthly} a month for everything else.
           </span>
         </h2>
-        <p className="mt-5 mx-auto mb-0 max-w-[560px] text-base text-fg-muted leading-1.5 text-pretty">
+        <p className="mt-5 mx-auto mb-0 max-w-[560px] text-base text-fg-muted leading-[1.5] text-pretty">
           No seats, no per-tool gating, no trial timers. Dynamic plans tailored for your region.
         </p>
       </div>
@@ -560,7 +560,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
               <span className="text-[48px] font-semibold tracking-[-0.03em]">$0</span>
               <span className="text-fg-subtle text-sm">forever</span>
             </div>
-            <p className="m-0 mt-3 text-fg-muted text-sm leading-1.5">
+            <p className="m-0 mt-3 text-fg-muted text-sm leading-[1.5]">
               For occasional use and weekend projects.
             </p>
           </div>
@@ -595,7 +595,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
               <span className="text-[48px] font-semibold tracking-[-0.03em]">{pricingData.currency}{pricingData.monthly}</span>
               <span className="text-fg-subtle text-sm">{pricingData.suffix}</span>
             </div>
-            <p className="m-0 mt-3 text-fg-muted text-sm leading-1.5">
+            <p className="m-0 mt-3 text-fg-muted text-sm leading-[1.5]">
               For people who live in their tools.
             </p>
           </div>
@@ -630,7 +630,7 @@ function Pricing({ onLaunch, onEnterprise, brandName, pricingData, onShowPaywall
               <span className="text-[48px] font-semibold tracking-[-0.03em]">{pricingData.currency}29</span>
               <span className="text-fg-subtle text-sm">{pricingData.suffix}</span>
             </div>
-            <p className="m-0 mt-3 text-fg-muted text-sm leading-1.5">
+            <p className="m-0 mt-3 text-fg-muted text-sm leading-[1.5]">
               For high-volume programmatic access.
             </p>
           </div>
@@ -707,13 +707,13 @@ function ClosingCTA({ onLaunch, onBrowseTools }: ClosingCTAProps) {
         />
 
         <div className="relative">
-          <h2 className="m-0 text-[clamp(34px,5vw,56px)] leading-1.02 tracking-[-0.03em] font-semibold text-balance text-fg">
+          <h2 className="m-0 text-[clamp(34px,5vw,56px)] leading-[1.02] tracking-[-0.03em] font-semibold text-balance text-fg">
             Stop googling tiny tools.{' '}
             <span className="font-serif italic font-normal tracking-[-0.025em] bg-gradient-to-r from-[oklch(0.92_0.04_265)] via-[oklch(0.78_0.16_285)] to-[oklch(0.82_0.14_200)] bg-clip-text text-transparent bg-[size:200%_100%] animate-gradient-shift">
               Start finishing.
             </span>
           </h2>
-          <p className="mt-5 mx-auto mb-0 max-w-[540px] text-base text-fg-muted leading-1.5">
+          <p className="mt-5 mx-auto mb-0 max-w-[540px] text-base text-fg-muted leading-[1.5]">
             Free forever for the basics. $9/mo when you outgrow it. Cancel any time, export everything.
           </p>
           <div className="flex gap-3 mt-8 justify-center flex-wrap">
@@ -750,13 +750,13 @@ function ApiShowcase({ onLaunch, brandName }: { onLaunch: () => void; brandName:
         {/* Info Column */}
         <div>
           <span className="mono text-[10.5px] font-semibold uppercase tracking-wider inline-block mb-4 py-1 px-2.5 rounded-full text-[oklch(0.78_0.16_195)] border border-[oklch(0.78_0.16_195_/_0.3)] bg-[oklch(0.18_0.010_195_/_0.1)]">⚡ Developer API Integration</span>
-          <h2 className="m-0 text-3xl font-semibold leading-1.15 mb-4 text-left">
+          <h2 className="m-0 text-3xl font-semibold leading-[1.15] mb-4 text-left">
             Integrate formatters<br/>
             <span className="font-serif italic font-normal tracking-[-0.025em] bg-gradient-to-r from-[oklch(0.92_0.04_265)] via-[oklch(0.78_0.16_285)] to-[oklch(0.82_0.14_200)] bg-clip-text text-transparent bg-[size:200%_100%] animate-gradient-shift">
               directly into your scripts.
             </span>
           </h2>
-          <p className="text-[14.5px] text-fg-muted leading-1.6 mb-6">
+          <p className="text-[14.5px] text-fg-muted leading-[1.6] mb-6">
             Integrate {brandName}'s enterprise-grade JSON, text, and data parser engines directly into your applications, scripts, and workflows. Generate secure keys, test endpoints instantly, and scale.
           </p>
           <div className="flex gap-3">
@@ -785,7 +785,7 @@ function ApiShowcase({ onLaunch, brandName }: { onLaunch: () => void; brandName:
             <span className="flex-1" />
             <span className="mono text-[11px] text-fg-dim font-semibold">cURL REQUEST</span>
           </div>
-          <pre className="mono m-0 p-0 overflow-x-auto text-[11.5px] text-[oklch(0.80_0.10_195)] leading-1.5 whitespace-pre-wrap break-all">
+          <pre className="mono m-0 p-0 overflow-x-auto text-[11.5px] text-[oklch(0.80_0.10_195)] leading-[1.5] whitespace-pre-wrap break-all">
 {`curl -X POST https://api.${displayDomain}/v1/format \\
   -H "Authorization: Bearer ms_live_prod_active_key" \\
   -H "Content-Type: application/json" \\
