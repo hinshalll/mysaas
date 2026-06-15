@@ -28,7 +28,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
   const [isEditingBrand, setIsEditingBrand] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
-    <header className={`sticky top-0 z-30 h-16 flex items-center px-8 gap-[18px] transition-all duration-250 ${scrolled ? 'bg-bg-topbar border-b border-border backdrop-blur-md saturate-140' : 'bg-transparent border-b border-transparent backdrop-blur-none'}`}>
+    <header className={`sticky top-0 z-30 h-16 flex items-center px-8 gap-[18px] transition-all duration-250 ${scrolled ? 'bg-bg-topbar border-b border-border backdrop-blur-md saturate-[1.4]' : 'bg-transparent border-b border-transparent backdrop-blur-none'}`}>
       {/* Brand Logo */}
       <div className="flex items-center gap-2.5 text-inherit no-underline">
         {isEditingBrand ? (
@@ -97,7 +97,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
           { label: 'Docs', path: '/docs' },
           { label: 'APIs', path: '/api' },
         ].map(item => (
-          <Link key={item.label} href={item.path} className="reset top-link text-[13px] text-fg-muted py-[7px] px-3 rounded-md no-underline cursor-pointer transition-colors duration-155 hover:bg-bg-hover hover:text-fg">{item.label}</Link>
+          <Link key={item.label} href={item.path} className="reset top-link text-[13px] text-fg-muted py-[7px] px-3 rounded-md no-underline cursor-pointer transition-colors duration-150 hover:bg-bg-hover hover:text-fg">{item.label}</Link>
         ))}
       </nav>
 
@@ -109,7 +109,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
           {(() => {
             const userDisplayName = sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0];
             return (
-              <Link href="/account" className="reset top-link text-[12.5px] text-fg inline-flex items-center gap-1.5 bg-bg-elev-1 border border-border py-1.25 px-3 rounded-full no-underline transition-colors duration-155 hover:bg-bg-hover">
+              <Link href="/account" className="reset top-link text-[12.5px] text-fg inline-flex items-center gap-1.5 bg-bg-elev-1 border border-border py-1.25 px-3 rounded-full no-underline transition-colors duration-150 hover:bg-bg-hover">
                 <span className={`w-1.5 h-1.5 rounded-full ${userPlan === 'pro' ? 'bg-pro' : 'bg-[oklch(0.70_0.16_145)]'}`} />
                 <span>Account ({userDisplayName})</span>
                 {userPlan === 'pro' && <span className="mono text-[9px] bg-pro text-black py-0.25 px-1 rounded font-bold">PRO</span>}
@@ -119,11 +119,11 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
           <button onClick={onSignOut} className="reset top-link text-[13px] text-fg-muted cursor-pointer bg-none border-none hover:text-fg">Sign Out</button>
         </div>
       ) : (
-        <button onClick={onOpenAuthModal} className="reset top-link text-[13px] text-accent font-semibold py-2 px-3 rounded-[7px] cursor-pointer mr-2 hover:bg-bg-hover transition-colors duration-155">Sign In / Up</button>
+        <button onClick={onOpenAuthModal} className="reset top-link text-[13px] text-accent font-semibold py-2 px-3 rounded-[7px] cursor-pointer mr-2 hover:bg-bg-hover transition-colors duration-150">Sign In / Up</button>
       )}
 
       {/* Theme Toggle Switch */}
-      <button onClick={onToggleTheme} className="reset theme-toggle-btn inline-flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer text-[13px] text-fg-muted bg-bg-elev-1 border border-border transition-all duration-155 hover:bg-bg-hover hover:text-fg hover:scale-[1.03] active:scale-[0.97]" title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
+      <button onClick={onToggleTheme} className="reset theme-toggle-btn inline-flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer text-[13px] text-fg-muted bg-bg-elev-1 border border-border transition-all duration-150 hover:bg-bg-hover hover:text-fg hover:scale-[1.03] active:scale-[0.97]" title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}>
         {theme === 'dark' ? <Icon.Sun size={15} /> : <Icon.Moon size={15} />}
       </button>
 
@@ -138,7 +138,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
 
       {/* Mobile Menu Panel for LandingNav */}
       {mobileMenuOpen && (
-        <div className="absolute top-16 left-0 right-0 bg-[oklch(0.145_0_0_/_0.95)] backdrop-blur-md saturate-140 border-b border-border p-[16px_20px] flex flex-col gap-3 z-40 shadow-[0_20px_40px_rgba(0,0,0,0.5)] animate-[slideDownMenu_0.2s_cubic-bezier(0.16,1,0.3,1)]">
+        <div className="absolute top-16 left-0 right-0 bg-[oklch(0.145_0_0_/_0.95)] backdrop-blur-md saturate-[1.4] border-b border-border p-[16px_20px] flex flex-col gap-3 z-40 shadow-[0_20px_40px_rgba(0,0,0,0.5)] animate-[slideDownMenu_0.2s_cubic-bezier(0.16,1,0.3,1)]">
           <style>{`
             @keyframes slideDownMenu {
               from { transform: translateY(-10px); opacity: 0; }
@@ -233,7 +233,7 @@ function LandingNav({ onLaunch, scrolled, theme, onToggleTheme, brandName, setBr
                   onOpenAuthModal();
                   setMobileMenuOpen(false);
                 }}
-                className="p-2.5 bg-gradient-to-b from-[oklch(0.72_0.18_265)] to-[oklch(0.62_0.20_305)] border-none rounded-lg text-white font-semibold text-[13.5px] cursor-pointer shadow-[0_4px_12px_rgba(128,64,200,0.2)] hover:brightness-115 transition-all"
+                className="p-2.5 bg-gradient-to-b from-[oklch(0.72_0.18_265)] to-[oklch(0.62_0.20_305)] border-none rounded-lg text-white font-semibold text-[13.5px] cursor-pointer shadow-[0_4px_12px_rgba(128,64,200,0.2)] hover:brightness-[1.15] transition-all"
               >
                 Sign In / Up
               </button>
@@ -393,7 +393,7 @@ function LandingHero({ onLaunch }: LandingHeroProps) {
       <div className="flex gap-3 mt-9 justify-center flex-wrap">
         <button 
           onClick={onLaunch} 
-          className="reset inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-11 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)] tracking-[-0.005em] transition-transform duration-120 hover:-translate-y-0.5 active:translate-y-0"
+          className="reset inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-[11px] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)] tracking-[-0.005em] transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0"
         >
           Launch app <Icon.ArrowRight size={15} strokeWidth={2.2}/>
         </button>
@@ -403,7 +403,7 @@ function LandingHero({ onLaunch }: LandingHeroProps) {
             document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
             window.history.pushState(null, '', '#pricing');
           }} 
-          className="reset inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-11 cursor-pointer backdrop-blur-md transition-all hover:bg-bg-hover active:scale-[0.98]"
+          className="reset inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-[11px] cursor-pointer backdrop-blur-md transition-all hover:bg-bg-hover active:scale-[0.98]"
         >
           See pricing
         </button>
@@ -452,7 +452,7 @@ function SuitePreview({ onLaunch }: SuitePreviewProps) {
         {CATEGORIES.map(cat => (
           <div 
             key={cat.id} 
-            className="p-5.5 border rounded-14 relative overflow-hidden flex flex-col gap-3 transition-all duration-250 hover:-translate-y-0.5 suite-card"
+            className="p-5.5 border rounded-[14px] relative overflow-hidden flex flex-col gap-3 transition-all duration-300 hover:-translate-y-0.5 suite-card"
             style={{
               background: cat.pro
                 ? `linear-gradient(180deg, ${tint(cat.hue, 0.30, 0.08, 0.15)}, ${tint(cat.hue, 0.20, 0.04, 0.05)})`
@@ -719,13 +719,13 @@ function ClosingCTA({ onLaunch, onBrowseTools }: ClosingCTAProps) {
           <div className="flex gap-3 mt-8 justify-center flex-wrap">
             <button 
               onClick={onLaunch} 
-              className="reset inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-11 cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)]"
+              className="reset inline-flex items-center gap-2 py-3.5 px-5.5 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[15px] rounded-[11px] cursor-pointer shadow-[inset_0_1px_0_rgba(255,255,255,0.5),0_4px_14px_rgba(0,0,0,0.4),0_0_0_1px_rgba(0,0,0,0.5)]"
             >
               Launch app <Icon.ArrowRight size={15} strokeWidth={2.2}/>
             </button>
             <button 
               onClick={onBrowseTools} 
-              className="reset inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-11 cursor-pointer transition-colors hover:bg-bg-hover active:scale-[0.98]"
+              className="reset inline-flex items-center gap-1.75 py-3.5 px-4.5 bg-[oklch(0.20_0.008_250_/_0.5)] border border-border text-fg font-medium text-[15px] rounded-[11px] cursor-pointer transition-colors hover:bg-bg-hover active:scale-[0.98]"
             >
               Browse every tool
             </button>
