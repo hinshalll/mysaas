@@ -38,72 +38,49 @@ export default function ChangelogClient() {
   ];
 
   return (
-    <div style={{
-      maxWidth: 880, margin: '40px auto 120px',
-      padding: '0 32px', boxSizing: 'border-box',
-      position: 'relative',
-    }} className="fade-in">
+    <div className="max-w-[880px] mx-auto mt-10 mb-[120px] px-8 box-border relative fade-in">
       {/* Subpage ambient top-center glow */}
-      <div style={{
-        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+      <div className={`absolute top-[-100px] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] pointer-events-none z-0 ${isLight ? 'opacity-[0.08]' : 'opacity-[0.15]'}`} style={{
         background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
-        opacity: isLight ? 0.08 : 0.15,
-        zIndex: 0,
       }}/>
 
-      <div style={{ marginBottom: 48, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-        <span style={eyebrow}>Software Releases</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Changelog & Updates</h1>
-        <p style={sectionSubtitle}>Follow our daily product iterations as we roll out premium utilities for your data and file workflows.</p>
+      <div className="text-center mb-12 relative z-[1]">
+        <span className={eyebrow}>Software Releases</span>
+        <h1 className={`${sectionTitle} mt-3 text-[var(--fg)]`}>Changelog & Updates</h1>
+        <p className={sectionSubtitle}>Follow our daily product iterations as we roll out premium utilities for your data and file workflows.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 40, position: 'relative', zIndex: 1 }}>
+      <div className="flex flex-col gap-10 relative z-[1]">
         {/* Vertical Timeline bar */}
-        <div style={{
-          position: 'absolute', left: 16, top: 24, bottom: 24, width: 1,
-          background: 'var(--border)',
-        }} />
+        <div className="absolute left-4 top-6 bottom-6 w-[1px] bg-[var(--border)]" />
 
         {releases.map((rel) => (
-          <div key={rel.version} style={{ display: 'flex', gap: 24, position: 'relative' }}>
+          <div key={rel.version} className="flex gap-6 relative">
             {/* Timeline Dot */}
-            <div style={{
-              width: 32, height: 32, borderRadius: '50%',
-              background: 'var(--bg-elev-1)',
-              border: '1px solid var(--border)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0, zIndex: 2,
-            }}>
-              <span style={{
-                width: 8, height: 8, borderRadius: '50%',
+            <div className="w-8 h-8 rounded-full bg-[var(--bg-elev-1)] border border-[var(--border)] flex items-center justify-center shrink-0 z-[2]">
+              <span className={`w-2 h-2 rounded-full ${isLight ? 'shadow-none' : ''}`} style={{
                 background: `oklch(0.75 0.14 ${rel.hue})`,
                 boxShadow: isLight ? 'none' : `0 0 10px oklch(0.75 0.14 ${rel.hue} / 0.8)`,
               }} />
             </div>
 
             {/* Content card */}
-            <div className="glass-card" style={{
-              flex: 1, padding: '24px 28px',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--fg)' }} className="mono">{rel.version}</span>
-                <span style={{ fontSize: 13, color: 'var(--fg-subtle)' }}>({rel.date})</span>
-                <span style={{
-                  padding: '3px 8px', borderRadius: 20,
-                  fontSize: 10.5, fontWeight: 600,
+            <div className="glass-card flex-1 py-6 px-7">
+              <div className="flex items-center gap-3 mb-3 flex-wrap">
+                <span className="text-[18px] font-semibold text-[var(--fg)] mono">{rel.version}</span>
+                <span className="text-[13px] text-[var(--fg-subtle)]">({rel.date})</span>
+                <span className="px-2 py-[3px] rounded-full text-[10.5px] font-semibold uppercase tracking-[0.04em] mono" style={{
                   background: tint(rel.hue, 0.18, 0.08, 0.15),
                   border: `1px solid ${tintBorder(rel.hue)}`,
                   color: tintFg(rel.hue),
-                  textTransform: 'uppercase', letterSpacing: '0.04em',
-                }} className="mono">{rel.badge}</span>
+                }}>{rel.badge}</span>
               </div>
 
-              <h2 style={{ fontSize: 16, fontWeight: 600, color: 'var(--fg)', margin: '0 0 16px' }}>{rel.title}</h2>
+              <h2 className="text-[16px] font-semibold text-[var(--fg)] m-0 mb-4">{rel.title}</h2>
 
-              <ul style={{ margin: 0, paddingLeft: 18, color: 'var(--fg-muted)', fontSize: 14, display: 'flex', flexDirection: 'column', gap: 10, lineHeight: 1.55 }}>
+              <ul className="m-0 pl-[18px] text-[var(--fg-muted)] text-[14px] flex flex-col gap-2.5 leading-[1.55] list-[square]">
                 {rel.items.map((item, idx) => (
-                  <li key={idx} style={{ listStyleType: 'square' }}>{item}</li>
+                  <li key={idx}>{item}</li>
                 ))}
               </ul>
             </div>
@@ -111,17 +88,8 @@ export default function ChangelogClient() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 48, position: 'relative', zIndex: 1 }}>
-        <button onClick={launchApp} className="" style={{
-          padding: '12px 24px', borderRadius: 9,
-          background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-          color: 'var(--fg)', fontWeight: 500, fontSize: 14, cursor: 'pointer',
-          boxShadow: '0 4px 12px oklch(0 0 0 / 0.15)',
-          transition: 'background 0.15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
-        >Explore the Dashboard</button>
+      <div className="flex justify-center mt-12 relative z-[1]">
+        <button onClick={launchApp} className="px-6 py-3 rounded-[9px] bg-[var(--bg-elev-2)] border border-[var(--border)] text-[var(--fg)] font-medium text-[14px] cursor-pointer shadow-[0_4px_12px_oklch(0_0_0/0.15)] transition-colors duration-150 hover:bg-[var(--bg-hover)]">Explore the Dashboard</button>
       </div>
     </div>
   );

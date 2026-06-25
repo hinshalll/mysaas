@@ -34,41 +34,30 @@ export default function BlogClient() {
   ];
 
   return (
-    <div style={{
-      maxWidth: 880, margin: '40px auto 120px',
-      padding: '0 32px', boxSizing: 'border-box',
-      position: 'relative',
-    }} className="fade-in">
+    <div className="max-w-[880px] mx-auto mt-10 mb-[120px] px-8 box-border relative fade-in">
       {/* Subpage ambient top-center glow */}
-      <div style={{
-        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+      <div className={`absolute top-[-100px] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] pointer-events-none z-0 ${isLight ? 'opacity-[0.08]' : 'opacity-[0.15]'}`} style={{
         background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
-        opacity: isLight ? 0.08 : 0.15,
-        zIndex: 0,
       }}/>
 
-      <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative', zIndex: 1 }}>
-        <span style={eyebrow}>Engineering & Product</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Blog</h1>
-        <p style={sectionSubtitle}>Behind-the-scenes engineering, product decisions, and the thinking that shapes our tools.</p>
+      <div className="text-center mb-12 relative z-[1]">
+        <span className={eyebrow}>Engineering & Product</span>
+        <h1 className={`${sectionTitle} mt-3 text-[var(--fg)]`}>Blog</h1>
+        <p className={sectionSubtitle}>Behind-the-scenes engineering, product decisions, and the thinking that shapes our tools.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20, position: 'relative', zIndex: 1 }}>
+      <div className="flex flex-col gap-5 relative z-[1]">
         {posts.map((post) => (
-          <article key={post.title} className="glass-card" style={{ cursor: 'pointer' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-              <span style={{
-                width: 8, height: 8, borderRadius: '50%',
-                background: `oklch(0.75 0.14 ${post.hue})`,
-              }} />
-              <span style={{ fontSize: 12, color: 'var(--fg-dim)' }}>{post.date}</span>
-              <span style={{ fontSize: 11, color: 'var(--fg-dim)', marginLeft: 'auto' }} className="mono">{post.readTime}</span>
+          <article key={post.title} className="glass-card cursor-pointer">
+            <div className="flex items-center gap-3 mb-3">
+              <span className="w-2 h-2 rounded-full" style={{ background: `oklch(0.75 0.14 ${post.hue})` }} />
+              <span className="text-[12px] text-[var(--fg-dim)]">{post.date}</span>
+              <span className="text-[11px] text-[var(--fg-dim)] ml-auto mono">{post.readTime}</span>
             </div>
-            <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px', lineHeight: 1.3 }}>{post.title}</h2>
-            <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.55 }}>{post.excerpt}</p>
-            <div style={{ marginTop: 14 }}>
-              <span style={{ fontSize: 13, color: 'var(--accent)', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+            <h2 className="text-[18px] font-semibold text-[var(--fg)] m-0 mb-2.5 leading-[1.3]">{post.title}</h2>
+            <p className="text-[14px] text-[var(--fg-muted)] m-0 leading-[1.55]">{post.excerpt}</p>
+            <div className="mt-3.5">
+              <span className="text-[13px] text-[var(--accent)] font-medium inline-flex items-center gap-[5px]">
                 Read more <Icon.ArrowRight size={12} />
               </span>
             </div>

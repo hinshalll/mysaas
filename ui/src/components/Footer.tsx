@@ -5,20 +5,6 @@ import Link from 'next/link';
 import { useSaaS } from '../context/SaaSContext';
 import { Command, GitBranch, Globe } from 'lucide-react';
 
-const socialStyle = {
-  width: 30,
-  height: 30,
-  borderRadius: 7,
-  display: 'inline-flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: 'oklch(0.20 0.008 250)',
-  border: '1px solid var(--border)',
-  color: 'var(--fg-muted)',
-  textDecoration: 'none',
-  cursor: 'pointer',
-};
-
 interface FooterColProps {
   title: string;
   links: { label: string; path: string }[];
@@ -27,22 +13,15 @@ interface FooterColProps {
 function FooterCol({ title, links }: FooterColProps) {
   return (
     <div>
-      <div style={{
-        fontSize: 11,
-        fontWeight: 600,
-        color: 'var(--fg)',
-        marginBottom: 12,
-        letterSpacing: '0.08em',
-        textTransform: 'uppercase',
-      }}>{title}</div>
-      <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div className="text-[11px] font-semibold text-[var(--fg)] mb-3 tracking-[0.08em] uppercase">
+        {title}
+      </div>
+      <ul className="list-none m-0 p-0 flex flex-col gap-2">
         {links.map(l => (
           <li key={l.label}>
-            <Link href={l.path} className="footer-link" style={{
-              fontSize: 12.5,
-              color: 'var(--fg-muted)',
-              textDecoration: 'none',
-            }}>{l.label}</Link>
+            <Link href={l.path} className="footer-link text-[12.5px] text-[var(--fg-muted)] no-underline hover:text-[var(--fg)] transition-colors">
+              {l.label}
+            </Link>
           </li>
         ))}
       </ul>
@@ -54,46 +33,25 @@ export default function Footer() {
   const { brandName, backToLanding, view } = useSaaS();
 
   return (
-    <footer style={{
-      marginTop: 60,
-      borderTop: '1px solid var(--border)',
-      background: 'var(--bg-elev-1)',
-    }}>
-      <div style={{
-        maxWidth: 1280,
-        margin: '0 auto',
-        padding: '36px 32px',
-        display: 'grid',
-        gridTemplateColumns: '1.4fr repeat(3, 1fr)',
-        gap: 32,
-      }} className="footer-grid">
+    <footer className="mt-[60px] border-t border-[var(--border)] bg-[var(--bg-elev-1)]">
+      <div className="footer-grid max-w-[1280px] mx-auto px-8 py-9 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(3,1fr)] gap-8">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <div style={{
-              width: 24,
-              height: 24,
-              borderRadius: 6,
-              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}>
-              <Command size={13} strokeWidth={2.2} style={{ color: 'white' }}/>
+          <div className="flex items-center gap-2.5 mb-3">
+            <div className="w-6 h-6 rounded-md bg-gradient-to-br from-[oklch(0.70_0.18_265)] to-[oklch(0.62_0.20_305)] flex items-center justify-center">
+              <Command size={13} strokeWidth={2.2} className="text-white"/>
             </div>
-            <span style={{ fontSize: 14, fontWeight: 600 }} suppressHydrationWarning>{brandName}</span>
+            <span className="text-[14px] font-semibold" suppressHydrationWarning>{brandName}</span>
           </div>
-          <p style={{
-            margin: 0,
-            fontSize: 12.5,
-            color: 'var(--fg-subtle)',
-            maxWidth: 280,
-            lineHeight: 1.55,
-          }}>
+          <p className="m-0 text-[12.5px] text-[var(--fg-subtle)] max-w-[280px] leading-[1.55]">
             The small utilities you keep googling, gathered into one keyboard-driven workspace. On-device by default.
           </p>
-          <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
-            <a className="reset footer-social" href="#" style={socialStyle}><GitBranch size={13}/></a>
-            <a className="reset footer-social" href="#" style={socialStyle}><Globe size={13}/></a>
+          <div className="flex gap-1.5 mt-3.5">
+            <a className="reset footer-social w-[30px] h-[30px] rounded-md inline-flex items-center justify-center bg-[oklch(0.20_0.008_250)] border border-[var(--border)] text-[var(--fg-muted)] no-underline cursor-pointer hover:bg-[var(--bg-hover)] hover:text-[var(--fg)] transition-all" href="#">
+              <GitBranch size={13}/>
+            </a>
+            <a className="reset footer-social w-[30px] h-[30px] rounded-md inline-flex items-center justify-center bg-[oklch(0.20_0.008_250)] border border-[var(--border)] text-[var(--fg-muted)] no-underline cursor-pointer hover:bg-[var(--bg-hover)] hover:text-[var(--fg)] transition-all" href="#">
+              <Globe size={13}/>
+            </a>
           </div>
         </div>
 
@@ -119,18 +77,7 @@ export default function Footer() {
           { label: 'Changelog', path: '/changelog' }
         ]} />
       </div>
-      <div style={{
-        borderTop: '1px solid var(--border)',
-        padding: '14px 32px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 14,
-        fontSize: 11.5,
-        color: 'var(--fg-dim)',
-        maxWidth: 1280,
-        margin: '0 auto',
-        flexWrap: 'wrap',
-      }}>
+      <div className="border-t border-[var(--border)] px-8 py-3.5 flex items-center gap-3.5 text-[11.5px] text-[var(--fg-dim)] max-w-[1280px] mx-auto flex-wrap">
         <span suppressHydrationWarning>© 2026 {brandName.toLowerCase()}, inc.</span>
         {view !== 'landing' && (
           <button 
@@ -138,8 +85,7 @@ export default function Footer() {
               e.preventDefault();
               backToLanding();
             }} 
-            className="reset footer-link" 
-            style={{ marginLeft: 'auto', cursor: 'pointer' }}
+            className="reset footer-link ml-auto cursor-pointer hover:text-[var(--fg)] transition-colors" 
           >
             ← Back to marketing page
           </button>

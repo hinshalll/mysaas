@@ -166,117 +166,87 @@ export default function PaywallModal({
     }
   }
 
-  const listStyle: React.CSSProperties = {
-    listStyleType: 'none',
-    margin: 0,
-    padding: 0,
-  };
-
   return createPortal(
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
-      background: 'var(--bg-overlay-modal)',
-      backdropFilter: 'blur(20px) saturate(140%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 20,
-    }} onClick={onClose}>
-      <div style={{
-        width: '100%', maxWidth: 780,
-        background: 'var(--bg-elev-1)',
-        border: '1px solid oklch(0.45 0.10 265 / 0.3)',
-        borderRadius: 20,
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-modal)',
-        position: 'relative',
-        display: 'flex', flexDirection: 'column'
-      }} onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="reset" style={{
-          position: 'absolute', top: 20, right: 20,
-          color: 'var(--fg-subtle)', cursor: 'pointer', zIndex: 10,
-          background: 'none', border: 'none', outline: 'none'
-        }}>
+    <div className="fixed inset-0 z-[1000] bg-[var(--bg-overlay-modal)] backdrop-blur-[20px] saturate-[140%] flex items-center justify-center p-5" onClick={onClose}>
+      <div className="w-full max-w-[780px] bg-[var(--bg-elev-1)] border border-[oklch(0.45_0.10_265/0.3)] rounded-2xl overflow-hidden shadow-[var(--shadow-modal)] relative flex flex-col" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="reset absolute top-5 right-5 text-[var(--fg-subtle)] cursor-pointer z-10 bg-none border-none outline-none hover:text-[var(--fg)] transition-colors">
           <X size={16} />
         </button>
 
         {checkoutSpinner ? (
-          <div style={{ padding: '80px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 440 }} className="fade-in">
-            <Loader size={48} style={{ color: 'var(--accent)', marginBottom: 24, animation: 'spin 1s linear infinite' }} />
-            <h3 style={{ fontSize: 20, fontWeight: 600, color: 'white', marginBottom: 8, textAlign: 'center' }}>Connecting to Creem Secure Checkout...</h3>
-            <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', textAlign: 'center', maxWidth: 365, lineHeight: 1.5 }}>
+          <div className="px-10 py-20 flex flex-col items-center justify-center min-h-[440px] animate-[fadeIn_0.2s_ease-out]">
+            <Loader size={48} className="text-[var(--accent)] mb-6 animate-spin" />
+            <h3 className="text-[20px] font-semibold text-white mb-2 text-center">Connecting to Creem Secure Checkout...</h3>
+            <p className="text-[13.5px] text-[var(--fg-muted)] text-center max-w-[365px] leading-relaxed m-0">
               Initializing your sandbox subscription profile. You will be redirected to the secure sandbox payment form.
             </p>
           </div>
         ) : loadingPreview ? (
-          <div style={{ padding: '80px 40px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 440, width: '100%' }} className="fade-in">
-            <Loader size={48} style={{ color: 'var(--accent)', marginBottom: 24, animation: 'spin 1s linear infinite' }} />
-            <h3 style={{ fontSize: 18, fontWeight: 600, color: 'white', marginBottom: 8, textAlign: 'center' }}>Calculating Proration Preview...</h3>
-            <p style={{ fontSize: 13, color: 'var(--fg-muted)', textAlign: 'center', maxWidth: 380, lineHeight: 1.5 }}>
+          <div className="px-10 py-20 flex flex-col items-center justify-center min-h-[440px] w-full animate-[fadeIn_0.2s_ease-out]">
+            <Loader size={48} className="text-[var(--accent)] mb-6 animate-spin" />
+            <h3 className="text-[18px] font-semibold text-white mb-2 text-center">Calculating Proration Preview...</h3>
+            <p className="text-[13px] text-[var(--fg-muted)] text-center max-w-[380px] leading-relaxed m-0">
               Fetching accurate remaining time credits from your current subscription to apply to the new plan.
             </p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'row', minHeight: 460 }} className="fade-in">
+          <div className="flex flex-col sm:flex-row min-h-[460px] animate-[fadeIn_0.2s_ease-out]">
             {/* Left Info bar */}
-            <div style={{
-              flex: '1.2', background: 'oklch(0.16 0.012 265 / 0.4)',
-              borderRight: '1px solid var(--border)', padding: '36px 30px',
-              display: 'flex', flexDirection: 'column', gap: 28,
-              boxSizing: 'border-box'
-            }}>
+            <div className="flex-[1.2] bg-[oklch(0.16_0.012_265/0.4)] sm:border-r sm:border-b-0 border-b border-[var(--border)] px-[30px] py-[36px] flex flex-col gap-7 box-border">
               <div>
-                <span className="mono" style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Vault Access Comparison</span>
-                <h3 style={{ fontSize: 21, fontWeight: 600, color: 'white', margin: '6px 0 0', letterSpacing: '-0.02em' }}>Understand Your Benefits</h3>
+                <span className="mono text-[10px] font-bold text-[var(--accent)] uppercase tracking-[0.06em]">Vault Access Comparison</span>
+                <h3 className="text-[21px] font-semibold text-white mt-1.5 mb-0 tracking-[-0.02em]">Understand Your Benefits</h3>
               </div>
               
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <div className="flex flex-col gap-5">
                 {/* 1. Pro Plan Block */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.70 0.18 265)' }} />
+                <div className="flex flex-col gap-2">
+                  <span className="text-[11.5px] font-bold text-white flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.70_0.18_265)]" />
                     Pro Plan ($9/mo)
                   </span>
-                  <ul style={{ ...listStyle, display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 12 }}>
-                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> Unlimited browser tool computing
+                  <ul className="list-none m-0 p-0 pl-3 flex flex-col gap-1.5">
+                    <li className="text-[12px] text-[var(--fg-subtle)] flex items-center gap-1.5">
+                      <span className="text-[oklch(0.70_0.18_265)] font-bold">✓</span> Unlimited browser tool computing
                     </li>
-                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> 100 daily Production API requests
+                    <li className="text-[12px] text-[var(--fg-subtle)] flex items-center gap-1.5">
+                      <span className="text-[oklch(0.70_0.18_265)] font-bold">✓</span> 100 daily Production API requests
                     </li>
-                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.70 0.18 265)', fontWeight: 'bold' }}>✓</span> PDF Diff tool & watermark removal
+                    <li className="text-[12px] text-[var(--fg-subtle)] flex items-center gap-1.5">
+                      <span className="text-[oklch(0.70_0.18_265)] font-bold">✓</span> PDF Diff tool & watermark removal
                     </li>
                   </ul>
                 </div>
 
                 {/* 2. Developer Plan Block */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, borderTop: '1px solid var(--border)', paddingTop: 16 }}>
-                  <span style={{ fontSize: 11.5, fontWeight: 700, color: 'oklch(0.78 0.16 145)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'oklch(0.78 0.16 145)' }} />
+                <div className="flex flex-col gap-2 border-t border-[var(--border)] pt-4">
+                  <span className="text-[11.5px] font-bold text-[oklch(0.78_0.16_145)] flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[oklch(0.78_0.16_145)]" />
                     Developer Plan ($29/mo)
                   </span>
-                  <ul style={{ ...listStyle, display: 'flex', flexDirection: 'column', gap: 6, paddingLeft: 12 }}>
-                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>All Pro Plan features included</strong>
+                  <ul className="list-none m-0 p-0 pl-3 flex flex-col gap-1.5">
+                    <li className="text-[12px] text-[var(--fg-subtle)] flex items-center gap-1.5">
+                      <span className="text-[oklch(0.78_0.16_145)] font-bold">✓</span> <strong>All Pro Plan features included</strong>
                     </li>
-                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>1,000 daily Production API requests</strong>
+                    <li className="text-[12px] text-[var(--fg-subtle)] flex items-center gap-1.5">
+                      <span className="text-[oklch(0.78_0.16_145)] font-bold">✓</span> <strong>1,000 daily Production API requests</strong>
                     </li>
-                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> <strong>Direct Developer API keys console</strong>
+                    <li className="text-[12px] text-[var(--fg-subtle)] flex items-center gap-1.5">
+                      <span className="text-[oklch(0.78_0.16_145)] font-bold">✓</span> <strong>Direct Developer API keys console</strong>
                     </li>
-                    <li style={{ fontSize: 12, color: 'var(--fg-subtle)', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 'bold' }}>✓</span> Custom webhook status callbacks
+                    <li className="text-[12px] text-[var(--fg-subtle)] flex items-center gap-1.5">
+                      <span className="text-[oklch(0.78_0.16_145)] font-bold">✓</span> Custom webhook status callbacks
                     </li>
                   </ul>
                 </div>
               </div>
 
-              <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 6 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11.5, color: 'oklch(0.70 0.12 145)' }}>
+              <div className="mt-auto flex flex-col gap-1.5 pt-4">
+                <div className="flex items-center gap-1.5 text-[11.5px] text-[oklch(0.70_0.12_145)]">
                   <Check size={12} strokeWidth={2.5} />
                   <span>Transparent Sandbox Proration</span>
                 </div>
-                <p style={{ fontSize: 11, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.35 }}>
+                <p className="text-[11px] text-[var(--fg-dim)] m-0 leading-[1.35]">
                   Upgrade instantly at any time. Card details are charged safely and prorated immediately.
                 </p>
               </div>
@@ -284,134 +254,100 @@ export default function PaywallModal({
 
             {/* Right Side Rendering */}
             {upgradePreview ? (
-              <div style={{ flex: '1.4', padding: 36, display: 'flex', flexDirection: 'column', gap: 20, justifyContent: 'center' }} className="fade-in">
+              <div className="flex-[1.4] p-9 flex flex-col gap-5 justify-center animate-[fadeIn_0.2s_ease-out]">
                 <div>
-                  <h4 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: '0 0 4px' }}>Confirm Subscription Change</h4>
-                  <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: 0 }}>Review the prorated adjustments before charging your card.</p>
+                  <h4 className="text-[15px] font-semibold text-white m-0 mb-1">Confirm Subscription Change</h4>
+                  <p className="text-[12px] text-[var(--fg-subtle)] m-0">Review the prorated adjustments before charging your card.</p>
                 </div>
 
                 {checkoutError && (
-                  <div style={{
-                    padding: '12px 14px', borderRadius: 8,
-                    background: 'oklch(0.20 0.05 20 / 0.3)', border: '1px solid oklch(0.50 0.15 20 / 0.4)',
-                    color: 'oklch(0.75 0.12 20)', fontSize: 12.5, display: 'flex', gap: 8, alignItems: 'flex-start'
-                  }}>
-                    <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <div className="px-3.5 py-3 rounded-lg bg-[oklch(0.20_0.05_20/0.3)] border border-[oklch(0.50_0.15_20/0.4)] text-[oklch(0.75_0.12_20)] text-[12.5px] flex gap-2 items-start">
+                    <AlertCircle size={15} className="shrink-0 mt-[1px]" />
                     <span>{checkoutError}</span>
                   </div>
                 )}
 
-                <div style={{ background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)', borderRadius: 12, padding: 18, display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, borderBottom: '1px solid var(--border)', paddingBottom: 10 }}>
-                    <span style={{ color: 'var(--fg-dim)' }}>New Selected Plan:</span>
-                    <strong style={{ color: 'white' }}>{upgradePreview.newTier === 'api' ? 'Developer Plan' : 'Pro Plan'}</strong>
+                <div className="bg-[oklch(0.14_0.005_250)] border border-[var(--border)] rounded-xl p-4.5 flex flex-col gap-3.5">
+                  <div className="flex justify-between text-[13px] border-b border-[var(--border)] pb-2.5">
+                    <span className="text-[var(--fg-dim)]">New Selected Plan:</span>
+                    <strong className="text-white">{upgradePreview.newTier === 'api' ? 'Developer Plan' : 'Pro Plan'}</strong>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--fg-dim)' }}>New Plan Monthly Price:</span>
-                    <span style={{ color: 'white', fontWeight: 500 }}>{upgradePreview.currency}{upgradePreview.newPrice.toFixed(2)}/mo</span>
+                  <div className="flex justify-between text-[13px]">
+                    <span className="text-[var(--fg-dim)]">New Plan Monthly Price:</span>
+                    <span className="text-white font-medium">{upgradePreview.currency}{upgradePreview.newPrice.toFixed(2)}/mo</span>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
-                    <span style={{ color: 'var(--fg-dim)' }}>Unused Time Credit (Prorated):</span>
-                    <span style={{ color: 'oklch(0.78 0.16 145)', fontWeight: 600 }}>-{upgradePreview.currency}{upgradePreview.unusedCredit.toFixed(2)}</span>
+                  <div className="flex justify-between text-[13px]">
+                    <span className="text-[var(--fg-dim)]">Unused Time Credit (Prorated):</span>
+                    <span className="text-[oklch(0.78_0.16_145)] font-semibold">-{upgradePreview.currency}{upgradePreview.unusedCredit.toFixed(2)}</span>
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, borderTop: '1px dotted var(--border)', paddingTop: 12 }}>
-                    <span style={{ color: 'white', fontWeight: 600 }}>Due Immediately:</span>
-                    <strong style={{ color: 'var(--accent)', fontSize: 16 }}>{upgradePreview.currency}{upgradePreview.immediateCharge.toFixed(2)}</strong>
+                  <div className="flex justify-between text-[14px] border-t border-dotted border-[var(--border)] pt-3">
+                    <span className="text-white font-semibold">Due Immediately:</span>
+                    <strong className="text-[var(--accent)] text-[16px]">{upgradePreview.currency}{upgradePreview.immediateCharge.toFixed(2)}</strong>
                   </div>
                 </div>
 
-                <p style={{ fontSize: 11, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.45 }}>
-                  * Confirming will charge your card on file <strong>{upgradePreview.currency}{upgradePreview.immediateCharge.toFixed(2)}</strong> today. A new monthly billing cycle will start immediately, renewing on <strong>{upgradePreview.nextBillingDate}</strong> for <strong>{upgradePreview.currency}{upgradePreview.newPrice.toFixed(2)}/mo</strong>.
+                <p className="text-[11px] text-[var(--fg-dim)] m-0 leading-relaxed">
+                  * Confirming will charge your card on file <strong className="text-white">{upgradePreview.currency}{upgradePreview.immediateCharge.toFixed(2)}</strong> today. A new monthly billing cycle will start immediately, renewing on <strong className="text-white">{upgradePreview.nextBillingDate}</strong> for <strong className="text-white">{upgradePreview.currency}{upgradePreview.newPrice.toFixed(2)}/mo</strong>.
                 </p>
 
-                <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
-                  <button onClick={() => { setUpgradePreview(null); setPendingPlan(null); }} className="reset" style={{
-                    flex: 1, padding: '10px 14px', borderRadius: 8,
-                    background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                    color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer', textAlign: 'center'
-                  }}>Back to Plans</button>
+                <div className="flex gap-3 mt-2">
+                  <button onClick={() => { setUpgradePreview(null); setPendingPlan(null); }} className="reset flex-1 px-3.5 py-2.5 rounded-lg bg-[var(--bg-elev-2)] border border-[var(--border)] text-[var(--fg)] font-semibold text-[12.5px] cursor-pointer text-center hover:bg-[var(--bg-hover)] transition-colors">Back to Plans</button>
 
-                  <button onClick={handleConfirmUpgrade} disabled={checkoutSpinner} className="reset" style={{
-                    flex: 1.5, padding: '10px 14px', borderRadius: 8,
-                    background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
-                    border: '1px solid var(--border)',
-                    color: 'white', fontWeight: 600, fontSize: 12.5, cursor: checkoutSpinner ? 'not-allowed' : 'pointer',
-                    textAlign: 'center'
-                  }}>
+                  <button onClick={handleConfirmUpgrade} disabled={checkoutSpinner} className="reset flex-[1.5] px-3.5 py-2.5 rounded-lg bg-gradient-to-b from-[var(--accent)] to-[oklch(0.60_0.16_265)] border border-[var(--border)] text-white font-semibold text-[12.5px] text-center disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer hover:brightness-110 transition-all">
                     {checkoutSpinner ? 'Processing...' : `Confirm & Pay ${upgradePreview.currency}${upgradePreview.immediateCharge.toFixed(2)}`}
                   </button>
                 </div>
               </div>
             ) : (
-              <div style={{ flex: '1.4', padding: 36, display: 'flex', flexDirection: 'column', gap: 18, justifyContent: 'center' }}>
+              <div className="flex-[1.4] p-9 flex flex-col gap-4.5 justify-center">
                 <div>
-                  <h4 style={{ fontSize: 14, fontWeight: 600, color: 'white', margin: '0 0 4px' }}>Select Sandbox Subscription:</h4>
-                  <p style={{ fontSize: 12, color: 'var(--fg-subtle)', margin: 0 }}>Safe test credit cards accepted</p>
+                  <h4 className="text-[14px] font-semibold text-white m-0 mb-1">Select Sandbox Subscription:</h4>
+                  <p className="text-[12px] text-[var(--fg-subtle)] m-0">Safe test credit cards accepted</p>
                 </div>
 
                 {checkoutError && (
-                  <div style={{
-                    padding: '12px 14px', borderRadius: 8,
-                    background: 'oklch(0.20 0.05 20 / 0.3)', border: '1px solid oklch(0.50 0.15 20 / 0.4)',
-                    color: 'oklch(0.75 0.12 20)', fontSize: 12.5, display: 'flex', gap: 8, alignItems: 'flex-start'
-                  }}>
-                    <AlertCircle size={15} style={{ flexShrink: 0, marginTop: 1 }} />
+                  <div className="px-3.5 py-3 rounded-lg bg-[oklch(0.20_0.05_20/0.3)] border border-[oklch(0.50_0.15_20/0.4)] text-[oklch(0.75_0.12_20)] text-[12.5px] flex gap-2 items-start">
+                    <AlertCircle size={15} className="shrink-0 mt-[1px]" />
                     <span>{checkoutError}</span>
                   </div>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                  <button onClick={() => handlePlanClick('pro')} className="reset plan-card" style={{
-                    textAlign: 'left', padding: '18px 20px', borderRadius: 12,
-                    background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    transition: 'border-color 0.15s, background 0.15s'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
-                  >
-                    <div style={{ flex: 1, marginRight: 16 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                        <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Pro Plan</div>
-                        <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 265 / 0.3)', color: 'var(--accent)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>MOST POPULAR</span>
+                <div className="flex flex-col gap-3.5">
+                  <button onClick={() => handlePlanClick('pro')} className="reset plan-card text-left px-5 py-4.5 rounded-xl bg-[oklch(0.20_0.008_250)] border border-[var(--border)] cursor-pointer flex items-center justify-between transition-all hover:border-[var(--accent)] hover:bg-[oklch(0.22_0.010_265/0.1)] group">
+                    <div className="flex-1 mr-4">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <div className="text-[14.5px] font-semibold text-white">Pro Plan</div>
+                        <span className="mono text-[9px] bg-[oklch(0.35_0.15_265/0.3)] text-[var(--accent)] px-1.5 py-0.5 rounded-[4px] font-semibold">MOST POPULAR</span>
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Complete cockpit access with unlimited tool computing.</div>
+                      <div className="text-[12px] text-[var(--fg-subtle)] leading-[1.35]">Complete cockpit access with unlimited tool computing.</div>
                     </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{currency}{proPrice}</div>
-                      <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>/ month</div>
+                    <div className="text-right shrink-0">
+                      <div className="text-[20px] font-bold text-white">{currency}{proPrice}</div>
+                      <div className="text-[10px] text-[var(--fg-dim)]">/ month</div>
                     </div>
                   </button>
 
-                  <button onClick={() => handlePlanClick('api')} className="reset plan-card" style={{
-                    textAlign: 'left', padding: '18px 20px', borderRadius: 12,
-                    background: 'oklch(0.20 0.008 250)', border: '1px solid var(--border)',
-                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    transition: 'border-color 0.15s, background 0.15s'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.background = 'oklch(0.22 0.010 265 / 0.1)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'oklch(0.20 0.008 250)'; }}
-                  >
-                    <div style={{ flex: 1, marginRight: 16 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
-                        <div style={{ fontSize: 14.5, fontWeight: 600, color: 'white' }}>Developer Plan</div>
-                        <span className="mono" style={{ fontSize: 9, background: 'oklch(0.35 0.15 145 / 0.25)', color: 'oklch(0.78 0.16 145)', padding: '2px 6px', borderRadius: 4, fontWeight: 600 }}>POWER TIER</span>
+                  <button onClick={() => handlePlanClick('api')} className="reset plan-card text-left px-5 py-4.5 rounded-xl bg-[oklch(0.20_0.008_250)] border border-[var(--border)] cursor-pointer flex items-center justify-between transition-all hover:border-[var(--accent)] hover:bg-[oklch(0.22_0.010_265/0.1)] group">
+                    <div className="flex-1 mr-4">
+                      <div className="flex items-center gap-1.5 mb-0.5">
+                        <div className="text-[14.5px] font-semibold text-white">Developer Plan</div>
+                        <span className="mono text-[9px] bg-[oklch(0.35_0.15_145/0.25)] text-[oklch(0.78_0.16_145)] px-1.5 py-0.5 rounded-[4px] font-semibold">POWER TIER</span>
                       </div>
-                      <div style={{ fontSize: 12, color: 'var(--fg-subtle)', lineHeight: 1.35 }}>Direct API keys, higher query limits & webhook callbacks.</div>
+                      <div className="text-[12px] text-[var(--fg-subtle)] leading-[1.35]">Direct API keys, higher query limits & webhook callbacks.</div>
                     </div>
-                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontSize: 20, fontWeight: 700, color: 'white' }}>{currency}{apiPrice}</div>
-                      <div style={{ fontSize: 10, color: 'var(--fg-dim)' }}>/ month</div>
+                    <div className="text-right shrink-0">
+                      <div className="text-[20px] font-bold text-white">{currency}{apiPrice}</div>
+                      <div className="text-[10px] text-[var(--fg-dim)]">/ month</div>
                     </div>
                   </button>
                 </div>
 
-                <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <CreditCard size={14} style={{ color: 'var(--fg-subtle)' }} />
-                  <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Secured by Creem &bull; PCI-DSS Compliant SSL Checkout</span>
+                <div className="border-t border-[var(--border)] pt-3.5 flex items-center gap-2 mt-2">
+                  <CreditCard size={14} className="text-[var(--fg-subtle)]" />
+                  <span className="text-[11.5px] text-[var(--fg-subtle)]">Secured by Creem &bull; PCI-DSS Compliant SSL Checkout</span>
                 </div>
               </div>
             )}

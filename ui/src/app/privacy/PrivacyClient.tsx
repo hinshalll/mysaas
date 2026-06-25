@@ -36,44 +36,36 @@ export default function PrivacyClient() {
   ];
 
   return (
-    <div style={{
-      maxWidth: 880, margin: '40px auto 120px',
-      padding: '0 32px', boxSizing: 'border-box',
-      position: 'relative',
-    }} className="fade-in">
+    <div className="max-w-[880px] mx-auto mt-10 mb-[120px] px-8 relative box-border fade-in">
       {/* Subpage ambient top-center glow */}
-      <div style={{
-        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
-        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
-        opacity: isLight ? 0.08 : 0.15,
-        zIndex: 0,
-      }}/>
+      <div 
+        className="absolute -top-[100px] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] pointer-events-none z-0 transition-opacity duration-200"
+        style={{
+          background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+          opacity: isLight ? 0.08 : 0.15,
+        }}
+      />
 
-      <div style={{ marginBottom: 40, textAlign: 'center', position: 'relative', zIndex: 1 }}>
-        <span style={eyebrow}>Legal</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Privacy Policy</h1>
-        <p style={{ fontSize: 13, color: 'var(--fg-dim)', marginTop: 8 }}>Last updated: May 27, 2026</p>
+      <div className="mb-10 text-center relative z-10">
+        <span className={eyebrow}>Legal</span>
+        <h1 className={`${sectionTitle} mt-3 mb-0 text-fg`}>Privacy Policy</h1>
+        <p className="text-[13px] text-fg-dim mt-2">Last updated: May 27, 2026</p>
       </div>
 
-      <div className="glass-card" style={{ position: 'relative', zIndex: 1, padding: '40px clamp(24px, 5vw, 48px)', gap: 32 }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }}>
+      <div className="glass-card relative z-10 py-10 px-[clamp(24px,5vw,48px)] gap-8">
+        <div className="flex flex-col gap-7">
           {sections.map((s) => (
             <div key={s.title}>
-              <h2 style={{ fontSize: 17, color: 'var(--fg)', fontWeight: 600, margin: '0 0 10px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>{s.title}</h2>
-              <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.65, margin: 0 }}>{s.content}</p>
+              <h2 className="text-[17px] text-fg font-semibold m-0 mb-2.5 border-b border-border pb-2">{s.title}</h2>
+              <p className="text-[14.5px] text-fg-muted leading-[1.65] m-0">{s.content}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="glass-card" style={{
-        marginTop: 32, padding: '24px 28px',
-        textAlign: 'center',
-        position: 'relative', zIndex: 1,
-      }}>
-        <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
-          Questions about our privacy practices? <a href="/contact" style={{ color: 'var(--accent)', textDecoration: 'underline', textDecorationColor: 'var(--accent)' }}>Contact us</a> and we'll respond within 24 hours.
+      <div className="glass-card mt-8 py-6 px-7 text-center relative z-10">
+        <p className="text-[14px] text-fg-muted m-0 leading-[1.5]">
+          Questions about our privacy practices? <a href="/contact" className="text-accent underline decoration-accent hover:text-fg transition-colors">Contact us</a> and we'll respond within 24 hours.
         </p>
       </div>
     </div>

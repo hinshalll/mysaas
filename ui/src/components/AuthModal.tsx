@@ -94,34 +94,16 @@ export default function AuthModal({ open, onClose, supabase }: AuthModalProps) {
   }
 
   return createPortal(
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 1000,
-      background: 'var(--bg-overlay-modal)',
-      backdropFilter: 'blur(16px) saturate(140%)',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      padding: 20,
-    }} onClick={onClose}>
-      <div style={{
-        width: '100%', maxWidth: 400,
-        background: 'var(--bg-elev-1)',
-        border: '1px solid var(--border)',
-        borderRadius: 16,
-        padding: 32,
-        boxShadow: 'var(--shadow-modal)',
-        position: 'relative',
-      }} onClick={e => e.stopPropagation()}>
-        <button onClick={onClose} className="reset" style={{
-          position: 'absolute', top: 20, right: 20,
-          color: 'var(--fg-subtle)', cursor: 'pointer',
-          background: 'none', border: 'none', outline: 'none'
-        }}>
+    <div className="fixed inset-0 z-[1000] bg-[var(--bg-overlay-modal)] backdrop-blur-[16px] saturate-[140%] flex items-center justify-center p-5" onClick={onClose}>
+      <div className="w-full max-w-[400px] bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-2xl p-8 shadow-[var(--shadow-modal)] relative" onClick={e => e.stopPropagation()}>
+        <button onClick={onClose} className="reset absolute top-5 right-5 text-[var(--fg-subtle)] cursor-pointer bg-none border-none outline-none hover:text-[var(--fg)] transition-colors">
           <X size={16} />
         </button>
 
-        <h2 style={{ fontSize: 22, fontWeight: 600, margin: '0 0 8px', color: 'white', letterSpacing: '-0.02em' }}>
+        <h2 className="text-[22px] font-semibold m-0 mb-2 text-white tracking-[-0.02em]">
           {isForgotPassword ? 'Reset Password' : isSignUp ? 'Create Account' : 'Welcome Back'}
         </h2>
-        <p style={{ fontSize: 13, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
+        <p className="text-[13px] text-[var(--fg-muted)] m-0 mb-6 leading-relaxed">
           {isForgotPassword
             ? 'Enter your email address below to receive a secure password reset link.'
             : isSignUp
@@ -131,47 +113,29 @@ export default function AuthModal({ open, onClose, supabase }: AuthModalProps) {
         </p>
 
         {message && (
-          <div style={{
-            padding: '10px 14px', borderRadius: 8,
-            background: 'oklch(0.20 0.010 35 / 0.3)',
-            border: '1px solid oklch(0.55 0.10 35 / 0.3)',
-            color: 'oklch(0.85 0.12 35)',
-            fontSize: 13, marginBottom: 20, lineHeight: 1.4
-          }}>
+          <div className="px-3.5 py-2.5 rounded-lg bg-[oklch(0.20_0.010_35/0.3)] border border-[oklch(0.55_0.10_35/0.3)] text-[oklch(0.85_0.12_35)] text-[13px] mb-5 leading-snug">
             {message}
           </div>
         )}
 
-        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <form onSubmit={handleAuth} className="flex flex-col gap-4">
           <div>
-            <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Email Address</label>
-            <input required type="email" placeholder="name@email.com" value={email} onChange={e => handleEmailChange(e.target.value)} style={{
-              width: '100%', padding: '12px 14px', borderRadius: 8,
-              background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
-              color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
-            }} />
+            <label className="block text-[11px] font-semibold text-[var(--fg-dim)] mb-1.5 uppercase tracking-[0.04em] mono">Email Address</label>
+            <input required type="email" placeholder="name@email.com" value={email} onChange={e => handleEmailChange(e.target.value)} className="w-full px-3.5 py-3 rounded-lg bg-[oklch(0.12_0.004_250)] border border-[var(--border)] text-white text-[14px] outline-none box-border focus:border-[var(--accent)] transition-colors" />
           </div>
 
           {isSignUp && (
             <>
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Full Name</label>
-                <input required type="text" placeholder="Satoshi Nakamoto" value={signupName} onChange={e => setSignupName(e.target.value)} style={{
-                  width: '100%', padding: '12px 14px', borderRadius: 8,
-                  background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
-                  color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
-                }} />
+                <label className="block text-[11px] font-semibold text-[var(--fg-dim)] mb-1.5 uppercase tracking-[0.04em] mono">Full Name</label>
+                <input required type="text" placeholder="Satoshi Nakamoto" value={signupName} onChange={e => setSignupName(e.target.value)} className="w-full px-3.5 py-3 rounded-lg bg-[oklch(0.12_0.004_250)] border border-[var(--border)] text-white text-[14px] outline-none box-border focus:border-[var(--accent)] transition-colors" />
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Username</label>
-                <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
-                  <span style={{ position: 'absolute', left: 12, fontSize: 13, color: 'var(--fg-dim)' }}>@</span>
-                  <input required type="text" placeholder="username" value={signupUsername} onChange={e => { setSignupUsername(e.target.value); setUsernameEdited(true); }} style={{
-                    width: '100%', padding: '12px 14px 12px 26px', borderRadius: 8,
-                    background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
-                    color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
-                  }} />
+                <label className="block text-[11px] font-semibold text-[var(--fg-dim)] mb-1.5 uppercase tracking-[0.04em] mono">Username</label>
+                <div className="flex relative items-center">
+                  <span className="absolute left-3 text-[13px] text-[var(--fg-dim)]">@</span>
+                  <input required type="text" placeholder="username" value={signupUsername} onChange={e => { setSignupUsername(e.target.value); setUsernameEdited(true); }} className="w-full py-3 pr-3.5 pl-[26px] rounded-lg bg-[oklch(0.12_0.004_250)] border border-[var(--border)] text-white text-[14px] outline-none box-border focus:border-[var(--accent)] transition-colors" />
                 </div>
               </div>
             </>
@@ -179,45 +143,33 @@ export default function AuthModal({ open, onClose, supabase }: AuthModalProps) {
 
           {!isForgotPassword && (
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 600, color: 'var(--fg-dim)', textTransform: 'uppercase', letterSpacing: '0.04em', margin: 0 }} className="mono">Password</label>
+              <div className="flex justify-between items-center mb-1.5">
+                <label className="block text-[11px] font-semibold text-[var(--fg-dim)] uppercase tracking-[0.04em] m-0 mono">Password</label>
                 {!isSignUp && (
-                  <button type="button" onClick={() => { setIsForgotPassword(true); setMessage(null); }} className="reset" style={{
-                    fontSize: 11.5, color: 'var(--accent)', cursor: 'pointer', background: 'none', border: 'none', padding: 0, fontWeight: 500
-                  }}>
+                  <button type="button" onClick={() => { setIsForgotPassword(true); setMessage(null); }} className="reset text-[11.5px] text-[var(--accent)] cursor-pointer bg-none border-none p-0 font-medium hover:underline">
                     Forgot Password?
                   </button>
                 )}
               </div>
-              <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                <input required type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} style={{
-                  width: '100%', padding: '12px 38px 12px 14px', borderRadius: 8,
-                  background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
-                  color: 'white', fontSize: 14, outline: 'none', boxSizing: 'border-box'
-                }} />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="reset" style={{
-                  position: 'absolute', right: 12, background: 'none', border: 'none',
-                  color: 'var(--fg-dim)', cursor: 'pointer', display: 'flex', alignItems: 'center',
-                  padding: 4, margin: 0, outline: 'none'
-                }} title={showPassword ? "Hide Password" : "Show Password"}>
+              <div className="relative flex items-center">
+                <input required type={showPassword ? "text" : "password"} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} className="w-full py-3 pr-[38px] pl-3.5 rounded-lg bg-[oklch(0.12_0.004_250)] border border-[var(--border)] text-white text-[14px] outline-none box-border focus:border-[var(--accent)] transition-colors" />
+                <button type="button" onClick={() => setShowPassword(!showPassword)} className="reset absolute right-3 bg-none border-none text-[var(--fg-dim)] cursor-pointer flex items-center p-1 m-0 outline-none hover:text-[var(--fg)] transition-colors" title={showPassword ? "Hide Password" : "Show Password"}>
                   {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                 </button>
               </div>
               
               {isSignUp && password && (
-                <div style={{ marginTop: 8 }} className="fade-in">
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                    <span style={{ fontSize: 10, color: 'var(--fg-dim)' }}>Password Strength:</span>
-                    <span style={{ fontSize: 10, fontWeight: 600, color: getPasswordStrength(password).color }}>
+                <div className="mt-2 animate-[fadeIn_0.2s_ease-out]">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-[10px] text-[var(--fg-dim)]">Password Strength:</span>
+                    <span className="text-[10px] font-semibold" style={{ color: getPasswordStrength(password).color }}>
                       {getPasswordStrength(password).label}
                     </span>
                   </div>
-                  <div style={{ height: 4, width: '100%', background: 'oklch(0.20 0.005 250)', borderRadius: 2, overflow: 'hidden' }}>
-                    <div style={{
-                      height: '100%',
+                  <div className="h-1 w-full bg-[oklch(0.20_0.005_250)] rounded-[2px] overflow-hidden">
+                    <div className="h-full transition-all duration-250 ease-out" style={{
                       width: getPasswordStrength(password).width,
-                      background: getPasswordStrength(password).color,
-                      transition: 'width 0.25s, background-color 0.25s'
+                      backgroundColor: getPasswordStrength(password).color,
                     }} />
                   </div>
                 </div>
@@ -225,26 +177,20 @@ export default function AuthModal({ open, onClose, supabase }: AuthModalProps) {
             </div>
           )}
 
-          <button type="submit" disabled={loading} className="reset" style={{
-            width: '100%', marginTop: 12, padding: '12px', borderRadius: 8,
-            background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
-            color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 14,
-            cursor: loading ? 'not-allowed' : 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8
-          }}>
+          <button type="submit" disabled={loading} className="reset w-full mt-3 p-3 rounded-lg bg-gradient-to-b from-[oklch(0.96_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.16_0.008_250)] font-semibold text-[14px] flex items-center justify-center gap-2 border-none hover:brightness-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer shadow-[0_2px_10px_oklch(0.86_0.005_250/0.2)]">
             {loading ? 'Processing...' : isForgotPassword ? 'Send Reset Link' : isSignUp ? 'Register Account' : 'Sign In'} <ArrowRight size={13} strokeWidth={2.5} />
           </button>
         </form>
 
-        <div style={{ marginTop: 24, textAlign: 'center', fontSize: 13, color: 'var(--fg-subtle)' }}>
+        <div className="mt-6 text-center text-[13px] text-[var(--fg-subtle)]">
           {isForgotPassword ? (
-            <button onClick={() => { setIsForgotPassword(false); setMessage(null); }} className="reset" style={{ color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
+            <button onClick={() => { setIsForgotPassword(false); setMessage(null); }} className="reset text-[var(--accent)] font-semibold cursor-pointer hover:underline bg-none border-none p-0">
               Back to Sign In
             </button>
           ) : (
             <>
               {isSignUp ? 'Already have an account?' : "Don't have an account yet?"}{' '}
-              <button onClick={() => { setIsSignUp(!isSignUp); setMessage(null); isForgotPassword && setIsForgotPassword(false); }} className="reset" style={{ color: 'var(--accent)', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}>
+              <button onClick={() => { setIsSignUp(!isSignUp); setMessage(null); isForgotPassword && setIsForgotPassword(false); }} className="reset text-[var(--accent)] font-semibold cursor-pointer hover:underline bg-none border-none p-0">
                 {isSignUp ? 'Sign In' : 'Create One'}
               </button>
             </>

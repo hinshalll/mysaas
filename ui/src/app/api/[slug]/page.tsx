@@ -192,10 +192,10 @@ export default function ApiDetailPage() {
 
   if (!api) {
     return (
-      <div style={{ minHeight: '100vh', background: '#040508', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-        <Loader className="spin" size={32} style={{ color: '#6366f1' }} />
-        <span style={{ marginTop: 12, fontSize: 14, fontFamily: 'monospace' }}>Finding API endpoints...</span>
-        <button onClick={() => router.push('/api')} style={{ marginTop: 24, padding: '10px 20px', background: 'white', color: 'black', borderRadius: 8, cursor: 'pointer', border: 'none', fontWeight: 600 }}>
+      <div className="min-h-screen bg-[#040508] flex flex-col items-center justify-center text-white">
+        <Loader className="spin text-[#6366f1]" size={32} />
+        <span className="mt-3 text-[14px] font-mono">Finding API endpoints...</span>
+        <button onClick={() => router.push('/api')} className="mt-6 px-5 py-2.5 bg-white text-black rounded-lg cursor-pointer border-none font-semibold transition-colors hover:bg-gray-200">
           Return to API Directory
         </button>
       </div>
@@ -325,57 +325,49 @@ const data = await response.json();`;
   };
 
   return (
-    <div style={{
-      minHeight: '100vh', background: '#040508', color: '#ffffff',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif', paddingBottom: 100,
-    }}>
-      <div style={{
-        position: 'sticky', top: 0, zIndex: 10,
-        background: 'rgba(4, 5, 8, 0.8)', backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.05)', padding: '16px 32px',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      }}>
-        <Link href="/api" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#94a3b8', textDecoration: 'none', fontWeight: 600 }}>
+    <div className="min-h-screen bg-[#040508] text-white font-sans pb-[100px]">
+      <div className="sticky top-0 z-10 bg-[#040508]/80 backdrop-blur-md border-b border-white/5 px-8 py-4 flex items-center justify-between">
+        <Link href="/api" className="flex items-center gap-1.5 text-[13px] text-[#94a3b8] no-underline font-semibold">
           <ChevronLeft size={16} /> Back to API Hub
         </Link>
-        <span style={{ fontSize: 13, fontFamily: 'monospace', color: '#6366f1', fontWeight: 600 }}>{api.endpoint}</span>
+        <span className="text-[13px] font-mono text-[#6366f1] font-semibold">{api.endpoint}</span>
       </div>
 
-      <div style={{ maxWidth: 1400, margin: '40px auto 0', padding: '0 24px', display: 'flex', flexWrap: 'wrap', gap: 60, alignItems: 'flex-start' }}>
+      <div className="max-w-[1400px] mx-auto mt-10 px-6 flex flex-wrap gap-[60px] items-start">
         
         {/* Left Column (Context & Setup) */}
-        <div style={{ flex: '1 1 600px', display: 'flex', flexDirection: 'column', gap: 60, paddingBottom: 100, minWidth: 0 }}>
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <h1 style={{ fontSize: 'clamp(32px, 4vw, 48px)', fontWeight: 800, margin: 0, letterSpacing: '-0.02em', color: 'white' }}>{api.title}</h1>
-          <p style={{ fontSize: 18, color: '#94a3b8', lineHeight: 1.6, margin: 0, maxWidth: 800 }}>{api.desc}</p>
+        <div className="flex-[1_1_600px] flex flex-col gap-[60px] pb-[100px] min-w-0">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="flex flex-col gap-6">
+          <h1 className="text-[clamp(32px,4vw,48px)] font-extrabold m-0 tracking-[-0.02em] text-white">{api.title}</h1>
+          <p className="text-[18px] text-[#94a3b8] leading-[1.6] m-0 max-w-[800px]">{api.desc}</p>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: 8, padding: '8px 12px' }}>
-              <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color: 'white', background: api.color, padding: '4px 8px', borderRadius: 6 }}>{api.method}</span>
-              <span style={{ fontSize: 13, fontFamily: 'monospace', color: 'white' }}>https://mysaastools.vercel.app{api.endpoint}</span>
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2 bg-[#6366f1]/10 border border-[#6366f1]/20 rounded-lg px-3 py-2">
+              <span className="text-[11px] font-mono font-bold text-white px-2 py-1 rounded-md" style={{ background: api.color }}>{api.method}</span>
+              <span className="text-[13px] font-mono text-white">https://mysaastools.vercel.app{api.endpoint}</span>
               <button 
                 onClick={() => { navigator.clipboard.writeText(`https://mysaastools.vercel.app${api.endpoint}`); setCopiedEndpoint(true); setTimeout(() => setCopiedEndpoint(false), 2000); }}
-                className="" style={{ background: 'none', border: 'none', color: copiedEndpoint ? '#4ade80' : '#94a3b8', cursor: 'pointer', display: 'flex', marginLeft: 8 }}
+                className={`bg-transparent border-none cursor-pointer flex ml-2 ${copiedEndpoint ? 'text-[#4ade80]' : 'text-[#94a3b8]'}`}
               >
                 {copiedEndpoint ? <CheckCircle2 size={14} /> : <Copy size={14} />}
               </button>
             </div>
             
-            <Link href="/account#api-keys" style={{ fontSize: 14, fontWeight: 600, color: '#a5b4fc', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Link href="/account#api-keys" className="text-[14px] font-semibold text-[#a5b4fc] no-underline flex items-center gap-1.5">
               Get your API key <ArrowRight size={14} />
             </Link>
           </div>
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Authentication & Headers</h2>
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, overflow: 'hidden' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, textAlign: 'left' }}>
+          <h2 className="text-[20px] font-bold text-white m-0 mb-4 border-b border-white/5 pb-3">Authentication & Headers</h2>
+          <div className="bg-white/2 border border-white/5 rounded-xl overflow-hidden">
+            <table className="w-full border-collapse text-[14px] text-left">
               <tbody>
                 {Object.entries(api.headers).map(([key, val], i) => (
-                  <tr key={key} style={{ borderBottom: i !== Object.keys(api.headers).length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none' }}>
-                    <td style={{ padding: '16px 20px', fontFamily: 'monospace', color: api.color, fontWeight: 600 }}>{key}</td>
-                    <td style={{ padding: '16px 20px', fontSize: 13, fontFamily: 'monospace', color: '#94a3b8' }}>{String(val)}</td>
+                  <tr key={key} className={i !== Object.keys(api.headers).length - 1 ? 'border-b border-white/5' : ''}>
+                    <td className="px-5 py-4 font-mono font-semibold" style={{ color: api.color }}>{key}</td>
+                    <td className="px-5 py-4 text-[13px] font-mono text-[#94a3b8]">{String(val)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -384,28 +376,28 @@ const data = await response.json();`;
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Request Parameters</h2>
-          <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 12, overflow: 'hidden', overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, textAlign: 'left' }}>
-              <thead style={{ background: 'rgba(0,0,0,0.2)' }}>
+          <h2 className="text-[20px] font-bold text-white m-0 mb-4 border-b border-white/5 pb-3">Request Parameters</h2>
+          <div className="bg-white/2 border border-white/5 rounded-xl overflow-hidden overflow-x-auto">
+            <table className="w-full border-collapse text-[14px] text-left">
+              <thead className="bg-black/20">
                 <tr>
-                  <th style={{ padding: '16px 20px', color: '#cbd5e1', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Field</th>
-                  <th style={{ padding: '16px 20px', color: '#cbd5e1', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Type</th>
-                  <th style={{ padding: '16px 20px', color: '#cbd5e1', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Required</th>
-                  <th style={{ padding: '16px 20px', color: '#cbd5e1', fontWeight: 600, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Description</th>
+                  <th className="px-5 py-4 text-[#cbd5e1] font-semibold text-[12px] uppercase tracking-[0.05em]">Field</th>
+                  <th className="px-5 py-4 text-[#cbd5e1] font-semibold text-[12px] uppercase tracking-[0.05em]">Type</th>
+                  <th className="px-5 py-4 text-[#cbd5e1] font-semibold text-[12px] uppercase tracking-[0.05em]">Required</th>
+                  <th className="px-5 py-4 text-[#cbd5e1] font-semibold text-[12px] uppercase tracking-[0.05em]">Description</th>
                 </tr>
               </thead>
               <tbody>
                 {api.params.map((param: Parameter, i: number) => (
-                  <tr key={param.name} style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                    <td style={{ padding: '16px 20px', fontFamily: 'monospace', color: 'white', fontWeight: 600 }}>{param.name}</td>
-                    <td style={{ padding: '16px 20px', fontFamily: 'monospace', color: '#94a3b8' }}>{param.type}</td>
-                    <td style={{ padding: '16px 20px' }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, padding: '4px 8px', borderRadius: 4, background: param.required ? 'rgba(239, 68, 68, 0.1)' : 'rgba(255,255,255,0.05)', color: param.required ? '#f87171' : '#94a3b8' }}>
+                  <tr key={param.name} className="border-t border-white/5">
+                    <td className="px-5 py-4 font-mono text-white font-semibold">{param.name}</td>
+                    <td className="px-5 py-4 font-mono text-[#94a3b8]">{param.type}</td>
+                    <td className="px-5 py-4">
+                      <span className={`text-[12px] font-semibold px-2 py-1 rounded-md ${param.required ? 'bg-[#ef4444]/10 text-[#f87171]' : 'bg-white/5 text-[#94a3b8]'}`}>
                         {param.required ? 'Yes' : 'No'}
                       </span>
                     </td>
-                    <td style={{ padding: '16px 20px', color: '#cbd5e1', lineHeight: 1.5 }}>{param.desc}</td>
+                    <td className="px-5 py-4 text-[#cbd5e1] leading-[1.5]">{param.desc}</td>
                   </tr>
                 ))}
               </tbody>
@@ -414,24 +406,24 @@ const data = await response.json();`;
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-          <h2 style={{ fontSize: 24, fontWeight: 800, color: 'white', margin: '0 0 24px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <h2 className="text-[24px] font-extrabold text-white m-0 mb-6 flex items-center gap-2.5">
             <Play size={20} color={api.color} /> Interactive Sandbox
           </h2>
           
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24, background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: 16, padding: 32 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600, color: userKey ? '#34d399' : '#fbbf24', background: userKey ? 'rgba(16, 185, 129, 0.1)' : 'rgba(251, 191, 36, 0.1)', padding: '8px 16px', borderRadius: 100, alignSelf: 'flex-start' }}>
+          <div className="flex flex-col gap-6 bg-white/2 border border-white/5 rounded-2xl p-8">
+            <div className={`flex items-center gap-2 text-[13px] font-semibold px-4 py-2 rounded-full self-start ${userKey ? 'text-[#34d399] bg-[#10b981]/10' : 'text-[#fbbf24] bg-[#fbbf24]/10'}`}>
               {userKey ? '🔑 Using your production API key' : '🔓 Public sandbox mode (3 runs/day)'}
             </div>
 
             {slug === 'universal-ai-formatter' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+              <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 8 }}>Text Payload</label>
-                  <textarea rows={4} value={formatterText} onChange={e => setFormatterText(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 12, color: 'white', fontSize: 14, outline: 'none' }} />
+                  <label className="text-[12px] font-semibold text-[#94a3b8] block mb-2">Text Payload</label>
+                  <textarea rows={4} value={formatterText} onChange={e => setFormatterText(e.target.value)} className="w-full box-border bg-[#0a0b0f] border border-white/10 rounded-lg p-3 text-white text-[14px] outline-none focus:border-[#6366f1]" />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 8 }}>Style</label>
-                  <select value={formatterStyle} onChange={e => setFormatterStyle(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 12, color: 'white', fontSize: 14, outline: 'none' }}>
+                  <label className="text-[12px] font-semibold text-[#94a3b8] block mb-2">Style</label>
+                  <select value={formatterStyle} onChange={e => setFormatterStyle(e.target.value)} className="w-full box-border bg-[#0a0b0f] border border-white/10 rounded-lg p-3 text-white text-[14px] outline-none focus:border-[#6366f1]">
                     <option value="modern">Modern Editorial</option>
                     <option value="academic">Academic Serif</option>
                     <option value="minimalist">Minimalist Mono</option>
@@ -441,14 +433,14 @@ const data = await response.json();`;
             )}
 
             {slug === 'json-formatter-validator' && (
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 16 }}>
+              <div className="grid grid-cols-1 gap-4">
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 8 }}>JSON Payload</label>
-                  <textarea rows={6} value={jsonSandboxText} onChange={e => setJsonSandboxText(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 12, color: 'white', fontSize: 14, outline: 'none', fontFamily: 'monospace' }} />
+                  <label className="text-[12px] font-semibold text-[#94a3b8] block mb-2">JSON Payload</label>
+                  <textarea rows={6} value={jsonSandboxText} onChange={e => setJsonSandboxText(e.target.value)} className="w-full box-border bg-[#0a0b0f] border border-white/10 rounded-lg p-3 text-white text-[14px] outline-none font-mono focus:border-[#6366f1]" />
                 </div>
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 8 }}>Action</label>
-                  <select value={jsonSandboxAction} onChange={e => setJsonSandboxAction(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 12, color: 'white', fontSize: 14, outline: 'none' }}>
+                  <label className="text-[12px] font-semibold text-[#94a3b8] block mb-2">Action</label>
+                  <select value={jsonSandboxAction} onChange={e => setJsonSandboxAction(e.target.value)} className="w-full box-border bg-[#0a0b0f] border border-white/10 rounded-lg p-3 text-white text-[14px] outline-none focus:border-[#6366f1]">
                     <option value="Format">Format & Validate</option>
                     <option value="Auto-Repair">Auto-Repair Broken JSON</option>
                     <option value="Minify">Minify</option>
@@ -458,26 +450,26 @@ const data = await response.json();`;
             )}
 
             {slug === 'heic-to-jpg-converter' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="flex flex-col gap-4">
                 <div>
-                  <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 8 }}>Input HEIC File</label>
-                  <div onClick={() => fileInputRef.current?.click()} style={{ border: '2px dashed rgba(255,255,255,0.1)', background: '#0a0b0f', borderRadius: 12, padding: '32px', textAlign: 'center', cursor: 'pointer', transition: 'border 0.2s', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                    <input type="file" accept=".heic,.heif" ref={fileInputRef} onChange={e => setHeicFile(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+                  <label className="text-[12px] font-semibold text-[#94a3b8] block mb-2">Input HEIC File</label>
+                  <div onClick={() => fileInputRef.current?.click()} className="border-2 border-dashed border-white/10 bg-[#0a0b0f] rounded-xl p-8 text-center cursor-pointer transition-colors duration-200 hover:border-white/30 flex flex-col items-center gap-3">
+                    <input type="file" accept=".heic,.heif" ref={fileInputRef} onChange={e => setHeicFile(e.target.files?.[0] || null)} className="hidden" />
                     <UploadCloud size={24} color="#94a3b8" />
-                    <span style={{ fontSize: 14, color: 'white', fontWeight: 600 }}>{heicFile ? heicFile.name : 'Click to upload HEIC file'}</span>
+                    <span className="text-[14px] text-white font-semibold">{heicFile ? heicFile.name : 'Click to upload HEIC file'}</span>
                   </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 8 }}>Format</label>
-                    <select value={heicFormat} onChange={e => setHeicFormat(e.target.value as any)} style={{ width: '100%', boxSizing: 'border-box', background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 12, color: 'white', fontSize: 14, outline: 'none' }}>
+                    <label className="text-[12px] font-semibold text-[#94a3b8] block mb-2">Format</label>
+                    <select value={heicFormat} onChange={e => setHeicFormat(e.target.value as any)} className="w-full box-border bg-[#0a0b0f] border border-white/10 rounded-lg p-3 text-white text-[14px] outline-none focus:border-[#6366f1]">
                       <option value="jpg">JPG</option>
                       <option value="png">PNG</option>
                     </select>
                   </div>
                   <div>
-                    <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 8 }}>Quality</label>
-                    <select value={heicQuality} onChange={e => setHeicQuality(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 12, color: 'white', fontSize: 14, outline: 'none' }}>
+                    <label className="text-[12px] font-semibold text-[#94a3b8] block mb-2">Quality</label>
+                    <select value={heicQuality} onChange={e => setHeicQuality(e.target.value)} className="w-full box-border bg-[#0a0b0f] border border-white/10 rounded-lg p-3 text-white text-[14px] outline-none focus:border-[#6366f1]">
                       <option value="0.95">High (95%)</option>
                       <option value="0.80">Medium (80%)</option>
                       <option value="0.50">Low (50%)</option>
@@ -489,16 +481,14 @@ const data = await response.json();`;
 
             {slug === 'html-to-print-ready-pdf' && (
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#94a3b8', display: 'block', marginBottom: 8 }}>HTML Content</label>
-                <textarea rows={6} value={pdfHtml} onChange={e => setPdfHtml(e.target.value)} style={{ width: '100%', boxSizing: 'border-box', background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: 12, color: 'white', fontSize: 14, outline: 'none', fontFamily: 'monospace' }} />
+                <label className="text-[12px] font-semibold text-[#94a3b8] block mb-2">HTML Content</label>
+                <textarea rows={6} value={pdfHtml} onChange={e => setPdfHtml(e.target.value)} className="w-full box-border bg-[#0a0b0f] border border-white/10 rounded-lg p-3 text-white text-[14px] outline-none font-mono focus:border-[#6366f1]" />
               </div>
             )}
 
-            <button onClick={executeSandbox} disabled={loading} className="" style={{
-              width: '100%', padding: '16px', fontSize: 15, fontWeight: 700, borderRadius: 12,
-              background: api.color, color: 'white', cursor: loading ? 'not-allowed' : 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-              boxShadow: `0 8px 24px ${api.color}40`, transition: 'all 0.2s', border: 'none'
+            <button onClick={executeSandbox} disabled={loading} className="w-full p-4 text-[15px] font-bold rounded-xl text-white flex items-center justify-center gap-2.5 transition-all duration-200 border-none group" style={{
+              background: api.color, cursor: loading ? 'not-allowed' : 'pointer',
+              boxShadow: `0 8px 24px ${api.color}40`
             }}
             onMouseEnter={e => { if (!loading) e.currentTarget.style.transform = 'translateY(-2px)'; }}
             onMouseLeave={e => { if (!loading) e.currentTarget.style.transform = 'none'; }}
@@ -508,40 +498,40 @@ const data = await response.json();`;
             </button>
 
             {(resStatus !== null || loading) && (
-              <div style={{ background: '#040508', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, overflow: 'hidden', marginTop: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <span style={{ fontSize: 12, fontWeight: 700, fontFamily: 'monospace', color: resStatus && resStatus < 300 ? '#4ade80' : '#f87171' }}>
+              <div className="bg-[#040508] border border-white/10 rounded-xl overflow-hidden mt-4">
+                <div className="flex justify-between items-center px-4 py-3 bg-white/2 border-b border-white/5">
+                  <div className="flex items-center gap-3">
+                    <span className={`text-[12px] font-bold font-mono ${resStatus && resStatus < 300 ? 'text-[#4ade80]' : 'text-[#f87171]'}`}>
                       Status: {resStatus || '...'}
                     </span>
-                    {resTime && <span style={{ fontSize: 12, color: '#94a3b8', fontFamily: 'monospace' }}>Time: {resTime}ms</span>}
+                    {resTime && <span className="text-[12px] text-[#94a3b8] font-mono">Time: {resTime}ms</span>}
                   </div>
                   {resBody && (
-                    <button onClick={() => { navigator.clipboard.writeText(JSON.stringify(resBody, null, 2)); setCopiedResponse(true); setTimeout(() => setCopiedResponse(false), 2000); }} className="" style={{ color: copiedResponse ? '#4ade80' : '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
+                    <button onClick={() => { navigator.clipboard.writeText(JSON.stringify(resBody, null, 2)); setCopiedResponse(true); setTimeout(() => setCopiedResponse(false), 2000); }} className={`bg-transparent border-none cursor-pointer flex items-center gap-1.5 text-[12px] font-semibold ${copiedResponse ? 'text-[#4ade80]' : 'text-[#94a3b8]'}`}>
                       {copiedResponse ? <CheckCircle2 size={14} /> : <Copy size={14} />} {copiedResponse ? 'Copied' : 'Copy Response'}
                     </button>
                   )}
                 </div>
-                <div style={{ padding: 16, overflowX: 'auto', maxHeight: 400 }}>
+                <div className="p-4 overflow-x-auto max-h-[400px]">
                   {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}><Loader size={24} className="spin" color={api.color} /></div>
+                    <div className="flex justify-center p-10"><Loader size={24} className="spin" color={api.color} /></div>
                   ) : resBody ? (
                     <>
-                      <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 13, color: '#a5b4fc' }}>
+                      <pre className="m-0 font-mono text-[13px] text-[#a5b4fc]">
                         {highlightJson(resBody)}
                       </pre>
                       {resImgUrl && (
-                        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                          <img src={resImgUrl} alt="Output" style={{ maxWidth: '100%', maxHeight: 200, borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }} />
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                          <img src={resImgUrl} alt="Output" className="max-w-full max-h-[200px] rounded-lg border border-white/10" />
                           <br />
-                          <a href={resImgUrl} download={`converted.${heicFormat}`} style={{ display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 12, color: 'white', background: api.color, padding: '8px 16px', borderRadius: 8, textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>
+                          <a href={resImgUrl} download={`converted.${heicFormat}`} className="inline-flex items-center gap-2 mt-3 text-white px-4 py-2 rounded-lg no-underline text-[13px] font-semibold" style={{ background: api.color }}>
                             <FileDown size={16} /> Download Image
                           </a>
                         </div>
                       )}
                       {resPdfUrl && (
-                        <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                          <a href={resPdfUrl} download="document.pdf" style={{ display: 'inline-flex', alignItems: 'center', gap: 8, color: 'white', background: api.color, padding: '8px 16px', borderRadius: 8, textDecoration: 'none', fontSize: 13, fontWeight: 600 }}>
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                          <a href={resPdfUrl} download="document.pdf" className="inline-flex items-center gap-2 text-white px-4 py-2 rounded-lg no-underline text-[13px] font-semibold" style={{ background: api.color }}>
                             <FileDown size={16} /> Download PDF Document
                           </a>
                         </div>
@@ -556,68 +546,60 @@ const data = await response.json();`;
         </div> {/* End Left Column */}
 
         {/* Right Column */}
-        <div style={{ flex: '1 1 500px', display: 'flex', flexDirection: 'column', gap: 40 }}>
-          <div style={{ position: 'sticky', top: 100, display: 'flex', flexDirection: 'column', gap: 40, paddingBottom: 40 }}>
+        <div className="flex-[1_1_500px] flex flex-col gap-10">
+          <div className="sticky top-[100px] flex flex-col gap-10 pb-10">
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
-<div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Code Examples</h2>
-          <div style={{ background: '#0a0b0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, overflow: 'hidden' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid rgba(255,255,255,0.05)', padding: '8px 16px', flexWrap: 'wrap', gap: 12, background: 'rgba(0,0,0,0.3)' }}>
-              <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', overflowX: 'auto', scrollbarWidth: 'none' }}>
-                {['curl', 'js', 'python', 'go', 'rust', 'csharp', 'java', 'php', 'ruby'].map(lang => (
-                  <button key={lang} onClick={() => setActiveLang(lang as any)} className="mono" style={{
-                    padding: '6px 12px', fontSize: 12, fontWeight: 600, borderRadius: 6,
-                    background: activeLang === lang ? 'rgba(255,255,255,0.1)' : 'transparent',
-                    color: activeLang === lang ? 'white' : '#8b949e', cursor: 'pointer', transition: 'all 0.2s'
-                  }}>
-                    {lang === 'js' ? 'JavaScript' : lang === 'csharp' ? 'C#' : lang.charAt(0).toUpperCase() + lang.slice(1)}
-                  </button>
-                ))}
+              <div>
+                <h2 className="text-[20px] font-bold text-white m-0 mb-4 border-b border-white/5 pb-3">Code Examples</h2>
+                <div className="bg-[#0a0b0f] border border-white/10 rounded-2xl overflow-hidden">
+                  <div className="flex justify-between items-center border-b border-white/5 px-4 py-2 flex-wrap gap-3 bg-black/30">
+                    <div className="flex gap-1 flex-wrap overflow-x-auto [scrollbar-width:none]">
+                      {['curl', 'js', 'python', 'go', 'rust', 'csharp', 'java', 'php', 'ruby'].map(lang => (
+                        <button key={lang} onClick={() => setActiveLang(lang as any)} className={`font-mono px-3 py-1.5 text-[12px] font-semibold rounded-md cursor-pointer transition-all duration-200 border-none ${activeLang === lang ? 'bg-white/10 text-white' : 'bg-transparent text-[#8b949e]'}`}>
+                          {lang === 'js' ? 'JavaScript' : lang === 'csharp' ? 'C#' : lang.charAt(0).toUpperCase() + lang.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                    <button onClick={handleCopyCode} className={`bg-transparent border-none cursor-pointer flex items-center gap-1.5 text-[12px] font-semibold ${copiedCode ? 'text-[#4ade80]' : 'text-[#8b949e]'}`}>
+                      {copiedCode ? <CheckCircle2 size={14} /> : <Copy size={14} />} {copiedCode ? 'Copied!' : 'Copy'}
+                    </button>
+                  </div>
+                  <motion.pre layout className="m-0 p-6 overflow-x-auto font-mono text-[13px] leading-[1.6] text-[#a5b4fc] max-h-[400px] whitespace-pre-wrap">
+                    <AnimatePresence mode="wait">
+                      <motion.code 
+                        key={activeLang}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="block"
+                      >
+                        {generateCodeSnippet(api, activeLang)}
+                      </motion.code>
+                    </AnimatePresence>
+                  </motion.pre>
+                </div>
               </div>
-              <button onClick={handleCopyCode} className="" style={{ color: copiedCode ? '#4ade80' : '#8b949e', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
-                {copiedCode ? <CheckCircle2 size={14} /> : <Copy size={14} />} {copiedCode ? 'Copied!' : 'Copy'}
-              </button>
-            </div>
-            <motion.pre layout style={{ margin: 0, padding: 24, overflowX: 'auto', fontFamily: 'monospace', fontSize: 13, lineHeight: 1.6, color: '#a5b4fc', maxHeight: 400, whiteSpace: 'pre-wrap' }}>
-              <AnimatePresence mode="wait">
-                <motion.code 
-                  key={activeLang}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.2 }}
-                  style={{ display: 'block' }}
-                >
-                  {generateCodeSnippet(api, activeLang)}
-                </motion.code>
-              </AnimatePresence>
-            </motion.pre>
-          </div>
-        </div>
-
-        
             </motion.div>
             
             <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
-<div>
-          <h2 style={{ fontSize: 20, fontWeight: 700, color: 'white', margin: '0 0 16px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: 12 }}>Response Schema</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 24 }}>
-            <div style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: 12, padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#34d399', margin: '0 0 12px' }}>Success (200 OK)</h3>
-              <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 12, color: '#a7f3d0', whiteSpace: 'pre-wrap' }}>
-                {highlightJson(responseSchemaSuccess)}
-              </pre>
-            </div>
-            <div style={{ background: 'rgba(239, 68, 68, 0.05)', border: '1px solid rgba(239, 68, 68, 0.2)', borderRadius: 12, padding: 20 }}>
-              <h3 style={{ fontSize: 14, fontWeight: 700, color: '#f87171', margin: '0 0 12px' }}>Error (400/500)</h3>
-              <pre style={{ margin: 0, fontFamily: 'monospace', fontSize: 12, color: '#fecaca', whiteSpace: 'pre-wrap' }}>
-                {highlightJson(responseSchemaError)}
-              </pre>
-            </div>
-          </div>
-        </div>
-
-        
+              <div>
+                <h2 className="text-[20px] font-bold text-white m-0 mb-4 border-b border-white/5 pb-3">Response Schema</h2>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(300px,1fr))] gap-6">
+                  <div className="bg-[#10b981]/5 border border-[#10b981]/20 rounded-xl p-5">
+                    <h3 className="text-[14px] font-bold text-[#34d399] m-0 mb-3">Success (200 OK)</h3>
+                    <pre className="m-0 font-mono text-[12px] text-[#a7f3d0] whitespace-pre-wrap">
+                      {highlightJson(responseSchemaSuccess)}
+                    </pre>
+                  </div>
+                  <div className="bg-[#ef4444]/5 border border-[#ef4444]/20 rounded-xl p-5">
+                    <h3 className="text-[14px] font-bold text-[#f87171] m-0 mb-3">Error (400/500)</h3>
+                    <pre className="m-0 font-mono text-[12px] text-[#fecaca] whitespace-pre-wrap">
+                      {highlightJson(responseSchemaError)}
+                    </pre>
+                  </div>
+                </div>
+              </div>
             </motion.div>
           </div>
         </div>

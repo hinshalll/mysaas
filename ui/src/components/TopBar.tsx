@@ -6,15 +6,6 @@ import { usePathname } from 'next/navigation';
 import { useSaaS } from '../context/SaaSContext';
 import { Command, Grid, ChevronDown, Search, Sun, Moon, X, Menu } from 'lucide-react';
 
-const topLink = {
-  fontSize: 13,
-  color: 'var(--fg-muted)',
-  padding: '6px 8px',
-  borderRadius: 6,
-  textDecoration: 'none',
-  cursor: 'pointer',
-};
-
 export default function TopBar() {
   const pathname = usePathname();
   const {
@@ -43,40 +34,13 @@ export default function TopBar() {
   if (pathname === '/') return null;
 
   return (
-    <header style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 30,
-      height: 56,
-      display: 'flex',
-      alignItems: 'center',
-      padding: '0 20px',
-      gap: 14,
-      background: scrolled ? 'var(--bg-topbar)' : 'transparent',
-      borderBottom: `1px solid ${scrolled ? 'var(--border)' : 'transparent'}`,
-      backdropFilter: scrolled ? 'blur(20px) saturate(140%)' : 'none',
-      transition: 'background 0.25s, border-color 0.25s, backdrop-filter 0.25s',
-    }}>
+    <header className={`sticky top-0 z-30 h-14 flex items-center px-5 gap-3.5 transition-all duration-250 ${scrolled ? 'bg-[var(--bg-topbar)] border-b border-[var(--border)] backdrop-blur-[20px] saturate-[140%]' : 'bg-transparent border-b border-transparent backdrop-blur-none'}`}>
       {/* Brand Logo */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 10,
-        color: 'inherit',
-      }}>
+      <div className="flex items-center gap-2.5 text-inherit">
         {isEditingBrand ? (
           <>
-            <div style={{
-              width: 28,
-              height: 28,
-              borderRadius: 7,
-              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
-            }}>
-              <Command size={14} strokeWidth={2.2} style={{ color: 'white' }} />
+            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-[oklch(0.70_0.18_265)] to-[oklch(0.62_0.20_305)] flex items-center justify-center shadow-[0_0_0_1px_oklch(0.50_0.10_280/0.5),_0_4px_14px_oklch(0.50_0.20_280/0.4)]">
+              <Command size={14} strokeWidth={2.2} className="text-white" />
             </div>
             <input
               type="text"
@@ -90,20 +54,8 @@ export default function TopBar() {
                 }
               }}
               onChange={(e) => setBrandName(e.target.value)}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: 'var(--fg)',
-                fontFamily: 'inherit',
-                fontSize: 15.5,
-                fontWeight: 600,
-                letterSpacing: '-0.018em',
-                width: `${Math.max(brandName.length, 1)}ch`,
-                outline: 'none',
-                cursor: 'text',
-                padding: 0,
-                margin: 0,
-              }}
+              className="bg-transparent border-none text-[var(--fg)] font-inherit text-[15.5px] font-semibold tracking-[-0.018em] outline-none cursor-text p-0 m-0"
+              style={{ width: `${Math.max(brandName.length, 1)}ch` }}
               title="Enter new brand name and click away"
             />
           </>
@@ -114,27 +66,11 @@ export default function TopBar() {
               e.preventDefault(); 
               goHome(); 
             }} 
-            style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              textDecoration: 'none', 
-              color: 'inherit',
-              gap: 10
-            }}
+            className="flex items-center no-underline text-inherit gap-2.5"
             title="Return to Home Screen"
           >
-            <div style={{
-              width: 28,
-              height: 28,
-              borderRadius: 7,
-              background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: '0 0 0 1px oklch(0.50 0.10 280 / 0.5), 0 4px 14px oklch(0.50 0.20 280 / 0.4)',
-              cursor: 'pointer',
-            }}>
-              <Command size={14} strokeWidth={2.2} style={{ color: 'white' }} />
+            <div className="w-7 h-7 rounded-md bg-gradient-to-br from-[oklch(0.70_0.18_265)] to-[oklch(0.62_0.20_305)] flex items-center justify-center shadow-[0_0_0_1px_oklch(0.50_0.10_280/0.5),_0_4px_14px_oklch(0.50_0.20_280/0.4)] cursor-pointer">
+              <Command size={14} strokeWidth={2.2} className="text-white" />
             </div>
             <span
               onDoubleClick={(e) => {
@@ -142,14 +78,7 @@ export default function TopBar() {
                 e.preventDefault();
                 setIsEditingBrand(true);
               }}
-              style={{
-                color: 'var(--fg)',
-                fontSize: 15.5,
-                fontWeight: 600,
-                letterSpacing: '-0.018em',
-                cursor: 'pointer',
-                userSelect: 'none',
-              }}
+              className="text-[var(--fg)] text-[15.5px] font-semibold tracking-[-0.018em] cursor-pointer select-none"
               title="Double-click to rename SaaS"
             >
               {brandName}
@@ -159,136 +88,62 @@ export default function TopBar() {
       </div>
 
       {/* Tools launcher pill */}
-      <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-        <button onClick={() => setLauncher(true)} className="reset launcher-pill" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 8,
-          padding: '7px 14px 7px 12px',
-          background: 'var(--bg-elev-1)',
-          border: '1px solid var(--border)',
-          borderRadius: 999,
-          fontSize: 13,
-          fontWeight: 500,
-          color: 'var(--fg)',
-          cursor: 'pointer',
-          backdropFilter: 'blur(10px)',
-          transition: 'background 0.15s, border-color 0.15s, transform 0.15s',
-        }}>
-          <Grid size={13} strokeWidth={2} style={{ color: 'var(--fg-muted)' }} />
+      <div className="flex-1 flex justify-center">
+        <button onClick={() => setLauncher(true)} className="reset launcher-pill flex items-center gap-2 py-[7px] pr-[14px] pl-[12px] bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-full text-[13px] font-medium text-[var(--fg)] cursor-pointer backdrop-blur-md transition-all duration-150 hover:bg-[var(--bg-hover)]">
+          <Grid size={13} strokeWidth={2} className="text-[var(--fg-muted)]" />
           <span>{activeTool ? activeTool.name : 'Browse all tools'}</span>
-          <ChevronDown size={12} style={{ color: 'var(--fg-subtle)' }} />
+          <ChevronDown size={12} className="text-[var(--fg-subtle)]" />
         </button>
       </div>
 
       {/* Right cluster */}
-      <button onClick={() => setPalette(true)} className="reset search-btn" style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 8,
-        padding: '7px 10px 7px 12px',
-        background: 'var(--bg-elev-1)',
-        border: '1px solid var(--border)',
-        borderRadius: 8,
-        fontSize: 12.5,
-        color: 'var(--fg-muted)',
-        cursor: 'pointer',
-        minWidth: 180,
-      }}>
+      <button onClick={() => setPalette(true)} className="reset search-btn hidden md:flex items-center gap-2 py-[7px] pr-[10px] pl-[12px] bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-lg text-[12.5px] text-[var(--fg-muted)] cursor-pointer min-w-[180px]">
         <Search size={13} />
-        <span style={{ flex: 1, textAlign: 'left' }}>Search tools…</span>
+        <span className="flex-1 text-left">Search tools…</span>
         <kbd className="kbd">⌘K</kbd>
       </button>
 
-      <Link href="/pricing" className="reset top-link" style={topLink}>Pricing</Link>
-      <Link href="/docs" className="reset top-link" style={topLink}>Docs</Link>
-      <Link href="/api" className="reset top-link" style={topLink}>APIs</Link>
+      <Link href="/pricing" className="reset top-link hidden sm:block text-[13px] text-[var(--fg-muted)] px-2 py-1.5 rounded-md no-underline cursor-pointer hover:bg-[var(--bg-hover)]">Pricing</Link>
+      <Link href="/docs" className="reset top-link hidden sm:block text-[13px] text-[var(--fg-muted)] px-2 py-1.5 rounded-md no-underline cursor-pointer hover:bg-[var(--bg-hover)]">Docs</Link>
+      <Link href="/api" className="reset top-link hidden sm:block text-[13px] text-[var(--fg-muted)] px-2 py-1.5 rounded-md no-underline cursor-pointer hover:bg-[var(--bg-hover)]">APIs</Link>
 
       {/* Auth State */}
       {sessionUser && !isAnonUser ? (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div className="hidden sm:flex items-center gap-2.5">
           {(() => {
             const userDisplayName = sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0];
             return (
               <button 
                 onClick={() => openTool('account')} 
-                className="reset top-link" 
-                style={{ 
-                  ...topLink, 
-                  display: 'inline-flex', 
-                  alignItems: 'center', 
-                  gap: 6,
-                  background: 'var(--bg-elev-1)',
-                  border: '1px solid var(--border)',
-                  padding: '5px 12px',
-                  borderRadius: 20,
-                  fontSize: 12,
-                  fontWeight: 500,
-                  color: 'var(--fg)',
-                }}
+                className="reset top-link inline-flex items-center gap-1.5 bg-[var(--bg-elev-1)] border border-[var(--border)] px-3 py-1.5 rounded-full text-[12px] font-medium text-[var(--fg)] hover:bg-[var(--bg-hover)]"
               >
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
+                <span className={`w-1.5 h-1.5 rounded-full ${userPlan === 'pro' ? 'bg-[var(--pro)]' : 'bg-[oklch(0.70_0.16_145)]'}`} />
                 <span>Account ({userDisplayName})</span>
-                {userPlan === 'pro' && <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 4px', borderRadius: 4, fontWeight: 700 }}>PRO</span>}
+                {userPlan === 'pro' && <span className="mono text-[9px] bg-[var(--pro)] text-black px-1 py-0.5 rounded-[4px] font-bold">PRO</span>}
               </button>
             );
           })()}
-          <button onClick={handleSignOut} className="reset top-link" style={topLink}>Sign Out</button>
+          <button onClick={handleSignOut} className="reset top-link text-[13px] text-[var(--fg-muted)] px-2 py-1.5 rounded-md cursor-pointer hover:bg-[var(--bg-hover)]">Sign Out</button>
         </div>
       ) : (
-        <button onClick={() => setAuthOpen(true)} className="reset top-link" style={{ ...topLink, color: 'var(--accent)', fontWeight: 600 }}>Sign In / Up</button>
+        <button onClick={() => setAuthOpen(true)} className="reset top-link hidden sm:block text-[13px] text-[var(--accent)] font-semibold px-2 py-1.5 rounded-md cursor-pointer hover:bg-[var(--accent)/0.1]">Sign In / Up</button>
       )}
 
       {!isPremium && (
-        <button onClick={() => handleShowPaywall('upgrade')} className="reset main-upgrade-btn" style={{
-          padding: '6px 12px',
-          background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-          color: 'white',
-          fontWeight: 600,
-          fontSize: 12,
-          borderRadius: 8,
-          cursor: 'pointer',
-          border: 'none',
-          boxShadow: '0 4px 12px oklch(0.50 0.20 280 / 0.3)'
-        }}>Upgrade</button>
+        <button onClick={() => handleShowPaywall('upgrade')} className="reset main-upgrade-btn hidden sm:block px-3 py-1.5 bg-gradient-to-br from-[oklch(0.70_0.18_265)] to-[oklch(0.62_0.20_305)] text-white font-semibold text-[12px] rounded-lg cursor-pointer border-none shadow-[0_4px_12px_oklch(0.50_0.20_280/0.3)] hover:brightness-110">
+          Upgrade
+        </button>
       )}
 
       {/* Theme Toggle Switch */}
-      <button onClick={toggleTheme} className="reset theme-toggle-btn" style={{
-        display: 'inline-flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: 32,
-        height: 32,
-        borderRadius: 8,
-        cursor: 'pointer',
-        fontSize: 13,
-        color: 'var(--fg-muted)',
-        background: 'var(--bg-elev-1)',
-        border: '1px solid var(--border)',
-        transition: 'background 0.15s, color 0.15s, transform 0.15s',
-      }}
-      title={`Switch to theme`}>
+      <button onClick={toggleTheme} className="reset theme-toggle-btn inline-flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer text-[13px] text-[var(--fg-muted)] bg-[var(--bg-elev-1)] border border-[var(--border)] transition-all duration-150 hover:bg-[var(--bg-hover)] hover:text-[var(--fg)]" title="Switch to theme">
         {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
       </button>
 
       {/* Mobile Menu Toggle Button */}
       <button 
         onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-        className="reset mobile-menu-btn"
-        style={{
-          display: 'none',
-          alignItems: 'center',
-          justifyContent: 'center',
-          width: 32,
-          height: 32,
-          borderRadius: 8,
-          cursor: 'pointer',
-          background: mobileMenuOpen ? 'var(--bg-hover)' : 'var(--bg-elev-1)',
-          border: '1px solid var(--border)',
-          color: 'var(--fg)',
-          transition: 'all 0.2s',
-        }}
+        className={`reset mobile-menu-btn sm:hidden flex items-center justify-center w-8 h-8 rounded-lg cursor-pointer border border-[var(--border)] text-[var(--fg)] transition-all duration-200 ${mobileMenuOpen ? 'bg-[var(--bg-hover)]' : 'bg-[var(--bg-elev-1)]'}`}
         title="Toggle Menu"
       >
         {mobileMenuOpen ? <X size={15} /> : <Menu size={15} />}
@@ -296,23 +151,7 @@ export default function TopBar() {
 
       {/* Mobile Menu Panel */}
       {mobileMenuOpen && (
-        <div style={{
-          position: 'absolute',
-          top: 56,
-          left: 0,
-          right: 0,
-          background: 'oklch(0.145 0 0 / 0.95)',
-          backdropFilter: 'blur(20px) saturate(140%)',
-          WebkitBackdropFilter: 'blur(20px) saturate(140%)',
-          borderBottom: '1px solid var(--border)',
-          padding: '16px 20px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 12,
-          zIndex: 40,
-          boxShadow: '0 20px 40px oklch(0 0 0 / 0.5)',
-          animation: 'slideDownMenu 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}>
+        <div className="absolute top-14 left-0 right-0 bg-[oklch(0.145_0_0/0.95)] backdrop-blur-[20px] saturate-[140%] border-b border-[var(--border)] px-5 py-4 flex flex-col gap-3 z-40 shadow-[0_20px_40px_oklch(0_0_0/0.5)] animate-[slideDownMenu_0.2s_cubic-bezier(0.16,1,0.3,1)] sm:hidden">
           <style>{`
             @keyframes slideDownMenu {
               from { transform: translateY(-10px); opacity: 0; }
@@ -320,54 +159,46 @@ export default function TopBar() {
             }
           `}</style>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            <span style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Navigation</span>
+          <div className="flex flex-col gap-0.5">
+            <span className="text-[10px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] mb-1 mono">Navigation</span>
             <Link 
               href="/pricing" 
               onClick={() => setMobileMenuOpen(false)}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)' }}
+              className="text-[14px] text-[var(--fg)] px-3 py-2.5 rounded-lg no-underline bg-[var(--bg-elev-1)] border border-[var(--border)]"
             >
               Pricing
             </Link>
             <Link 
               href="/docs" 
               onClick={() => setMobileMenuOpen(false)}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+              className="text-[14px] text-[var(--fg)] px-3 py-2.5 rounded-lg no-underline bg-[var(--bg-elev-1)] border border-[var(--border)] mt-2"
             >
               Docs
             </Link>
             <Link 
               href="/api" 
               onClick={() => setMobileMenuOpen(false)}
-              style={{ fontSize: 14, color: 'var(--fg)', padding: '10px 12px', borderRadius: 8, textDecoration: 'none', background: 'var(--bg-elev-1)', border: '1px solid var(--border)', marginTop: 8 }}
+              className="text-[14px] text-[var(--fg)] px-3 py-2.5 rounded-lg no-underline bg-[var(--bg-elev-1)] border border-[var(--border)] mt-2"
             >
               APIs
             </Link>
           </div>
 
-          <div style={{ height: 1, background: 'var(--border)', margin: '4px 0' }} />
+          <div className="h-px bg-[var(--border)] my-1" />
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <span style={{ fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }} className="mono">Account Workspace</span>
+          <div className="flex flex-col gap-2">
+            <span className="text-[10px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] mb-1 mono">Account Workspace</span>
             
             {sessionUser && !isAnonUser ? (
               <>
-                <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  background: 'var(--bg-elev-1)',
-                  border: '1px solid var(--border)'
-                }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)' }} />
-                  <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <span style={{ fontSize: 13.5, fontWeight: 500, color: 'white' }}>
+                <div className="flex items-center gap-2.5 px-3 py-2.5 rounded-lg bg-[var(--bg-elev-1)] border border-[var(--border)]">
+                  <span className={`w-2 h-2 rounded-full ${userPlan === 'pro' ? 'bg-[var(--pro)]' : 'bg-[oklch(0.70_0.16_145)]'}`} />
+                  <div className="flex flex-col">
+                    <span className="text-[13.5px] font-medium text-white">
                       {sessionUser.user_metadata?.name || sessionUser.user_metadata?.username || sessionUser.email.split('@')[0]}
                     </span>
-                    <span style={{ fontSize: 11, color: 'var(--fg-muted)' }}>
-                      Active Plan: <span className="mono" style={{ color: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70 0.16 145)', fontWeight: 700 }}>{userPlan.toUpperCase()}</span>
+                    <span className="text-[11px] text-[var(--fg-muted)]">
+                      Active Plan: <span className="mono font-bold" style={{ color: userPlan === 'pro' ? 'var(--pro)' : 'oklch(0.70_0.16_145)' }}>{userPlan.toUpperCase()}</span>
                     </span>
                   </div>
                 </div>
@@ -376,17 +207,7 @@ export default function TopBar() {
                     openTool('account');
                     setMobileMenuOpen(false);
                   }}
-                  className="reset" 
-                  style={{
-                    textAlign: 'center',
-                    padding: '10px',
-                    borderRadius: 8,
-                    background: 'var(--bg-elev-2)',
-                    border: '1px solid var(--border)',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: 'pointer'
-                  }}
+                  className="reset text-center p-2.5 rounded-lg bg-[var(--bg-elev-2)] border border-[var(--border)] text-[13px] font-medium cursor-pointer"
                 >
                   Manage Account Settings
                 </button>
@@ -395,18 +216,7 @@ export default function TopBar() {
                     handleSignOut();
                     setMobileMenuOpen(false);
                   }}
-                  className="reset" 
-                  style={{
-                    textAlign: 'center',
-                    padding: '10px',
-                    borderRadius: 8,
-                    color: 'oklch(0.65 0.16 20)',
-                    background: 'oklch(0.65 0.16 20 / 0.1)',
-                    border: '1px solid oklch(0.65 0.16 20 / 0.2)',
-                    fontSize: 13,
-                    fontWeight: 500,
-                    cursor: 'pointer'
-                  }}
+                  className="reset text-center p-2.5 rounded-lg text-[oklch(0.65_0.16_20)] bg-[oklch(0.65_0.16_20/0.1)] border border-[oklch(0.65_0.16_20/0.2)] text-[13px] font-medium cursor-pointer"
                 >
                   Sign Out
                 </button>
@@ -417,17 +227,7 @@ export default function TopBar() {
                   setAuthOpen(true);
                   setMobileMenuOpen(false);
                 }}
-                className="reset" 
-                style={{
-                  textAlign: 'center',
-                  padding: '10px',
-                  borderRadius: 8,
-                  background: 'linear-gradient(135deg, oklch(0.70 0.18 265), oklch(0.62 0.20 305))',
-                  color: 'white',
-                  fontSize: 13,
-                  fontWeight: 600,
-                  cursor: 'pointer'
-                }}
+                className="reset text-center p-2.5 rounded-lg bg-gradient-to-br from-[oklch(0.70_0.18_265)] to-[oklch(0.62_0.20_305)] text-white text-[13px] font-semibold cursor-pointer"
               >
                 Sign In / Sign Up
               </button>

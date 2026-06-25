@@ -1049,138 +1049,83 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
   }
 
   return (
-    <div style={{
-      maxWidth: 1280, margin: '0 auto',
-      padding: '32px 32px 80px',
-      width: '100%', boxSizing: 'border-box',
-    }} className="fade-in">
+    <div className="w-full max-w-[1280px] mx-auto px-8 pt-8 pb-20 box-border fade-in">
 
       {/* Header */}
-      <div style={{
-        display: 'flex', alignItems: 'flex-end', gap: 20,
-        marginBottom: 28, flexWrap: 'wrap',
-      }}>
-        <div style={{ flex: 1, minWidth: 280 }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            fontSize: 11.5, color: 'var(--fg-dim)',
-            marginBottom: 12,
-          }} className="mono">
+      <div className="flex items-end gap-5 mb-7 flex-wrap">
+        <div className="flex-1 min-w-[280px]">
+          <div className="inline-flex items-center gap-2 text-[11.5px] text-fg-dim mb-3 mono">
             <span style={{ color: tintFg(activeHue) }}>{tool.categoryLabel}</span>
             <span>/</span>
-            <span style={{ color: 'var(--fg-muted)' }}>{aiSource.value === 'universal' ? 'universal-ai-formatter' : `${aiSource.value}-to-${format.value}`}</span>
+            <span className="text-fg-muted">{aiSource.value === 'universal' ? 'universal-ai-formatter' : `${aiSource.value}-to-${format.value}`}</span>
           </div>
-          <h1 style={{
-            margin: 0, fontSize: 36, fontWeight: 600,
-            letterSpacing: '-0.025em', lineHeight: 1.08,
-          }}>
+          <h1 className="m-0 text-4xl font-semibold tracking-tight leading-tight">
             {aiSource.value !== 'universal' 
               ? `${aiSource.label.replace(' Style', '')} to ${format.label} Formatter` 
               : 'Universal AI-to-Doc Formatter'}
           </h1>
-          <p style={{
-            margin: '10px 0 0', fontSize: 15,
-            color: 'var(--fg-muted)', maxWidth: 620, lineHeight: 1.5,
-          }}>
+          <p className="mt-2.5 mb-0 text-[15px] text-fg-muted max-w-[620px] leading-relaxed">
             {aiSource.value !== 'universal'
               ? `Paste raw output from ${aiSource.label.replace(' Style', '')}. Generate a themed document, then fine-tune it directly in the editor before exporting as a premium ${format.label}.`
               : 'Paste raw output from ChatGPT, Claude, Gemini, DeepSeek, Grok, or Perplexity. Generate a themed document, then fine-tune it directly in the editor before exporting.'}
           </p>
         </div>
 
-        <div style={{
-          display: 'flex', gap: 6, alignItems: 'center',
-          padding: '8px 12px',
-          background: 'var(--bg-elev-2)',
-          border: '1px solid var(--border)',
-          borderRadius: 8,
-          fontSize: 11.5, color: 'var(--fg-muted)',
-        }}>
+        <div className="flex gap-1.5 items-center px-3 py-2 bg-[var(--bg-elev-2)] border border-[var(--border)] rounded-lg text-[11.5px] text-fg-muted">
           <kbd className="kbd">⌘</kbd><kbd className="kbd">↵</kbd>
-          <span style={{ marginLeft: 4 }}>to generate</span>
+          <span className="ml-1">to generate</span>
         </div>
       </div>
 
       {/* Input card */}
-      <div style={{
-        background: 'var(--bg-elev-1)',
-        border: '1px solid var(--border)',
-        borderRadius: 12,
-        overflow: 'visible',
-        boxShadow: '0 1px 0 oklch(1 0 0 / 0.03) inset',
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          padding: '10px 12px',
-          borderBottom: '1px solid var(--border)',
-          background: 'var(--bg-elev-2)',
-        }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: 6,
-            fontSize: 11.5, fontWeight: 500, color: 'var(--fg-muted)',
-            padding: '3px 9px',
-            background: 'var(--bg-hover)',
-            borderRadius: 5,
-          }}>
-            <span style={{
-              width: 6, height: 6, borderRadius: '50%',
-              background: text ? 'oklch(0.78 0.16 145)' : 'var(--fg-dim)',
-              boxShadow: text ? '0 0 8px oklch(0.78 0.16 145 / 0.7)' : 'none',
-            }} />
+      <div className="bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-xl overflow-visible shadow-[0_1px_0_oklch(1_0_0/0.03)_inset]">
+        <div className="flex items-center gap-2 px-3 py-2.5 border-b border-[var(--border)] bg-[var(--bg-elev-2)]">
+          <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium text-fg-muted px-2 py-1 bg-[var(--bg-hover)] rounded-md">
+            <span 
+              className="w-1.5 h-1.5 rounded-full shrink-0" 
+              style={{
+                background: text ? 'oklch(0.78 0.16 145)' : 'var(--fg-dim)',
+                boxShadow: text ? '0 0 8px oklch(0.78 0.16 145 / 0.7)' : 'none',
+              }} 
+            />
             Source · markdown
           </span>
-          <div style={{ flex: 1 }} />
-          <button onClick={() => { setText(SAMPLE); taRef.current?.focus(); }} className="" style={miniBtn}>Sample</button>
+          <div className="flex-1" />
+          <button onClick={() => { setText(SAMPLE); taRef.current?.focus(); }} style={miniBtn}>Sample</button>
           <button onClick={() => {
             navigator.clipboard?.readText?.().then(t => setText(t || text)).catch(() => {});
-          }} className="" style={miniBtn}>Paste</button>
-          <button onClick={() => { setText(''); taRef.current?.focus(); }} className="" style={{ ...miniBtn, color: text ? 'var(--fg-muted)' : 'var(--fg-dim)' }}>Clear</button>
+          }} style={miniBtn}>Paste</button>
+          <button onClick={() => { setText(''); taRef.current?.focus(); }} style={{ ...miniBtn, color: text ? 'var(--fg-muted)' : 'var(--fg-dim)' }}>Clear</button>
         </div>
 
         {/* AI Source Auto-detection Recommendation Banner */}
         {detectedAi && (
-          <div style={{
+          <div className="border-b border-[var(--border)] px-4 py-2.5 text-[12.5px] flex items-center gap-2.5 text-fg-muted fade-in" style={{
             background: `oklch(0.20 0.010 ${hueOverrides[detectedAi] ?? 265} / 0.75)`,
-            borderBottom: '1px solid var(--border)',
-            padding: '10px 16px',
-            fontSize: 12.5,
-            display: 'flex', alignItems: 'center', gap: 10,
-            color: 'var(--fg-muted)',
-          }} className="fade-in">
-            <span style={{ display: 'inline-flex', alignItems: 'center', color: `oklch(0.78 0.16 ${hueOverrides[detectedAi] ?? 265})` }}>
+          }}>
+            <span className="inline-flex items-center" style={{ color: `oklch(0.78 0.16 ${hueOverrides[detectedAi] ?? 265})` }}>
               <Icon.Sparkles size={13} strokeWidth={2.2} />
             </span>
             <span>
               Detected **{AI_SOURCES.find(a => a.value === detectedAi)?.label.replace(' Style', '')}** formatting. Optimize layout styling?
             </span>
-            <div style={{ flex: 1 }} />
+            <div className="flex-1" />
             <button
               onClick={() => {
                 const matched = AI_SOURCES.find(a => a.value === detectedAi);
                 if (matched) setAiSource(matched);
                 setDetectedAi(null);
               }}
-              className=""
+              className="px-2.5 py-1 text-white text-[11.5px] font-semibold rounded-md shadow-[0_1px_3px_oklch(0_0_0/0.15)] cursor-pointer"
               style={{
-                cursor: 'pointer',
-                padding: '4px 10px',
                 background: `oklch(0.72 0.18 ${hueOverrides[detectedAi] ?? 265})`,
-                color: 'white',
-                fontSize: 11.5, fontWeight: 600,
-                borderRadius: 5,
-                boxShadow: '0 1px 3px oklch(0 0 0 / 0.15)',
               }}
             >
               Apply Style
             </button>
             <button
               onClick={() => setDetectedAi(null)}
-              className=""
-              style={{
-                cursor: 'pointer',
-                fontSize: 11.5, color: 'var(--fg-dim)',
-                padding: '4px 6px',
-              }}
+              className="text-[11.5px] text-fg-dim px-1.5 py-1 cursor-pointer"
             >
               Dismiss
             </button>
@@ -1193,62 +1138,35 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           onChange={e => setText(e.target.value)}
           spellCheck={false}
           placeholder="Paste your raw AI output here…"
-          style={{
-            display: 'block', width: '100%', boxSizing: 'border-box',
-            minHeight: 180,
-            padding: '14px 18px',
-            background: 'transparent', border: 'none', outline: 'none',
-            color: 'var(--fg)',
-            fontFamily: '"JetBrains Mono", ui-monospace, monospace',
-            fontSize: 13, lineHeight: 1.6,
-            resize: 'vertical',
-          }}
+          className="block w-full box-border min-h-[180px] px-[18px] py-[14px] bg-transparent border-none outline-none text-fg font-mono text-[13px] leading-[1.6] resize-y"
         />
 
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 12,
-          padding: '10px 12px',
-          borderTop: '1px solid var(--border)',
-          background: 'var(--bg-elev-2)',
-          flexWrap: 'wrap',
-        }} className="tool-controls-row">
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 14,
-            fontSize: 11, color: 'var(--fg-dim)',
-            fontFamily: '"JetBrains Mono", monospace',
-            flex: 1, minWidth: 180,
-          }}>
+        <div className="flex items-center gap-3 px-3 py-2.5 border-t border-[var(--border)] bg-[var(--bg-elev-2)] flex-wrap tool-controls-row">
+          <div className="flex items-center gap-3.5 text-[11px] text-fg-dim font-mono flex-1 min-w-[180px]">
             <Stat label="chars" value={chars.toLocaleString()} />
             <Stat label="words" value={words.toLocaleString()} />
             <Stat label="lines" value={lines.toLocaleString()} />
           </div>
-          <div style={{ width: 140 }}><Select compact value={theme} options={THEMES} onChange={setTheme} /></div>
-          <div style={{ width: 120 }}><Select compact value={format} options={FORMATS} onChange={setFormat} /></div>
+          <div className="w-[140px]"><Select compact value={theme} options={THEMES} onChange={setTheme} /></div>
+          <div className="w-[120px]"><Select compact value={format} options={FORMATS} onChange={setFormat} /></div>
           <button
             onClick={handleGenerate}
             disabled={!text.trim() || generating}
-            className=""
+            className="inline-flex items-center gap-2 px-3.5 py-[9px] text-white font-medium text-[13px] rounded-lg whitespace-nowrap"
             style={{
               cursor: !text.trim() || generating ? 'not-allowed' : 'pointer',
               opacity: !text.trim() ? 0.5 : 1,
-              display: 'inline-flex', alignItems: 'center', gap: 8,
-              padding: '9px 14px',
               background: generating
                 ? `oklch(0.55 0.12 ${activeHue})`
                 : `linear-gradient(180deg, oklch(0.72 0.18 ${activeHue}), oklch(0.62 0.20 ${activeHue}))`,
-              color: 'white',
-              fontWeight: 500, fontSize: 13,
-              borderRadius: 8,
               boxShadow: `0 1px 0 oklch(1 0 0 / 0.25) inset, 0 0 0 1px oklch(0.50 0.14 ${activeHue} / 0.5), 0 4px 14px oklch(0.50 0.20 ${activeHue} / 0.30)`,
-              whiteSpace: 'nowrap',
             }}
           >
             {generating ? (
               <>
-                <span style={{ display: 'inline-flex', animation: 'spin 0.9s linear infinite' }}>
+                <span className="inline-flex animate-spin">
                   <Icon.Loader size={14} strokeWidth={2.2}/>
                 </span>
-                <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
                 Generating…
               </>
             ) : (
@@ -1289,35 +1207,25 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
             </span>
             <span className="mono" style={{ fontSize: 11, color: 'var(--fg-dim)' }}>
               · formatted-doc-{Date.now().toString().slice(-4)}{format.tag}
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{
+              background: generating ? 'oklch(0.78 0.16 75)' : 'oklch(0.78 0.16 145)',
+              boxShadow: '0 0 8px currentColor',
+              color: generating ? 'oklch(0.78 0.16 75)' : 'oklch(0.78 0.16 145)',
+            }} />
+            <span className="text-[13px] font-medium">
+              {generating ? 'Rendering…' : 'Editable preview · edit anything, your changes export'}
             </span>
-            <div style={{ flex: 1 }} />
+            <span className="mono text-[11px] text-fg-dim">
+              · formatted-doc-{Date.now().toString().slice(-4)}{format.tag}
+            </span>
+            <div className="flex-1" />
             {generated && (
               <>
-                <button onClick={rerender} className="" style={{
-                  cursor: 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '7px 10px',
-                  background: 'var(--bg-hover)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 7,
-                  fontSize: 12, fontWeight: 500,
-                  color: 'var(--fg-muted)',
-                }}
-                title="Discard edits and re-render from source markdown">
+                <button onClick={rerender} className="inline-flex items-center gap-1.5 px-2.5 py-[7px] bg-[var(--bg-hover)] border border-[var(--border)] rounded-md text-[12px] font-medium text-fg-muted cursor-pointer" title="Discard edits and re-render from source markdown">
                   <Icon.Loader size={11} strokeWidth={2}/> Re-render
                 </button>
 
-                <button onClick={handleCopy} disabled={copying} className="" style={{
-                  cursor: copying ? 'wait' : 'pointer',
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '7px 12px',
-                  background: 'var(--bg-hover)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 7,
-                  fontSize: 12, fontWeight: 500,
-                  color: 'var(--fg-muted)',
-                }}
-                title="Copy formatted output to your clipboard">
+                <button onClick={handleCopy} disabled={copying} className="inline-flex items-center gap-1.5 px-3 py-[7px] bg-[var(--bg-hover)] border border-[var(--border)] rounded-md text-[12px] font-medium text-fg-muted" style={{ cursor: copying ? 'wait' : 'pointer' }} title="Copy formatted output to your clipboard">
                   {copying ? (
                     <><Icon.Loader size={11} strokeWidth={2} /> Copying...</>
                   ) : (
@@ -1328,17 +1236,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                   )}
                 </button>
                 
-                <button onClick={handleDownload} disabled={downloading} className="" style={{
-                  cursor: downloading ? 'wait' : 'pointer',
-                  opacity: downloading ? 0.7 : 1,
-                  display: 'inline-flex', alignItems: 'center', gap: 7,
-                  padding: '7px 14px',
-                  background: 'linear-gradient(180deg, oklch(0.97 0.005 250), oklch(0.86 0.005 250))',
-                  color: 'oklch(0.14 0.008 250)',
-                  fontWeight: 500, fontSize: 13,
-                  borderRadius: 7,
-                  boxShadow: '0 1px 0 oklch(1 0 0 / 0.5) inset, 0 1px 3px oklch(0 0 0 / 0.5)',
-                }}>
+                <button onClick={handleDownload} disabled={downloading} className="inline-flex items-center gap-2 px-3.5 py-[7px] bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[13px] rounded-md shadow-[0_1px_0_oklch(1_0_0/0.5)_inset,0_1px_3px_oklch(0_0_0/0.5)]" style={{ cursor: downloading ? 'wait' : 'pointer', opacity: downloading ? 0.7 : 1 }}>
                   {downloading ? (
                     <><Icon.Loader size={12} strokeWidth={2.2} /> Generating...</>
                   ) : (
@@ -1351,39 +1249,27 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
 
           {/* Pro Workspace Cockpit Settings */}
           {generated && (
-            <div style={{
-              padding: '14px 20px',
-              background: 'oklch(0.18 0.010 265 / 0.15)',
-              borderBottom: '1px solid var(--border)',
-              display: 'flex', flexDirection: 'column', gap: 14
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Icon.Wand size={14} style={{ color: 'var(--pro)' }} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Workspace & Branding Cockpit</span>
+            <div className="px-5 py-3.5 bg-[oklch(0.18_0.010_265/0.15)] border-b border-[var(--border)] flex flex-col gap-3.5">
+              <div className="flex items-center justify-between flex-wrap gap-2.5">
+                <div className="flex items-center gap-2">
+                  <Icon.Wand size={14} className="text-[var(--pro)]" />
+                  <span className="text-[13px] font-semibold text-white">Workspace & Branding Cockpit</span>
                   {!isPremium && (
-                    <span className="mono" style={{ fontSize: 9, background: 'var(--pro)', color: 'black', padding: '1px 5px', borderRadius: 4, fontWeight: 700 }}>PRO UPGRADE GATED</span>
+                    <span className="mono text-[9px] bg-[var(--pro)] text-black px-1.5 py-[1px] rounded font-bold">PRO UPGRADE GATED</span>
                   )}
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div className="flex items-center gap-2">
                   {/* Layout selector */}
-                  <label className="mono" style={{ fontSize: 11, color: 'var(--fg-subtle)' }}>Layout:</label>
-                  <select value={layoutMode} onChange={e => setLayoutMode(e.target.value as any)} style={{
-                    background: 'var(--bg-elev-2)', border: '1px solid var(--border)', color: 'white',
-                    fontSize: 12, padding: '4px 8px', borderRadius: 6, outline: 'none'
-                  }}>
+                  <label className="mono text-[11px] text-[var(--fg-subtle)]">Layout:</label>
+                  <select value={layoutMode} onChange={e => setLayoutMode(e.target.value as any)} className="bg-[var(--bg-elev-2)] border border-[var(--border)] text-white text-[12px] px-2 py-1 rounded-md outline-none">
                     <option value="standard">Standard</option>
                     <option value="compact">Compact</option>
                     <option value="zen">Zen Focus</option>
                   </select>
 
                   {/* History drawer toggle */}
-                  <button onClick={() => { setHistoryOpen(!historyOpen); loadCloudHistory(); }} className="" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6, padding: '4px 10px',
-                    background: 'var(--bg-elev-2)', border: '1px solid var(--border)', borderRadius: 6,
-                    fontSize: 12, color: 'white', cursor: 'pointer'
-                  }}>
+                  <button onClick={() => { setHistoryOpen(!historyOpen); loadCloudHistory(); }} className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-[var(--bg-elev-2)] border border-[var(--border)] rounded-md text-[12px] text-white cursor-pointer">
                     <Icon.BookMarked size={12} />
                     History
                   </button>
@@ -1392,24 +1278,16 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
 
               {/* Collapsible settings block */}
               {format.value === 'pdf' && (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 14, marginTop: 4 }}>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3.5 mt-1">
                   {/* 1. Custom header text input */}
                   <div 
                     onClick={() => !isPremium && onShowPaywall()}
-                    style={{ cursor: !isPremium ? 'pointer' : 'default' }}
+                    className={!isPremium ? 'cursor-pointer' : 'cursor-default'}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <label style={{ fontSize: 10, color: 'var(--fg-dim)', margin: 0 }} className="mono">PDF Running Header</label>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <label className="mono text-[10px] text-fg-dim m-0">PDF Running Header</label>
                       {!isPremium && (
-                        <span className="mono" style={{
-                          fontSize: 8.5,
-                          background: 'linear-gradient(90deg, oklch(0.70 0.20 30), oklch(0.85 0.15 80))',
-                          color: 'black',
-                          padding: '1px 5px',
-                          borderRadius: 4,
-                          fontWeight: 800,
-                          letterSpacing: '0.05em'
-                        }}>PRO</span>
+                        <span className="mono text-[8.5px] bg-gradient-to-r from-[oklch(0.70_0.20_30)] to-[oklch(0.85_0.15_80)] text-black px-1.5 py-[1px] rounded font-extrabold tracking-[0.05em]">PRO</span>
                       )}
                     </div>
                     <input
@@ -1418,31 +1296,20 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                       readOnly={!isPremium}
                       value={customHeader}
                       onChange={e => setCustomHeader(e.target.value)}
-                      style={{
-                        width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
-                        border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none',
-                        cursor: !isPremium ? 'pointer' : 'text'
-                      }}
+                      className="w-full px-2.5 py-1.5 bg-[var(--bg-elev-2)] border border-[var(--border)] rounded-md text-white text-[12px] outline-none"
+                      style={{ cursor: !isPremium ? 'pointer' : 'text' }}
                     />
                   </div>
 
                   {/* 2. Custom footer text input */}
                   <div 
                     onClick={() => !isPremium && onShowPaywall()}
-                    style={{ cursor: !isPremium ? 'pointer' : 'default' }}
+                    className={!isPremium ? 'cursor-pointer' : 'cursor-default'}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                      <label style={{ fontSize: 10, color: 'var(--fg-dim)', margin: 0 }} className="mono">PDF Running Footer</label>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <label className="mono text-[10px] text-fg-dim m-0">PDF Running Footer</label>
                       {!isPremium && (
-                        <span className="mono" style={{
-                          fontSize: 8.5,
-                          background: 'linear-gradient(90deg, oklch(0.70 0.20 30), oklch(0.85 0.15 80))',
-                          color: 'black',
-                          padding: '1px 5px',
-                          borderRadius: 4,
-                          fontWeight: 800,
-                          letterSpacing: '0.05em'
-                        }}>PRO</span>
+                        <span className="mono text-[8.5px] bg-gradient-to-r from-[oklch(0.70_0.20_30)] to-[oklch(0.85_0.15_80)] text-black px-1.5 py-[1px] rounded font-extrabold tracking-[0.05em]">PRO</span>
                       )}
                     </div>
                     <input
@@ -1451,11 +1318,8 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                       readOnly={!isPremium}
                       value={customFooter}
                       onChange={e => setCustomFooter(e.target.value)}
-                      style={{
-                        width: '100%', padding: '6px 10px', background: 'var(--bg-elev-2)',
-                        border: '1px solid var(--border)', borderRadius: 6, color: 'white', fontSize: 12, outline: 'none',
-                        cursor: !isPremium ? 'pointer' : 'text'
-                      }}
+                      className="w-full px-2.5 py-1.5 bg-[var(--bg-elev-2)] border border-[var(--border)] rounded-md text-white text-[12px] outline-none"
+                      style={{ cursor: !isPremium ? 'pointer' : 'text' }}
                     />
                   </div>
                 </div>
@@ -1503,31 +1367,22 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
           {/* Paper area */}
           <div style={{
             padding: 'clamp(20px, 4vw, 48px)',
-            background: 'var(--bg-paper-container)',
-            minHeight: 480,
-            display: 'flex', justifyContent: 'center',
-          }}>
+          {/* Paper area */}
+          <div className="p-[clamp(20px,4vw,48px)] bg-[var(--bg-paper-container)] min-h-[480px] flex justify-center">
             {generating ? (
-              <div style={{ width: '100%', maxWidth: 760, background: 'oklch(0.97 0.005 250)', borderRadius: 6, padding: '60px 56px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <div className="shimmer" style={{ height: 32, width: '60%', borderRadius: 4 }}/>
-                <div className="shimmer" style={{ height: 14, width: '40%' }}/>
-                <div style={{ height: 16 }}/>
-                <div className="shimmer" style={{ height: 14, width: '95%' }}/>
-                <div className="shimmer" style={{ height: 14, width: '92%' }}/>
+              <div className="w-full max-w-[760px] bg-[oklch(0.97_0.005_250)] rounded-md px-[56px] py-[60px] flex flex-col gap-3">
+                <div className="shimmer h-8 w-[60%] rounded" />
+                <div className="shimmer h-3.5 w-[40%]" />
+                <div className="h-4" />
+                <div className="shimmer h-3.5 w-[95%]" />
+                <div className="shimmer h-3.5 w-[92%]" />
               </div>
             ) : format.value === 'md' || format.value === 'txt' ? (
               <textarea
                 ref={editorRef as any}
                 defaultValue={text}
                 spellCheck={false}
-                style={{
-                  width: '100%', maxWidth: 760,
-                  background: 'oklch(0.97 0.005 250)', color: 'oklch(0.16 0.008 250)',
-                  borderRadius: 6, padding: '60px clamp(36px, 6vw, 72px)',
-                  boxShadow: '0 2px 4px oklch(0 0 0 / 0.4), 0 24px 80px oklch(0 0 0 / 0.5)',
-                  outline: 'none', border: 'none', resize: 'vertical', minHeight: 480,
-                  fontFamily: '"JetBrains Mono", ui-monospace, monospace', fontSize: 14, lineHeight: 1.6
-                }}
+                className="w-full max-w-[760px] bg-[oklch(0.97_0.005_250)] text-[oklch(0.16_0.008_250)] rounded-md px-[clamp(36px,6vw,72px)] py-[60px] shadow-[0_2px_4px_oklch(0_0_0/0.4),0_24px_80px_oklch(0_0_0/0.5)] outline-none border-none resize-y min-h-[480px] font-mono text-[14px] leading-[1.6]"
               />
             ) : (
               <div
@@ -1553,77 +1408,30 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
 
           {/* Bottom meta */}
           {generated && (
-            <div style={{
-              padding: '8px 14px',
-              borderTop: '1px solid var(--border)',
-              background: 'var(--bg-elev-2)',
-              display: 'flex', alignItems: 'center', gap: 16,
-              fontSize: 11, color: 'var(--fg-dim)',
-              fontFamily: '"JetBrains Mono", monospace',
-              flexWrap: 'wrap',
-            }}>
+            <div className="px-3.5 py-2 border-t border-[var(--border)] bg-[var(--bg-elev-2)] flex items-center gap-4 text-[11px] text-[var(--fg-dim)] font-mono flex-wrap">
               <span>Auto-saved · just now</span>
               <span>·</span>
               <span>{theme.value === 'academic' ? 'Source Serif, Inter' : theme.value === 'minimalist' ? 'JetBrains Mono' : 'Inter, Source Serif'}</span>
               <span>·</span>
               <span>2 pages · 184 KB</span>
-              <span style={{ flex: 1 }} />
+              <span className="flex-1" />
               <span>theme={theme.value} · format={format.value}</span>
             </div>
           )}
           {pdfToast && typeof window !== 'undefined' && createPortal(
-            <div style={{
-              position: 'fixed',
-              top: 0, left: 0, right: 0, bottom: 0,
-              zIndex: 999999,
-              background: 'oklch(0.12 0.015 250 / 0.7)',
-              backdropFilter: 'blur(16px)',
-              WebkitBackdropFilter: 'blur(16px)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 16,
-              color: '#fff',
-              animation: 'fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}>
+            <div className="fixed inset-0 z-[999999] bg-[oklch(0.12_0.015_250/0.7)] backdrop-blur-md flex flex-col items-center justify-center gap-4 text-white animate-[fadeIn_0.4s_cubic-bezier(0.16,1,0.3,1)]">
               <style>{`
                 @keyframes spin { to { transform: rotate(360deg); } }
                 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
               `}</style>
               
-              <div style={{
-                width: 48, height: 48,
-                borderRadius: '50%',
-                border: '3px solid oklch(0.7 0.15 140 / 0.2)',
-                borderTopColor: 'oklch(0.7 0.15 140)',
-                animation: 'spin 1s linear infinite',
-                boxShadow: '0 0 16px oklch(0.7 0.15 140 / 0.3)',
-              }} />
+              <div className="w-12 h-12 rounded-full border-[3px] border-[oklch(0.7_0.15_140/0.2)] border-t-[oklch(0.7_0.15_140)] animate-[spin_1s_linear_infinite] shadow-[0_0_16px_oklch(0.7_0.15_140/0.3)]" />
               
-              <div style={{
-                maxWidth: 460,
-                textAlign: 'center',
-                padding: '0 24px',
-              }}>
-                <h3 style={{
-                  fontSize: 19,
-                  fontWeight: 600,
-                  marginBottom: 8,
-                  color: '#fff',
-                  letterSpacing: '-0.01em',
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                }}>
+              <div className="max-w-[460px] text-center px-6">
+                <h3 className="text-[19px] font-semibold mb-2 text-white tracking-[-0.01em] font-sans">
                   Preparing Your PDF...
                 </h3>
-                <p style={{
-                  fontSize: 14.5,
-                  lineHeight: 1.6,
-                  color: 'oklch(0.9 0.01 250 / 0.95)',
-                  fontWeight: 400,
-                  margin: 0,
-                  fontFamily: 'Inter, system-ui, sans-serif',
-                }}>
+                <p className="text-[14.5px] leading-[1.6] text-[oklch(0.9_0.01_250/0.95)] font-normal m-0 font-sans">
                   {pdfToast}
                 </p>
               </div>
@@ -1635,42 +1443,30 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
 
       {/* Smart Truncation Paywall Modal (100% Client-Side Screen only - clean PDF) */}
       {truncationModal && typeof window !== 'undefined' && createPortal(
-        <div style={{
-          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'oklch(0 0 0 / 0.75)', backdropFilter: 'blur(8px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          zIndex: 999999, animation: 'fadeIn 0.25s ease'
-        }}>
-          <div style={{
-            background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-            borderRadius: 16, padding: 32, maxWidth: 460, width: '90%',
-            boxShadow: '0 24px 60px oklch(0 0 0 / 0.5)', display: 'flex', flexDirection: 'column', gap: 20,
-            position: 'relative'
-          }} className="fade-in-up">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-[999999] animate-[fadeIn_0.25s_ease]">
+          <div className="bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-2xl p-8 max-w-[460px] w-[90%] shadow-[0_24px_60px_oklch(0_0_0/0.5)] flex flex-col gap-5 relative fade-in-up">
             <button 
               onClick={() => setTruncationModal(null)} 
-              className="" 
-              style={{ position: 'absolute', top: 20, right: 20, cursor: 'pointer', color: 'var(--fg-dim)', transition: 'color 0.15s', border: 'none', background: 'transparent' }}
-              onMouseEnter={e => e.currentTarget.style.color = 'white'}
-              onMouseLeave={e => e.currentTarget.style.color = 'var(--fg-dim)'}
+              className="absolute top-5 right-5 cursor-pointer text-[var(--fg-dim)] hover:text-white transition-colors border-none bg-transparent"
             >
               <Icon.X size={18} />
             </button>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'center', marginTop: 10 }}>
-              <div style={{
-                width: 56, height: 56, borderRadius: '50%',
-                background: isAnonUser ? 'oklch(0.20 0.010 195 / 0.8)' : 'oklch(0.20 0.010 265 / 0.8)',
-                color: isAnonUser ? 'oklch(0.72 0.18 195)' : 'oklch(0.70 0.18 265)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px',
-                boxShadow: isAnonUser ? '0 0 20px oklch(0.72 0.18 195 / 0.15)' : '0 0 20px oklch(0.70 0.18 265 / 0.15)'
-              }}>
+            <div className="flex flex-col gap-2 text-center mt-2.5">
+              <div 
+                className="w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3"
+                style={{
+                  background: isAnonUser ? 'oklch(0.20 0.010 195 / 0.8)' : 'oklch(0.20 0.010 265 / 0.8)',
+                  color: isAnonUser ? 'oklch(0.72 0.18 195)' : 'oklch(0.70 0.18 265)',
+                  boxShadow: isAnonUser ? '0 0 20px oklch(0.72 0.18 195 / 0.15)' : '0 0 20px oklch(0.70 0.18 265 / 0.15)'
+                }}
+              >
                 <Icon.Layers3 size={24} />
               </div>
-              <h3 style={{ fontSize: 20, fontWeight: 600, color: 'white', margin: 0, fontFamily: 'Inter, system-ui, sans-serif' }}>
+              <h3 className="text-[20px] font-semibold text-white m-0 font-sans">
                 {isAnonUser ? 'Guest Page Limit Reached' : 'Free Page Limit Reached'}
               </h3>
-              <p style={{ fontSize: 13.5, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5, fontFamily: 'Inter, system-ui, sans-serif' }}>
+              <p className="text-[13.5px] text-[var(--fg-muted)] m-0 leading-[1.5] font-sans">
                 {isAnonUser 
                   ? `You successfully compiled your first ${truncationModal.limit} pages! Guest exports are capped at 5 pages. Create a free account to instantly unlock 20 pages.`
                   : `You successfully compiled your first ${truncationModal.limit} pages! Your full document is approximately ${truncationModal.totalPages} pages. Upgrade to a premium plan to export all pages instantly.`
@@ -1678,7 +1474,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
               </p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 10 }}>
+            <div className="flex flex-col gap-2.5 mt-2.5">
               {isAnonUser ? (
                 <>
                   <button 
@@ -1687,13 +1483,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                       // Trigger auth modal via parent window postMessage
                       window.parent?.postMessage?.('open-auth-modal', '*');
                     }}
-                    className=""
-                    style={{
-                      width: '100%', padding: '12px', borderRadius: 8,
-                      background: 'linear-gradient(180deg, oklch(0.72 0.18 195), oklch(0.62 0.20 195))',
-                      color: 'white', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', textAlign: 'center', border: 'none',
-                      boxShadow: '0 4px 12px oklch(0.72 0.18 195 / 0.2)'
-                    }}
+                    className="w-full p-3 rounded-lg bg-gradient-to-b from-[oklch(0.72_0.18_195)] to-[oklch(0.62_0.20_195)] text-white font-semibold text-[13.5px] cursor-pointer text-center border-none shadow-[0_4px_12px_oklch(0.72_0.18_195/0.2)]"
                   >
                     Create Free Account
                   </button>
@@ -1702,15 +1492,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                       setTruncationModal(null);
                       window.parent?.postMessage?.('show-paywall-modal', '*');
                     }}
-                    className=""
-                    style={{
-                      width: '100%', padding: '11px', borderRadius: 8,
-                      background: 'transparent', border: '1px solid var(--border)',
-                      color: 'white', fontWeight: 500, fontSize: 13, cursor: 'pointer', textAlign: 'center',
-                      transition: 'background 0.15s'
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-                    onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                    className="w-full py-[11px] px-3 rounded-lg bg-transparent hover:bg-[var(--bg-hover)] border border-[var(--border)] text-white font-medium text-[13px] cursor-pointer text-center transition-colors"
                   >
                     Upgrade to Premium
                   </button>
@@ -1721,13 +1503,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                     setTruncationModal(null);
                     window.parent?.postMessage?.('show-paywall-modal', '*');
                   }}
-                  className=""
-                  style={{
-                    width: '100%', padding: '12px', borderRadius: 8,
-                    background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
-                    color: 'white', fontWeight: 600, fontSize: 13.5, cursor: 'pointer', textAlign: 'center', border: 'none',
-                    boxShadow: '0 4px 12px oklch(0.70 0.18 265 / 0.2)'
-                  }}
+                  className="w-full p-3 rounded-lg bg-gradient-to-b from-[oklch(0.72_0.18_265)] to-[oklch(0.62_0.20_265)] text-white font-semibold text-[13.5px] cursor-pointer text-center border-none shadow-[0_4px_12px_oklch(0.70_0.18_265/0.2)]"
                 >
                   Upgrade to Export All {truncationModal.totalPages} Pages
                 </button>
@@ -1735,11 +1511,7 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
               
               <button 
                 onClick={() => setTruncationModal(null)} 
-                className="" 
-                style={{
-                  width: '100%', padding: '10px', color: 'var(--fg-dim)', fontWeight: 500,
-                  fontSize: 12.5, cursor: 'pointer', textAlign: 'center', border: 'none', background: 'transparent'
-                }}
+                className="w-full p-2.5 text-[var(--fg-dim)] font-medium text-[12.5px] cursor-pointer text-center border-none bg-transparent"
               >
                 Keep Truncated PDF
               </button>
@@ -1751,28 +1523,24 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
 
       {/* Cloud History Drawer Component */}
       {historyOpen && (
-        <div style={{
-          position: 'fixed', top: 0, right: 0, bottom: 0, width: 320, zIndex: 99999,
-          background: 'var(--bg-elev-1)', borderLeft: '1px solid var(--border)',
-          boxShadow: '-10px 0 30px oklch(0 0 0 / 0.4)', padding: '80px 24px 24px', display: 'flex', flexDirection: 'column'
-        }} className="fade-in">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <h4 style={{ fontSize: 16, fontWeight: 600, color: 'white', margin: 0 }}>Cloud History (30 Days)</h4>
-            <button onClick={() => setHistoryOpen(false)} className="" style={{ cursor: 'pointer', color: 'var(--fg-subtle)' }}><Icon.X size={16} /></button>
+        <div className="fixed top-0 right-0 bottom-0 w-[320px] z-[99999] bg-[var(--bg-elev-1)] border-l border-[var(--border)] shadow-[-10px_0_30px_oklch(0_0_0/0.4)] pt-20 px-6 pb-6 flex flex-col fade-in">
+          <div className="flex items-center justify-between mb-5">
+            <h4 className="text-[16px] font-semibold text-white m-0">Cloud History (30 Days)</h4>
+            <button onClick={() => setHistoryOpen(false)} className="cursor-pointer text-[var(--fg-subtle)] bg-transparent border-none p-0"><Icon.X size={16} /></button>
           </div>
 
           {!sessionUser || sessionUser.is_anonymous ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, margin: 'auto 0', textAlign: 'center', padding: '0 10px' }}>
-              <Icon.BookMarked size={32} style={{ color: 'var(--fg-dim)', margin: '0 auto' }} />
-              <div style={{ fontSize: 13.5, color: 'var(--fg-muted)' }}>Sign up to synchronize your history securely in the cloud.</div>
+            <div className="flex flex-col gap-3.5 my-auto text-center px-2.5">
+              <Icon.BookMarked size={32} className="text-[var(--fg-dim)] mx-auto" />
+              <div className="text-[13.5px] text-[var(--fg-muted)]">Sign up to synchronize your history securely in the cloud.</div>
             </div>
           ) : historyLogs.length === 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, margin: 'auto 0', textAlign: 'center' }}>
-              <Icon.BookMarked size={32} style={{ color: 'var(--fg-dim)', margin: '0 auto' }} />
-              <div style={{ fontSize: 13.5, color: 'var(--fg-muted)' }}>No saved document history yet.</div>
+            <div className="flex flex-col gap-3.5 my-auto text-center">
+              <Icon.BookMarked size={32} className="text-[var(--fg-dim)] mx-auto" />
+              <div className="text-[13.5px] text-[var(--fg-muted)]">No saved document history yet.</div>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto', flex: 1 }}>
+            <div className="flex flex-col gap-3 overflow-y-auto flex-1">
               {historyLogs.map((log: any) => (
                 <div 
                   key={log.id} 
@@ -1782,23 +1550,11 @@ export default function FormatterTool({ tool, initialSlug, brandName, userPlan, 
                       setHistoryOpen(false);
                     }
                   }}
-                  style={{
-                    padding: 12, borderRadius: 8, background: 'var(--bg-elev-2)',
-                    border: '1px solid var(--border)', display: 'flex', flexDirection: 'column', gap: 4,
-                    cursor: 'pointer', transition: 'background 0.15s, border-color 0.15s'
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.background = 'var(--bg-hover)';
-                    e.currentTarget.style.borderColor = 'var(--accent)';
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.background = 'var(--bg-elev-2)';
-                    e.currentTarget.style.borderColor = 'var(--border)';
-                  }}
+                  className="p-3 rounded-lg bg-[var(--bg-elev-2)] border border-[var(--border)] flex flex-col gap-1 cursor-pointer transition-colors hover:bg-[var(--bg-hover)] hover:border-[var(--accent)]"
                   title="Click to restore this document snippet into the editor"
                 >
-                  <div style={{ fontSize: 13, fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{log.file_name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>{new Date(log.created_at).toLocaleDateString()} · {log.tool_id.toUpperCase()}</div>
+                  <div className="text-[13px] font-semibold text-white overflow-hidden text-ellipsis whitespace-nowrap">{log.file_name}</div>
+                  <div className="text-[11px] text-[var(--fg-dim)]">{new Date(log.created_at).toLocaleDateString()} · {log.tool_id.toUpperCase()}</div>
                 </div>
               ))}
             </div>

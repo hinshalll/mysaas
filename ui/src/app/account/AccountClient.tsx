@@ -543,18 +543,13 @@ export default function AccountClient() {
 
   if (!isLoggedIn) {
     return (
-      <div style={{ maxWidth: 640, margin: '80px auto', padding: '0 32px', textAlign: 'center' }}>
-        <Icon.Shield size={48} style={{ color: 'var(--fg-dim)', marginBottom: 20 }} />
-        <h2 style={{ fontSize: 22, fontWeight: 600, color: 'var(--fg)', margin: '0 0 10px' }}>Account Settings Locked</h2>
-        <p style={{ fontSize: 14, color: 'var(--fg-muted)', margin: '0 0 24px', lineHeight: 1.5 }}>
+      <div className="max-w-[640px] mx-auto my-[80px] px-8 text-center">
+        <Icon.Shield size={48} className="text-[var(--fg-dim)] mb-5 inline-block" />
+        <h2 className="text-[22px] font-semibold text-[var(--fg)] m-0 mb-2.5">Account Settings Locked</h2>
+        <p className="text-[14px] text-[var(--fg-muted)] m-0 mb-6 leading-relaxed">
           You are currently visiting as a guest. Sign in or create a free account to customize workspace layout settings, manage subscriptions, and configure profile parameters.
         </p>
-        <button onClick={() => setAuthOpen(true)} className="" style={{
-          padding: '12px 28px', borderRadius: 9,
-          background: 'linear-gradient(180deg, oklch(0.72 0.18 265), oklch(0.62 0.20 265))',
-          color: 'white', fontWeight: 600, fontSize: 14, cursor: 'pointer',
-          boxShadow: '0 4px 14px oklch(0.50 0.20 265 / 0.3)',
-        }}>Sign In / Sign Up</button>
+        <button onClick={() => setAuthOpen(true)} className="px-7 py-3 rounded-[9px] bg-gradient-to-b from-[oklch(0.72_0.18_265)] to-[oklch(0.62_0.20_265)] text-white font-semibold text-[14px] shadow-[0_4px_14px_oklch(0.50_0.20_265/0.3)] hover:opacity-90 transition-opacity">Sign In / Sign Up</button>
       </div>
     );
   }
@@ -590,38 +585,25 @@ export default function AccountClient() {
   const dailyLimitMax = userPlan === 'api' ? 2000 : userPlan === 'pro' ? 200 : isAnonUser ? 3 : 10;
 
   return (
-    <div style={{
-      maxWidth: 1040, margin: '40px auto 120px',
-      padding: '0 24px', boxSizing: 'border-box',
-      position: 'relative',
-    }} className="fade-in">
-      <div style={{
-        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
-        background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
-        opacity: isLight ? 0.08 : 0.15,
-        zIndex: 0,
-      }}/>
+    <div className="max-w-[1040px] mx-auto mt-10 mb-[120px] px-6 box-border relative fade-in">
+      <div 
+        className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] pointer-events-none z-0"
+        style={{
+          background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
+          opacity: isLight ? 0.08 : 0.15,
+        }}
+      />
 
-      <div style={{ textAlign: 'center', marginBottom: 40, position: 'relative', zIndex: 1 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Personal Profile</span>
-        <h1 style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.020em', margin: '8px 0 0', color: 'var(--fg)' }}>My Account Settings</h1>
-        <p style={{ fontSize: 14, color: 'var(--fg-dim)', margin: '6px 0 0' }}>Configure your display name, regional localizations, layout preferences, and manage secure SaaS billing.</p>
+      <div className="text-center mb-10 relative z-10">
+        <span className="text-[11px] font-bold text-[var(--accent)] uppercase tracking-[0.1em]">Personal Profile</span>
+        <h1 className="text-[28px] font-bold tracking-[-0.020em] mt-2 mb-0 text-[var(--fg)]">My Account Settings</h1>
+        <p className="text-[14px] text-[var(--fg-dim)] mt-1.5 mb-0">Configure your display name, regional localizations, layout preferences, and manage secure SaaS billing.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'row', gap: 32, flexWrap: 'wrap', position: 'relative', zIndex: 1, alignItems: 'start' }}>
+      <div className="flex flex-row gap-8 flex-wrap relative z-10 items-start">
         
         {/* Sidebar Tabs */}
-        <div style={{
-          width: 220,
-          flexShrink: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 6,
-          position: 'sticky',
-          top: 100,
-          alignSelf: 'start',
-        }}>
+        <div className="w-[220px] shrink-0 flex flex-col gap-1.5 sticky top-[100px] self-start">
           {[
             { id: 'profile', label: 'Profile Settings', icon: Icon.User },
             { id: 'security', label: 'Security & Access', icon: Icon.Lock },
@@ -635,22 +617,8 @@ export default function AccountClient() {
               <button
                 key={tab.id}
                 onClick={() => changeTab(tab.id)}
-                className=""
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  padding: '10px 14px',
-                  borderRadius: 8,
-                  fontSize: 13,
-                  fontWeight: isActive ? 600 : 450,
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  background: isActive ? 'var(--bg-elev-2)' : 'transparent',
-                  border: isActive ? '1px solid var(--border)' : '1px solid transparent',
-                  color: isActive ? (tab.color || 'white') : 'var(--fg-dim)',
-                  transition: 'all 0.15s'
-                }}
+                className={`flex items-center gap-2.5 px-3.5 py-2.5 rounded-lg text-[13px] cursor-pointer text-left transition-all duration-150 border ${isActive ? 'font-semibold bg-[var(--bg-elev-2)] border-[var(--border)]' : 'font-medium bg-transparent border-transparent text-[var(--fg-dim)]'}`}
+                style={{ color: isActive ? (tab.color || 'white') : undefined }}
               >
                 {tab.icon && React.createElement(tab.icon, { size: 14, style: { color: isActive ? (tab.color || 'var(--accent)') : 'var(--fg-subtle)' } })}
                 <span>{tab.label}</span>
@@ -660,75 +628,46 @@ export default function AccountClient() {
         </div>
 
         {/* Content Pane */}
-        <div style={{
-          flex: 1,
-          minWidth: 280,
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 28,
-        }}>
+        <div className="flex-1 min-w-[280px] flex flex-col gap-7">
 
           {activeTab === 'profile' && (
-            <form onSubmit={handleSaveProfile} className="glass-card fade-in" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 32, height: 32, borderRadius: 8,
-                  background: 'oklch(0.18 0.010 265 / 0.15)',
-                  border: '1px solid oklch(0.70 0.18 265 / 0.3)',
-                  color: 'oklch(0.70 0.18 265)',
-                }}>
+            <form onSubmit={handleSaveProfile} className="glass-card fade-in p-[30px] flex flex-col gap-5">
+              <div className="flex items-center gap-2.5 border-b border-[var(--border)] pb-3.5">
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[oklch(0.18_0.010_265/0.15)] border border-[oklch(0.70_0.18_265/0.3)] text-[oklch(0.70_0.18_265)]">
                   <Icon.Braces size={16} />
                 </span>
                 <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Profile Details</h3>
-                  <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Update your registered public user handle and full display name.</p>
+                  <h3 className="text-[15px] font-semibold text-white m-0">Profile Details</h3>
+                  <p className="text-[12px] text-[var(--fg-dim)] m-0">Update your registered public user handle and full display name.</p>
                 </div>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+              <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Registered Email</label>
-                  <input type="text" readOnly value={sessionUser?.email || ''} style={{
-                    width: '100%', padding: '10px 12px', borderRadius: 8,
-                    background: 'oklch(0.10 0.002 250)', border: '1px solid var(--border)',
-                    color: 'var(--fg-muted)', fontSize: 13, outline: 'none', cursor: 'not-allowed', boxSizing: 'border-box'
-                  }} />
+                  <label className="block text-[10px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] mb-1.5 mono">Registered Email</label>
+                  <input type="text" readOnly value={sessionUser?.email || ''} className="w-full px-3 py-2.5 rounded-lg bg-[oklch(0.10_0.002_250)] border border-[var(--border)] text-[var(--fg-muted)] text-[13px] outline-none cursor-not-allowed box-border" />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Full Display Name</label>
-                  <input type="text" placeholder="Your full name" value={profileName} onChange={e => setProfileName(e.target.value)} style={{
-                    width: '100%', padding: '10px 12px', borderRadius: 8,
-                    background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                    color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                  }} />
+                  <label className="block text-[10px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] mb-1.5 mono">Full Display Name</label>
+                  <input type="text" placeholder="Your full name" value={profileName} onChange={e => setProfileName(e.target.value)} className="w-full px-3 py-2.5 rounded-lg bg-[oklch(0.14_0.005_250)] border border-[var(--border)] text-white text-[13px] outline-none box-border" />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Username Handle</label>
-                  <div style={{ display: 'flex', position: 'relative', alignItems: 'center' }}>
-                    <span style={{ position: 'absolute', left: 12, fontSize: 13, color: 'var(--fg-dim)' }}>@</span>
-                    <input type="text" placeholder="username" value={profileUsername} onChange={e => setProfileUsername(e.target.value)} style={{
-                      width: '100%', padding: '10px 12px 10px 26px', borderRadius: 8,
-                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                      color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                    }} />
+                  <label className="block text-[10px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] mb-1.5 mono">Username Handle</label>
+                  <div className="flex relative items-center">
+                    <span className="absolute left-3 text-[13px] text-[var(--fg-dim)]">@</span>
+                    <input type="text" placeholder="username" value={profileUsername} onChange={e => setProfileUsername(e.target.value)} className="w-full pl-[26px] pr-3 py-2.5 rounded-lg bg-[oklch(0.14_0.005_250)] border border-[var(--border)] text-white text-[13px] outline-none box-border" />
                   </div>
                 </div>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-                <span style={{ fontSize: 12, color: profileError ? 'oklch(0.60 0.20 20)' : 'oklch(0.78 0.16 145)' }}>
+              <div className="flex items-center justify-self-stretch justify-between border-t border-[var(--border)] pt-4 mt-2">
+                <span className={`text-[12px] ${profileError ? 'text-[oklch(0.60_0.20_20)]' : 'text-[oklch(0.78_0.16_145)]'}`}>
                   {profileSuccess && "✓ Profile details updated successfully!"}
                   {profileError && profileError}
                 </span>
-                <button type="submit" disabled={isSavingProfile} className="" style={{
-                  padding: '10px 20px', borderRadius: 8,
-                  background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
-                  color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 13, cursor: 'pointer',
-                  display: 'flex', alignItems: 'center', gap: 6, boxShadow: '0 2px 8px oklch(0.96 0.005 250 / 0.15)'
-                }}>
+                <button type="submit" disabled={isSavingProfile} className="px-5 py-2.5 rounded-lg bg-gradient-to-b from-[oklch(0.96_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.16_0.008_250)] font-semibold text-[13px] cursor-pointer flex items-center gap-1.5 shadow-[0_2px_8px_oklch(0.96_0.005_250/0.15)]">
                   {isSavingProfile ? 'Saving...' : 'Save Profile Details'}
                 </button>
               </div>
@@ -852,74 +791,48 @@ export default function AccountClient() {
           )}
 
           {activeTab === 'preferences' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }} className="fade-in">
+            <div className="flex flex-col gap-7 fade-in">
               {/* Section 3: Layout Configuration */}
-              <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 32, height: 32, borderRadius: 8,
-                    background: 'oklch(0.18 0.010 210 / 0.15)',
-                    border: '1px solid oklch(0.70 0.18 210 / 0.3)',
-                    color: 'oklch(0.70 0.18 210)',
-                  }}>
+              <div className="glass-card p-[30px] flex flex-col gap-5">
+                <div className="flex items-center gap-2.5 border-b border-[var(--border)] pb-3.5">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[oklch(0.18_0.010_210/0.15)] border border-[oklch(0.70_0.18_210/0.3)] text-[oklch(0.70_0.18_210)]">
                     <Icon.Grid size={16} />
                   </span>
                   <div>
-                    <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Layout Settings</h3>
-                    <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Choose the active alignment display of the document editing cockpit.</p>
+                    <h3 className="text-[15px] font-semibold text-white m-0">Layout Settings</h3>
+                    <p className="text-[12px] text-[var(--fg-dim)] m-0">Choose the active alignment display of the document editing cockpit.</p>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16 }}>
-                  <button onClick={() => handleLayoutChange('standard')} className="layout-card" style={{
-                    textAlign: 'left', padding: '16px 20px', borderRadius: 12,
-                    background: editorLayout === 'standard' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
-                    border: editorLayout === 'standard' ? '1px solid var(--accent)' : '1px solid var(--border)',
-                    cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.15s ease'
-                  }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Standard Layout</span>
-                    <span style={{ fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.4 }}>Dual comparison pane: Markdown text editor on the left and visual document outputs on the right.</span>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-4">
+                  <button onClick={() => handleLayoutChange('standard')} className={`layout-card text-left px-5 py-4 rounded-xl cursor-pointer flex flex-col gap-1.5 transition-all duration-150 border ${editorLayout === 'standard' ? 'bg-[oklch(0.18_0.010_265/0.15)] border-[var(--accent)]' : 'bg-[oklch(0.14_0.005_250)] border-[var(--border)]'}`}>
+                    <span className="text-[13px] font-semibold text-white">Standard Layout</span>
+                    <span className="text-[11px] text-[var(--fg-subtle)] leading-[1.4]">Dual comparison pane: Markdown text editor on the left and visual document outputs on the right.</span>
                   </button>
 
-                  <button onClick={() => handleLayoutChange('reversed')} className="layout-card" style={{
-                    textAlign: 'left', padding: '16px 20px', borderRadius: 12,
-                    background: editorLayout === 'reversed' ? 'oklch(0.18 0.010 265 / 0.15)' : 'oklch(0.14 0.005 250)',
-                    border: editorLayout === 'reversed' ? '1px solid var(--accent)' : '1px solid var(--border)',
-                    cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.15s ease'
-                  }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'white' }}>Reversed Layout</span>
-                    <span style={{ fontSize: 11, color: 'var(--fg-subtle)', lineHeight: 1.4 }}>Mirror layout: Visual live outputs rendered on the left, editing Markdown content on the right.</span>
+                  <button onClick={() => handleLayoutChange('reversed')} className={`layout-card text-left px-5 py-4 rounded-xl cursor-pointer flex flex-col gap-1.5 transition-all duration-150 border ${editorLayout === 'reversed' ? 'bg-[oklch(0.18_0.010_265/0.15)] border-[var(--accent)]' : 'bg-[oklch(0.14_0.005_250)] border-[var(--border)]'}`}>
+                    <span className="text-[13px] font-semibold text-white">Reversed Layout</span>
+                    <span className="text-[11px] text-[var(--fg-subtle)] leading-[1.4]">Mirror layout: Visual live outputs rendered on the left, editing Markdown content on the right.</span>
                   </button>
                 </div>
               </div>
 
               {/* Section 4: Localization Preferences */}
-              <form onSubmit={handleSaveLocalization} className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 32, height: 32, borderRadius: 8,
-                    background: 'oklch(0.18 0.010 120 / 0.15)',
-                    border: '1px solid oklch(0.70 0.16 120 / 0.3)',
-                    color: 'oklch(0.70 0.16 120)',
-                  }}>
+              <form onSubmit={handleSaveLocalization} className="glass-card p-[30px] flex flex-col gap-5">
+                <div className="flex items-center gap-2.5 border-b border-[var(--border)] pb-3.5">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[oklch(0.18_0.010_120/0.15)] border border-[oklch(0.70_0.16_120/0.3)] text-[oklch(0.70_0.16_120)]">
                     <Icon.Globe size={16} />
                   </span>
                   <div>
-                    <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Localization Preferences</h3>
-                    <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Configure regional timezones and display languages.</p>
+                    <h3 className="text-[15px] font-semibold text-white m-0">Localization Preferences</h3>
+                    <p className="text-[12px] text-[var(--fg-dim)] m-0">Configure regional timezones and display languages.</p>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+                <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
                   <div>
-                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">Display Language</label>
-                    <select value={profileLanguage} onChange={e => setProfileLanguage(e.target.value)} style={{
-                      width: '100%', padding: '10px 12px', borderRadius: 8,
-                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                      color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
-                    }}>
+                    <label className="block text-[10px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] mb-1.5 mono">Display Language</label>
+                    <select value={profileLanguage} onChange={e => setProfileLanguage(e.target.value)} className="w-full px-3 py-2.5 rounded-lg bg-[oklch(0.14_0.005_250)] border border-[var(--border)] text-white text-[13px] outline-none cursor-pointer box-border">
                       <option value="en_US">English (United States)</option>
                       <option value="en_GB">English (United Kingdom)</option>
                       <option value="es_ES">Español (España)</option>
@@ -929,12 +842,8 @@ export default function AccountClient() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }} className="mono">System Timezone</label>
-                    <select value={profileTimezone} onChange={e => setProfileTimezone(e.target.value)} style={{
-                      width: '100%', padding: '10px 12px', borderRadius: 8,
-                      background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                      color: 'white', fontSize: 13, outline: 'none', cursor: 'pointer', boxSizing: 'border-box'
-                    }}>
+                    <label className="block text-[10px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] mb-1.5 mono">System Timezone</label>
+                    <select value={profileTimezone} onChange={e => setProfileTimezone(e.target.value)} className="w-full px-3 py-2.5 rounded-lg bg-[oklch(0.14_0.005_250)] border border-[var(--border)] text-white text-[13px] outline-none cursor-pointer box-border">
                       <option value="UTC">Coordinated Universal Time (UTC)</option>
                       <option value="America/New_York">Eastern Standard Time (New York, -5)</option>
                       <option value="Europe/London">Greenwich Mean Time (London, +0)</option>
@@ -945,59 +854,49 @@ export default function AccountClient() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
-                  <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)' }}>
+                <div className="flex items-center justify-between border-t border-[var(--border)] pt-4 mt-2">
+                  <span className="text-[12px] text-[oklch(0.78_0.16_145)]">
                     {locSuccess && "✓ Localization saved successfully!"}
                   </span>
-                  <button type="submit" disabled={isSavingLoc} className="" style={{
-                    padding: '8px 16px', borderRadius: 8,
-                    background: 'linear-gradient(180deg, oklch(0.96 0.005 250), oklch(0.86 0.005 250))',
-                    color: 'oklch(0.16 0.008 250)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
-                  }}>
+                  <button type="submit" disabled={isSavingLoc} className="px-4 py-2 rounded-lg bg-gradient-to-b from-[oklch(0.96_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.16_0.008_250)] font-semibold text-[12.5px] cursor-pointer">
                     {isSavingLoc ? 'Saving...' : 'Save Localization'}
                   </button>
                 </div>
               </form>
 
               {/* Section 5: Daily limits visual meter */}
-              <div className="glass-card" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid var(--border)', paddingBottom: 14 }}>
-                  <span style={{
-                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                    width: 32, height: 32, borderRadius: 8,
-                    background: 'oklch(0.18 0.010 75 / 0.15)',
-                    border: '1px solid oklch(0.70 0.16 75 / 0.3)',
-                    color: 'oklch(0.70 0.16 75)',
-                  }}>
+              <div className="glass-card p-[30px] flex flex-col gap-5">
+                <div className="flex items-center gap-2.5 border-b border-[var(--border)] pb-3.5">
+                  <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[oklch(0.18_0.010_75/0.15)] border border-[oklch(0.70_0.16_75/0.3)] text-[oklch(0.70_0.16_75)]">
                     <Icon.Sparkles size={16} />
                   </span>
                   <div>
-                    <h3 style={{ fontSize: 15, fontWeight: 600, color: 'white', margin: 0 }}>Daily Workspace Limit Meter</h3>
-                    <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Real-time count of active data runs and metered bounds.</p>
+                    <h3 className="text-[15px] font-semibold text-white m-0">Daily Workspace Limit Meter</h3>
+                    <p className="text-[12px] text-[var(--fg-dim)] m-0">Real-time count of active data runs and metered bounds.</p>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 13, color: 'white', fontWeight: 550 }}>Daily Metered Runs</span>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: 'var(--accent)' }} className="mono">
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[13px] text-white font-[550]">Daily Metered Runs</span>
+                    <span className="text-[12.5px] font-bold text-[var(--accent)] mono">
                       {userPlan === 'pro' ? 'Unlimited / Unlimited' : userPlan === 'api' ? 'Unlimited / 30,000 API Runs/mo' : `${dailyUsageCount} / 20 used today`}
                     </span>
                   </div>
 
-                  <div style={{ height: 10, width: '100%', background: 'oklch(0.18 0.005 250)', borderRadius: 5, overflow: 'hidden', border: '1px solid var(--border)' }}>
-                    <div style={{
-                      height: '100%',
-                      width: (userPlan === 'pro' || userPlan === 'api') ? '100%' : `${Math.min((dailyUsageCount / 20) * 100, 100)}%`,
-                      background: (userPlan === 'pro' || userPlan === 'api')
-                        ? 'linear-gradient(90deg, oklch(0.70 0.18 265) 0%, oklch(0.70 0.16 195) 50%, oklch(0.70 0.16 145) 100%)'
-                        : 'linear-gradient(90deg, oklch(0.70 0.16 145) 0%, oklch(0.70 0.16 75) 60%, oklch(0.65 0.20 20) 100%)',
-                      boxShadow: '0 0 10px var(--accent)30',
-                      transition: 'width 0.5s ease-out'
-                    }} />
+                  <div className="h-2.5 w-full bg-[oklch(0.18_0.005_250)] rounded-[5px] overflow-hidden border border-[var(--border)]">
+                    <div 
+                      className="h-full shadow-[0_0_10px_var(--accent)30] transition-all duration-500 ease-out"
+                      style={{
+                        width: (userPlan === 'pro' || userPlan === 'api') ? '100%' : `${Math.min((dailyUsageCount / 20) * 100, 100)}%`,
+                        background: (userPlan === 'pro' || userPlan === 'api')
+                          ? 'linear-gradient(90deg, oklch(0.70 0.18 265) 0%, oklch(0.70 0.16 195) 50%, oklch(0.70 0.16 145) 100%)'
+                          : 'linear-gradient(90deg, oklch(0.70 0.16 145) 0%, oklch(0.70 0.16 75) 60%, oklch(0.65 0.20 20) 100%)',
+                      }} 
+                    />
                   </div>
                   {userPlan !== 'pro' && userPlan !== 'api' && (
-                    <p style={{ fontSize: 11.5, color: 'var(--fg-dim)', margin: 0, lineHeight: 1.4 }}>
+                    <p className="text-[11.5px] text-[var(--fg-dim)] m-0 leading-[1.4]">
                       Free registered accounts have a metered bound of 20 runs. Upgrade to Pro or API Tier to strip watermarks automatically and unlock unlimited daily loops!
                     </p>
                   )}
@@ -1048,70 +947,70 @@ export default function AccountClient() {
                 gap: 32,
               }}>
                 {/* Left Side: Subscription Plan Details */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+                <div className="flex flex-col gap-5">
                   <div>
-                    <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }} className="mono">Active Plan</span>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                      <span style={{ fontSize: 22, fontWeight: 700, color: 'white' }}>{planName}</span>
+                    <span className="text-[10.5px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] block mb-1.5 mono">Active Plan</span>
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-[22px] font-bold text-white">{planName}</span>
                       {userPlan !== 'free' && (
-                        <span style={{ fontSize: 15, fontWeight: 600, color: 'var(--accent)' }}>
-                          {planPrice} <span style={{ fontSize: 12, fontWeight: 400, color: 'var(--fg-dim)' }}>/ {planPeriod}</span>
+                        <span className="text-[15px] font-semibold text-[var(--accent)]">
+                          {planPrice} <span className="text-[12px] font-normal text-[var(--fg-dim)]">/ {planPeriod}</span>
                         </span>
                       )}
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div className="flex flex-col gap-2 mt-2">
+                      <div className="flex items-center gap-1.5">
                         {isCanceling ? (
                           <>
-                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.65 0.20 50)', boxShadow: '0 0 8px oklch(0.65 0.20 50)' }} />
-                            <span style={{ fontSize: 12, color: 'oklch(0.65 0.20 50)', fontWeight: 600 }}>
+                            <span className="inline-block w-2 h-2 rounded-full bg-[oklch(0.65_0.20_50)] shadow-[0_0_8px_oklch(0.65_0.20_50)]" />
+                            <span className="text-[12px] text-[oklch(0.65_0.20_50)] font-semibold">
                               Canceling
                             </span>
                           </>
                         ) : (userPlan === 'pro' || userPlan === 'api') ? (
                           <>
-                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'oklch(0.78 0.16 145)', boxShadow: '0 0 8px oklch(0.78 0.16 145)' }} />
-                            <span style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)', fontWeight: 600 }}>
+                            <span className="inline-block w-2 h-2 rounded-full bg-[oklch(0.78_0.16_145)] shadow-[0_0_8px_oklch(0.78_0.16_145)]" />
+                            <span className="text-[12px] text-[oklch(0.78_0.16_145)] font-semibold">
                               Active
                             </span>
                           </>
                         ) : (
                           <>
-                            <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: 'var(--fg-dim)' }} />
-                            <span style={{ fontSize: 12, color: 'var(--fg-dim)', fontWeight: 500 }}>
+                            <span className="inline-block w-2 h-2 rounded-full bg-[var(--fg-dim)]" />
+                            <span className="text-[12px] text-[var(--fg-dim)] font-medium">
                               No Active Subscription
                             </span>
                           </>
                         )}
                       </div>
                       {isCanceling && (
-                        <p style={{ fontSize: 12, color: 'oklch(0.65 0.20 50 / 0.9)', margin: 0, lineHeight: 1.45 }}>
+                        <p className="text-[12px] text-[oklch(0.65_0.20_50/0.9)] m-0 leading-[1.45]">
                           Your plan remains active until <strong>{nextStr}</strong>. After that, your account will revert to the Free tier.
                         </p>
                       )}
                     </div>
                   </div>
 
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14 }}>
-                    <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }} className="mono">Quotas & Usage Limits</span>
-                    <p style={{ fontSize: 12.5, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.45 }}>
+                  <div className="border-t border-[var(--border)] pt-3.5">
+                    <span className="text-[10.5px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] block mb-1 mono">Quotas & Usage Limits</span>
+                    <p className="text-[12.5px] text-[var(--fg-muted)] m-0 leading-[1.45]">
                       {planLimits}
                     </p>
                   </div>
 
                   {(userPlan === 'pro' || userPlan === 'api') && (
-                    <div style={{ borderTop: '1px solid var(--border)', paddingTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div className="border-t border-[var(--border)] pt-3.5 flex justify-between items-center">
                       <div>
-                        <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">
+                        <span className="text-[10.5px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] block mb-0.5 text-right mono">
                           {isCanceling ? 'Access Expires' : 'Next Billing Date'}
                         </span>
-                        <span style={{ fontSize: 13, color: 'white', fontWeight: 500 }}>{nextStr}</span>
+                        <span className="text-[13px] text-white font-medium">{nextStr}</span>
                       </div>
                       {!isCanceling && (
                         <div>
-                          <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 2, textAlign: 'right' }} className="mono">Payment Partner</span>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12.5, color: 'var(--fg-muted)' }}>
-                            <Icon.CreditCard size={14} style={{ color: 'var(--accent)' }} />
+                          <span className="text-[10.5px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] block mb-0.5 text-right mono">Payment Partner</span>
+                          <div className="flex items-center gap-1.5 text-[12.5px] text-[var(--fg-muted)]">
+                            <Icon.CreditCard size={14} className="text-[var(--accent)]" />
                             <span>Creem Payment Hub</span>
                           </div>
                         </div>
@@ -1119,56 +1018,35 @@ export default function AccountClient() {
                     </div>
                   )}
 
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: 16, display: 'flex', flexDirection: 'column', gap: 12, marginTop: 'auto' }}>
+                  <div className="border-t border-[var(--border)] pt-4 flex flex-col gap-3 mt-auto">
                     {userPlan === 'pro' || userPlan === 'api' || userPlan === 'admin' ? (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
+                      <div className="flex flex-col gap-2.5 w-full">
                         {!isCanceling && (
-                          <button onClick={() => handleShowPaywall()} className="" style={{
-                            width: '100%', padding: '10px 14px', borderRadius: 8,
-                            background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
-                            border: '1px solid var(--border)',
-                            color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                            textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                          }}>
-                            <Icon.Sparkles size={14} style={{ color: 'white' }} />
+                          <button onClick={() => handleShowPaywall()} className="w-full px-3.5 py-2.5 rounded-lg bg-gradient-to-b from-[var(--accent)] to-[oklch(0.60_0.16_265)] border border-[var(--border)] text-white font-semibold text-[12.5px] cursor-pointer text-center inline-flex items-center justify-center gap-1.5">
+                            <Icon.Sparkles size={14} className="text-white" />
                             <span>Change Plan</span>
                           </button>
                         )}
-                        <div style={{ display: 'flex', gap: 10, width: '100%' }}>
-                          <button onClick={handleManageBilling} className="" style={{
-                            flex: 1, padding: '10px 14px', borderRadius: 8,
-                            background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                            color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                            textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                          }}>
+                        <div className="flex gap-2.5 w-full">
+                          <button onClick={handleManageBilling} className="flex-1 px-3.5 py-2.5 rounded-lg bg-[var(--bg-elev-2)] border border-[var(--border)] text-[var(--fg)] font-semibold text-[12.5px] cursor-pointer text-center inline-flex items-center justify-center gap-1.5">
                             <Icon.Grid size={14} />
                             <span>Manage Billing</span>
                           </button>
                           {isCanceling ? (
-                            <button onClick={handleResumeSubscription} disabled={isResumingSub} className="" style={{
-                              flex: 1, padding: '10px 14px', borderRadius: 8,
-                              background: 'oklch(0.18 0.010 145 / 0.15)', border: '1px solid oklch(0.70 0.16 145 / 0.3)',
-                              color: 'oklch(0.78 0.16 145)', fontWeight: 600, fontSize: 12.5, cursor: isResumingSub ? 'not-allowed' : 'pointer',
-                            }}>{isResumingSub ? 'Resuming...' : 'Resume Subscription'}</button>
+                            <button onClick={handleResumeSubscription} disabled={isResumingSub} className={`flex-1 px-3.5 py-2.5 rounded-lg bg-[oklch(0.18_0.010_145/0.15)] border border-[oklch(0.70_0.16_145/0.3)] text-[oklch(0.78_0.16_145)] font-semibold text-[12.5px] ${isResumingSub ? 'cursor-not-allowed' : 'cursor-pointer'}`}>
+                              {isResumingSub ? 'Resuming...' : 'Resume Subscription'}
+                            </button>
                           ) : (
-                            <button onClick={() => setCancelModalOpen(true)} className="" style={{
-                              flex: 1, padding: '10px 14px', borderRadius: 8,
-                              background: 'oklch(0.18 0.010 15 / 0.15)', border: '1px solid oklch(0.50 0.15 15 / 0.3)',
-                              color: 'oklch(0.78 0.16 15)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                            }}>Cancel Subscription</button>
+                            <button onClick={() => setCancelModalOpen(true)} className="flex-1 px-3.5 py-2.5 rounded-lg bg-[oklch(0.18_0.010_15/0.15)] border border-[oklch(0.50_0.15_15/0.3)] text-[oklch(0.78_0.16_15)] font-semibold text-[12.5px] cursor-pointer">
+                              Cancel Subscription
+                            </button>
                           )}
                         </div>
                       </div>
                     ) : (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, width: '100%' }}>
-                        <button onClick={() => handleShowPaywall()} className="" style={{
-                          width: '100%', padding: '10px 14px', borderRadius: 8,
-                          background: 'linear-gradient(180deg, var(--accent) 0%, oklch(0.60 0.16 265) 100%)',
-                          border: '1px solid var(--border)',
-                          color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                          textAlign: 'center', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6
-                        }}>
-                          <Icon.Sparkles size={14} style={{ color: 'white' }} />
+                      <div className="flex flex-col gap-2.5 w-full">
+                        <button onClick={() => handleShowPaywall()} className="w-full px-3.5 py-2.5 rounded-lg bg-gradient-to-b from-[var(--accent)] to-[oklch(0.60_0.16_265)] border border-[var(--border)] text-white font-semibold text-[12.5px] cursor-pointer text-center inline-flex items-center justify-center gap-1.5">
+                          <Icon.Sparkles size={14} className="text-white" />
                           <span>Upgrade to Premium</span>
                         </button>
                       </div>
@@ -1177,32 +1055,24 @@ export default function AccountClient() {
                 </div>
 
                 {/* Right Side: Invoice History */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div className="flex flex-col gap-4">
                   <div>
-                    <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 6 }} className="mono">Invoice History</span>
-                    <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: '0 0 12px' }}>View your payment history here. Download legally valid tax invoices directly in your secure Creem Portal.</p>
+                    <span className="text-[10.5px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] block mb-1.5 mono">Invoice History</span>
+                    <p className="text-[12px] text-[var(--fg-muted)] m-0 mb-3">View your payment history here. Download legally valid tax invoices directly in your secure Creem Portal.</p>
                   </div>
 
                   {userPlan === 'free' ? (
-                    <div style={{
-                      flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                      padding: '24px 20px', background: 'var(--bg-elev-1)', border: '1px dashed var(--border)',
-                      borderRadius: 12, textAlign: 'center', gap: 8
-                    }}>
-                      <Icon.FileText size={24} style={{ color: 'var(--fg-dim)' }} />
-                      <span style={{ fontSize: 12.5, fontWeight: 555, color: 'var(--fg-subtle)' }}>No Invoices Yet</span>
-                      <span style={{ fontSize: 11, color: 'var(--fg-dim)', maxWidth: 220 }}>Upgrade to a paid tier to generate invoice history.</span>
+                    <div className="flex-1 flex flex-col items-center justify-center px-5 py-6 bg-[var(--bg-elev-1)] border border-dashed border-[var(--border)] rounded-xl text-center gap-2">
+                      <Icon.FileText size={24} className="text-[var(--fg-dim)]" />
+                      <span className="text-[12.5px] font-[555] text-[var(--fg-subtle)]">No Invoices Yet</span>
+                      <span className="text-[11px] text-[var(--fg-dim)] max-w-[220px]">Upgrade to a paid tier to generate invoice history.</span>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    <div className="flex flex-col gap-2.5">
                       {loadingInvoices ? (
-                        <div style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                          padding: '24px 20px', background: 'var(--bg-elev-1)', border: '1px solid var(--border)',
-                          borderRadius: 10
-                        }}>
-                          <Icon.Loader size={16} className="spin" style={{ color: 'var(--accent)' }} />
-                          <span style={{ fontSize: 12, color: 'var(--fg-muted)' }}>Retrieving Creem billing history...</span>
+                        <div className="flex items-center justify-center gap-2 px-5 py-6 bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-[10px]">
+                          <Icon.Loader size={16} className="spin text-[var(--accent)]" />
+                          <span className="text-[12px] text-[var(--fg-muted)]">Retrieving Creem billing history...</span>
                         </div>
                       ) : invoices.length > 0 ? (
                         invoices.map((order) => {
@@ -1212,27 +1082,18 @@ export default function AccountClient() {
                           const invId = `INV-${order.id.substring(0, 8).toUpperCase()}`;
 
                           return (
-                            <div key={order.id} style={{
-                              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                              padding: '12px 14px', background: 'var(--bg-elev-1)',
-                              border: '1px solid var(--border)', borderRadius: 10,
-                            }}>
+                            <div key={order.id} className="flex items-center justify-between px-[14px] py-[12px] bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-[10px]">
                               <div>
-                                <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>
+                                <div className="text-[12.5px] font-semibold text-white">
                                   {formattedOrderDate}
                                 </div>
-                                <div style={{ fontSize: 11, color: 'var(--fg-dim)' }}>
+                                <div className="text-[11px] text-[var(--fg-dim)]">
                                   {invId} • {planName}
                                 </div>
                               </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                                <span style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>{displayAmount}</span>
-                                <span style={{
-                                  display: 'inline-flex', alignItems: 'center', gap: 4,
-                                  padding: '4px 8px', borderRadius: 6,
-                                  background: 'oklch(0.70 0.16 145 / 0.12)', border: '1px solid oklch(0.70 0.16 145 / 0.3)',
-                                  color: 'oklch(0.78 0.16 145)', fontSize: 11, fontWeight: 555
-                                }}>
+                              <div className="flex items-center gap-2.5">
+                                <span className="text-[12.5px] font-semibold text-white">{displayAmount}</span>
+                                <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-[oklch(0.70_0.16_145/0.12)] border border-[oklch(0.70_0.16_145/0.3)] text-[oklch(0.78_0.16_145)] text-[11px] font-[555]">
                                   <Icon.Check size={11} />
                                   <span>Paid</span>
                                 </span>
@@ -1242,13 +1103,9 @@ export default function AccountClient() {
                         })
                       ) : (
                         /* Fallback to computed dynamic billing row if empty */
-                        <div style={{
-                          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                          padding: '12px 14px', background: 'var(--bg-elev-1)',
-                          border: '1px solid var(--border)', borderRadius: 10,
-                        }}>
+                        <div className="flex items-center justify-between px-[14px] py-[12px] bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-[10px]">
                           <div>
-                            <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }}>
+                            <div className="text-[12.5px] font-semibold text-white">
                               {(() => {
                                 const invoiceDate = currentPeriodEnd 
                                   ? new Date(new Date(currentPeriodEnd).getTime() - 30 * 24 * 60 * 60 * 1000)
@@ -1303,59 +1160,44 @@ export default function AccountClient() {
           )}
 
           {activeTab === 'api-keys' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 28 }} className="fade-in">
+            <div className="flex flex-col gap-7 fade-in">
               
               {/* Credentials Console Card */}
-              <div style={{
-                background: 'oklch(0.14 0.006 250)',
-                border: '1px solid oklch(0.20 0.008 250)',
-                borderRadius: 16,
-                padding: 24,
-                display: 'flex', flexDirection: 'column', gap: 20
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid oklch(0.20 0.008 250)', paddingBottom: 14 }}>
-                  <Icon.Database size={16} style={{ color: 'oklch(0.68 0.18 265)' }} />
+              <div className="bg-[oklch(0.14_0.006_250)] border border-[oklch(0.20_0.008_250)] rounded-2xl p-6 flex flex-col gap-5">
+                <div className="flex items-center gap-2.5 border-b border-[oklch(0.20_0.008_250)] pb-3.5">
+                  <Icon.Database size={16} className="text-[oklch(0.68_0.18_265)]" />
                   <div>
-                    <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>API Credentials</h3>
-                    <p style={{ fontSize: 11.5, color: 'oklch(0.50 0.01 250)', margin: 0 }}>Access tokens targeting formatting and media pipelines.</p>
+                    <h3 className="text-[15px] font-bold text-white m-0">API Credentials</h3>
+                    <p className="text-[11.5px] text-[oklch(0.50_0.01_250)] m-0">Access tokens targeting formatting and media pipelines.</p>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div className="flex flex-col gap-4">
                   {/* Account Details Row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid oklch(0.16 0.006 250)', paddingBottom: 12 }}>
+                  <div className="flex justify-between border-b border-[oklch(0.16_0.006_250)] pb-3">
                     <div>
-                      <span style={{ fontSize: 9, color: 'oklch(0.50 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Access Tier</span>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'white', marginTop: 2 }}>{planName}</div>
+                      <span className="text-[9px] text-[oklch(0.50_0.01_250)] uppercase tracking-[0.04em] mono">Access Tier</span>
+                      <div className="text-[13px] font-bold text-white mt-0.5">{planName}</div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <span style={{ fontSize: 9, color: 'oklch(0.50 0.01 250)', textTransform: 'uppercase', letterSpacing: '0.04em' }} className="mono">Rate Limit</span>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: 'white', marginTop: 2 }}>
+                    <div className="text-right">
+                      <span className="text-[9px] text-[oklch(0.50_0.01_250)] uppercase tracking-[0.04em] mono">Rate Limit</span>
+                      <div className="text-[13px] font-bold text-white mt-0.5">
                         {userPlan === 'api' ? '120 / min' : userPlan === 'pro' ? '30 / min' : isAnonUser ? '3 / min' : '10 / min'}
                       </div>
                     </div>
                   </div>
 
                   {/* Key block */}
-                  <div style={{
-                    background: 'oklch(0.12 0.005 250 / 0.6)', border: '1px solid oklch(0.18 0.008 250)',
-                    borderRadius: 10, padding: 16, display: 'flex', flexDirection: 'column', gap: 12
-                  }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 12, fontWeight: 600, color: 'white' }}>Default Secret Key</span>
-                      <span style={{
-                        fontSize: 8.5, fontWeight: 700, fontFamily: 'monospace',
-                        background: isAnonUser ? 'oklch(0.72 0.18 25 / 0.12)' : 'oklch(0.78 0.16 145 / 0.12)',
-                        border: isAnonUser ? '1px solid oklch(0.72 0.18 25 / 0.3)' : '1px solid oklch(0.78 0.16 145 / 0.3)',
-                        color: isAnonUser ? 'oklch(0.72 0.18 25)' : 'oklch(0.78 0.16 145)',
-                        padding: '1px 6px', borderRadius: 4, textTransform: 'uppercase'
-                      }}>
+                  <div className="bg-[oklch(0.12_0.005_250/0.6)] border border-[oklch(0.18_0.008_250)] rounded-[10px] p-4 flex flex-col gap-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[12px] font-semibold text-white">Default Secret Key</span>
+                      <span className={`text-[8.5px] font-bold font-mono px-1.5 py-[1px] rounded uppercase ${isAnonUser ? 'bg-[oklch(0.72_0.18_25/0.12)] border border-[oklch(0.72_0.18_25/0.3)] text-[oklch(0.72_0.18_25)]' : 'bg-[oklch(0.78_0.16_145/0.12)] border border-[oklch(0.78_0.16_145/0.3)] text-[oklch(0.78_0.16_145)]'}`}>
                         {isAnonUser ? 'Sandbox' : 'Production'}
                       </span>
                     </div>
 
-                    <div style={{ display: 'flex', gap: 8, alignItems: 'center', background: '#0e0f12', border: '1px solid #1c1d22', padding: '8px 12px', borderRadius: 6 }}>
-                      <code style={{ flex: 1, fontFamily: 'monospace', fontSize: 11.5, color: '#a5b4fc', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <div className="flex gap-2 items-center bg-[#0e0f12] border border-[#1c1d22] px-3 py-2 rounded-md">
+                      <code className="flex-1 font-mono text-[11.5px] text-[#a5b4fc] overflow-hidden text-ellipsis whitespace-nowrap">
                         {apiKey ? (
                           isKeyRevealed ? apiKey : `${apiKey.slice(0, 12)}${'•'.repeat(Math.max(1, apiKey.length - 12))}`
                         ) : (
@@ -1363,13 +1205,12 @@ export default function AccountClient() {
                         )}
                       </code>
                       
-                      <div style={{ display: 'flex', gap: 6 }}>
+                      <div className="flex gap-1.5">
                         {apiKey && (
                           <button
                             type="button"
                             onClick={() => setIsKeyRevealed(!isKeyRevealed)}
-                            className=""
-                            style={{ color: 'oklch(0.50 0.01 250)', cursor: 'pointer', display: 'flex', padding: 4 }}
+                            className="text-[oklch(0.50_0.01_250)] cursor-pointer flex p-1"
                             title={isKeyRevealed ? "Hide Secret Key" : "Reveal Secret Key"}
                           >
                             {isKeyRevealed ? <Icon.EyeOff size={13} /> : <Icon.Eye size={13} />}
@@ -1378,8 +1219,7 @@ export default function AccountClient() {
                         <button
                           type="button"
                           onClick={handleCopyUUID}
-                          className=""
-                          style={{ color: uuidCopied ? 'oklch(0.78 0.16 145)' : 'white', cursor: 'pointer', display: 'flex', padding: 4 }}
+                          className={`cursor-pointer flex p-1 ${uuidCopied ? 'text-[oklch(0.78_0.16_145)]' : 'text-white'}`}
                           title="Copy Key to Clipboard"
                         >
                           {uuidCopied ? <Icon.Check size={13} /> : <Icon.Copy size={13} />}
@@ -1387,7 +1227,7 @@ export default function AccountClient() {
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10.5, color: 'oklch(0.50 0.01 250)' }}>
+                    <div className="flex justify-between text-[10.5px] text-[oklch(0.50_0.01_250)]">
                       <span>Scope: Read & Write</span>
                       <span>Created: Active Session</span>
                     </div>
@@ -1399,15 +1239,7 @@ export default function AccountClient() {
                       type="button"
                       onClick={handleRegenerateKey}
                       disabled={isRegenerating}
-                      className=""
-                      style={{
-                        padding: '10px 0', border: '1px dashed oklch(0.24 0.01 250)', borderRadius: 8,
-                        fontSize: 12, fontWeight: 600, color: 'oklch(0.70 0.01 250)', cursor: isRegenerating ? 'not-allowed' : 'pointer',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.2s',
-                        background: 'transparent'
-                      }}
-                      onMouseEnter={e => { e.currentTarget.style.borderColor = 'white'; e.currentTarget.style.color = 'white'; }}
-                      onMouseLeave={e => { e.currentTarget.style.borderColor = 'oklch(0.24 0.01 250)'; e.currentTarget.style.color = 'oklch(0.70 0.01 250)'; }}
+                      className={`py-2.5 border border-dashed border-[oklch(0.24_0.01_250)] rounded-lg text-[12px] font-semibold text-[oklch(0.70_0.01_250)] flex items-center justify-center gap-1.5 transition-all duration-200 bg-transparent hover:border-white hover:text-white ${isRegenerating ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                     >
                       {isRegenerating ? <Icon.Loader size={12} className="spin" /> : (apiKey ? <Icon.RefreshCw size={11} /> : <Icon.Key size={11} />)}
                       {isRegenerating ? (apiKey ? 'Rotating Token...' : 'Generating...') : (apiKey ? 'Rotate API Key' : 'Generate API Key')}
@@ -1417,97 +1249,66 @@ export default function AccountClient() {
               </div>
 
               {/* Advanced CORS Settings Card */}
-              <div style={{
-                background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)',
-                borderRadius: 16, padding: 24, display: 'flex', flexDirection: 'column', gap: 12
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'white', fontWeight: 600, fontSize: 13 }}>
-                  <Icon.Globe size={14} style={{ color: 'oklch(0.68 0.18 265)' }} />
+              <div className="bg-[oklch(0.14_0.006_250)] border border-[oklch(0.20_0.008_250)] rounded-2xl p-6 flex flex-col gap-3">
+                <div className="flex items-center gap-1.5 text-white font-semibold text-[13px]">
+                  <Icon.Globe size={14} className="text-[oklch(0.68_0.18_265)]" />
                   <span>Allowed Web Origins (CORS)</span>
                 </div>
-                <p style={{ fontSize: 12, color: 'oklch(0.50 0.01 250)', margin: 0, lineHeight: 1.45 }}>
+                <p className="text-[12px] text-[oklch(0.50_0.01_250)] m-0 leading-[1.45]">
                   Restrict browser requests to specific domains (e.g. `https://my-domain.com`). Leave `*` to permit all.
                 </p>
                 <input
                   type="text"
                   value={allowedOrigins}
                   onChange={e => handleSaveOrigins(e.target.value)}
-                  style={{
-                    width: '100%', background: '#0e0f12', border: '1px solid oklch(0.20 0.008 250)',
-                    borderRadius: 8, padding: '8px 12px', color: 'white', fontSize: 13, outline: 'none',
-                    boxSizing: 'border-box'
-                  }}
+                  className="w-full bg-[#0e0f12] border border-[oklch(0.20_0.008_250)] rounded-lg px-3 py-2 text-white text-[13px] outline-none box-border"
                 />
               </div>
 
               {/* Quota details meter */}
-              <div style={{
-                background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)',
-                padding: 24, borderRadius: 16, display: 'flex', flexDirection: 'column', gap: 16
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, borderBottom: '1px solid oklch(0.20 0.008 250)', paddingBottom: 12 }}>
-                  <Icon.Sparkles size={16} style={{ color: 'oklch(0.68 0.18 265)' }} />
-                  <span style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>Monthly Quota details</span>
+              <div className="bg-[oklch(0.14_0.006_250)] border border-[oklch(0.20_0.008_250)] p-6 rounded-2xl flex flex-col gap-4">
+                <div className="flex items-center gap-2 border-b border-[oklch(0.20_0.008_250)] pb-3">
+                  <Icon.Sparkles size={16} className="text-[oklch(0.68_0.18_265)]" />
+                  <span className="text-[13px] font-bold text-white">Monthly Quota details</span>
                 </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12.5, color: 'oklch(0.70 0.01 250)' }}>Metered Calls</span>
-                    <span style={{ fontSize: 12.5, fontWeight: 700, color: 'oklch(0.68 0.18 265)' }} className="mono">
+                <div className="flex flex-col gap-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[12.5px] text-[oklch(0.70_0.01_250)]">Metered Calls</span>
+                    <span className="text-[12.5px] font-bold text-[oklch(0.68_0.18_265)] mono">
                       {`${dailyUsageCount} / ${dailyLimitMax} used today`}
                     </span>
                   </div>
-                  <div style={{ height: 8, width: '100%', background: 'oklch(0.18 0.005 250)', borderRadius: 4, overflow: 'hidden', border: '1px solid oklch(0.20 0.008 250)' }}>
-                    <div style={{
-                      height: '100%',
-                      width: `${Math.min((dailyUsageCount / dailyLimitMax) * 100, 100)}%`,
-                      background: 'linear-gradient(90deg, oklch(0.68 0.18 265) 0%, oklch(0.78 0.16 75) 100%)',
-                      transition: 'width 0.4s ease-out'
-                    }} />
+                  <div className="h-2 w-full bg-[oklch(0.18_0.005_250)] rounded overflow-hidden border border-[oklch(0.20_0.008_250)]">
+                    <div 
+                      className="h-full bg-gradient-to-r from-[oklch(0.68_0.18_265)] to-[oklch(0.78_0.16_75)] transition-all duration-400 ease-out"
+                      style={{ width: `${Math.min((dailyUsageCount / dailyLimitMax) * 100, 100)}%` }}
+                    />
                   </div>
                 </div>
               </div>
 
               {/* Integration Snippets Card */}
-              <div style={{
-                background: 'oklch(0.14 0.006 250)',
-                border: '1px solid oklch(0.20 0.008 250)',
-                borderRadius: 16,
-                padding: 24,
-                display: 'flex', flexDirection: 'column', gap: 16
-              }}>
+              <div className="bg-[oklch(0.14_0.006_250)] border border-[oklch(0.20_0.008_250)] rounded-2xl p-6 flex flex-col gap-4">
                 <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 700, color: 'white', margin: 0 }}>API Integration Snippets</h3>
-                  <p style={{ fontSize: 11.5, color: 'oklch(0.50 0.01 250)', margin: '4px 0 0' }}>Authenticate your programs using standard HTTP request headers.</p>
+                  <h3 className="text-[15px] font-bold text-white m-0">API Integration Snippets</h3>
+                  <p className="text-[11.5px] text-[oklch(0.50_0.01_250)] mt-1 mb-0">Authenticate your programs using standard HTTP request headers.</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: 6, background: '#0e0f12', border: '1px solid #1c1d22', padding: '6px', borderRadius: 10, overflowX: 'auto', scrollbarWidth: 'none' }}>
+                <div className="flex gap-1.5 bg-[#0e0f12] border border-[#1c1d22] p-1.5 rounded-[10px] overflow-x-auto scrollbar-none">
                   {(['curl', 'js', 'python', 'go', 'rust', 'csharp', 'java', 'php', 'ruby'] as const).map(tab => (
                     <button
                       key={tab}
                       type="button"
                       onClick={() => setSnippetTab(tab as any)}
-                      className="mono"
-                      style={{
-                        padding: '6px 12px', borderRadius: 6,
-                        fontSize: 11, fontWeight: 600, cursor: 'pointer',
-                        background: snippetTab === tab ? 'oklch(0.20 0.01 250)' : 'transparent',
-                        border: snippetTab === tab ? '1px solid oklch(0.28 0.01 250)' : '1px solid transparent',
-                        color: snippetTab === tab ? 'white' : 'oklch(0.50 0.01 250)',
-                        textAlign: 'center', transition: 'all 0.15s'
-                      }}
+                      className={`mono px-3 py-1.5 rounded-md text-[11px] font-semibold cursor-pointer text-center transition-all duration-150 border ${snippetTab === tab ? 'bg-[oklch(0.20_0.01_250)] border-[oklch(0.28_0.01_250)] text-white' : 'bg-transparent border-transparent text-[oklch(0.50_0.01_250)]'}`}
                     >
                       {tab === 'curl' ? 'cURL' : tab === 'js' ? 'JS Fetch' : tab === 'csharp' ? 'C#' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                     </button>
                   ))}
                 </div>
 
-                <div style={{ position: 'relative' }}>
-                  <pre style={{
-                    background: '#07080a', border: '1px solid #16181d', borderRadius: 10,
-                    padding: 16, margin: 0, fontSize: 11.5, lineHeight: 1.5,
-                    color: '#a5b4fc', overflowX: 'auto', whiteSpace: 'pre',
-                    fontFamily: 'monospace', textAlign: 'left', maxHeight: 220
-                  }}>
+                <div className="relative">
+                  <pre className="bg-[#07080a] border border-[#16181d] rounded-[10px] p-4 m-0 text-[11.5px] leading-relaxed text-[#a5b4fc] overflow-x-auto whitespace-pre font-mono text-left max-h-[220px]">
                     {codeSnippets[snippetTab]}
                   </pre>
                   
@@ -1517,13 +1318,7 @@ export default function AccountClient() {
                       navigator.clipboard.writeText(codeSnippets[snippetTab]);
                       alert("Snippet copied to clipboard!");
                     }}
-                    className=""
-                    style={{
-                      position: 'absolute', top: 10, right: 10,
-                      background: 'oklch(0.14 0.006 250 / 0.8)', border: '1px solid oklch(0.24 0.01 250)',
-                      color: 'white', padding: '4px 8px', borderRadius: 6,
-                      fontSize: 10, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4
-                    }}
+                    className="absolute top-2.5 right-2.5 bg-[oklch(0.14_0.006_250/0.8)] border border-[oklch(0.24_0.01_250)] text-white px-2 py-1 rounded-md text-[10px] font-semibold cursor-pointer flex items-center gap-1"
                   >
                     <Icon.Copy size={10} />
                     <span>Copy</span>
@@ -1532,20 +1327,14 @@ export default function AccountClient() {
               </div>
 
               {/* OpenAPI spec sheet download */}
-              <div style={{
-                background: 'oklch(0.14 0.006 250)', border: '1px solid oklch(0.20 0.008 250)',
-                padding: 24, borderRadius: 16, display: 'flex', alignItems: 'center', gap: 16
-              }}>
-                <Icon.Server size={28} style={{ color: 'oklch(0.70 0.15 195)', flexShrink: 0 }} />
+              <div className="bg-[oklch(0.14_0.006_250)] border border-[oklch(0.20_0.008_250)] p-6 rounded-2xl flex items-center gap-4">
+                <Icon.Server size={28} className="text-[oklch(0.70_0.15_195)] shrink-0" />
                 <div>
-                  <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'white' }}>OpenAPI Spec Specifications</h4>
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'oklch(0.50 0.01 250)', lineHeight: 1.45 }}>
+                  <h4 className="m-0 text-[14px] font-bold text-white">OpenAPI Spec Specifications</h4>
+                  <p className="mt-1 mb-0 text-[12px] text-[oklch(0.50_0.01_250)] leading-[1.45]">
                     Download our OpenAPI 3.0 specs to instantly generate types, API clients, and mock servers.
                   </p>
-                  <a href="/api/openapi.json" download="openapi.json" style={{
-                    display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600,
-                    color: 'oklch(0.70 0.15 195)', textDecoration: 'none', marginTop: 10
-                  }}>
+                  <a href="/api/openapi.json" download="openapi.json" className="inline-flex items-center gap-1.5 text-[12px] font-semibold text-[oklch(0.70_0.15_195)] no-underline mt-2.5">
                     Download openapi.json <Icon.ArrowRight size={11} />
                   </a>
                 </div>
@@ -1555,62 +1344,48 @@ export default function AccountClient() {
           )}
 
           {activeTab === 'danger' && (
-            <div className="glass-card fade-in" style={{ padding: 30, display: 'flex', flexDirection: 'column', gap: 20, border: '1px solid oklch(0.60 0.20 20 / 0.25)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1px solid oklch(0.60 0.20 20 / 0.2)', paddingBottom: 14 }}>
-                <span style={{
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                  width: 32, height: 32, borderRadius: 8,
-                  background: 'oklch(0.18 0.010 20 / 0.15)',
-                  border: '1px solid oklch(0.60 0.20 20 / 0.3)',
-                  color: 'oklch(0.65 0.22 20)',
-                }}>
+            <div className="glass-card fade-in p-[30px] flex flex-col gap-5 border border-[oklch(0.60_0.20_20/0.25)]">
+              <div className="flex items-center gap-2.5 border-b border-[oklch(0.60_0.20_20/0.2)] pb-3.5">
+                <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-[oklch(0.18_0.010_20/0.15)] border border-[oklch(0.60_0.20_20/0.3)] text-[oklch(0.65_0.22_20)]">
                   <Icon.Shield size={16} />
                 </span>
                 <div>
-                  <h3 style={{ fontSize: 15, fontWeight: 600, color: 'oklch(0.65 0.22 20)', margin: 0 }}>Danger Zone</h3>
-                  <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Deactivate your workspace account permanently.</p>
+                  <h3 className="text-[15px] font-semibold text-[oklch(0.65_0.22_20)] m-0">Danger Zone</h3>
+                  <p className="text-[12px] text-[var(--fg-dim)] m-0">Deactivate your workspace account permanently.</p>
                 </div>
               </div>
 
               {!showDeactivateFields ? (
-                <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', padding: '8px 0' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <span style={{ fontSize: 13, fontWeight: 550, color: 'oklch(0.65 0.22 20)' }}>Deactivate Workspace Account</span>
-                    <span style={{ fontSize: 11.5, color: 'var(--fg-subtle)' }}>Initiate permanent deletion protocol. Grace window applies.</span>
+                <div className="flex items-center justify-self-stretch justify-between py-2">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[13px] font-[550] text-[oklch(0.65_0.22_20)]">Deactivate Workspace Account</span>
+                    <span className="text-[11.5px] text-[var(--fg-subtle)]">Initiate permanent deletion protocol. Grace window applies.</span>
                   </div>
                   <button
                     type="button"
                     onClick={() => setShowDeactivateFields(true)}
-                    className=""
-                    style={{
-                      padding: '8px 16px', borderRadius: 8,
-                      background: 'oklch(0.18 0.010 20 / 0.15)', border: '1px solid oklch(0.60 0.20 20 / 0.3)',
-                      color: 'oklch(0.65 0.22 20)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer'
-                    }}
+                    className="px-4 py-2 rounded-lg bg-[oklch(0.18_0.010_20/0.15)] border border-[oklch(0.60_0.20_20/0.3)] text-[oklch(0.65_0.22_20)] font-semibold text-[12.5px] cursor-pointer"
                   >
                     Deactivate Account...
                   </button>
                 </div>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }} className="fade-in">
-                  <div style={{
-                    background: 'oklch(0.18 0.010 20 / 0.1)', border: '1px solid oklch(0.60 0.20 20 / 0.3)',
-                    padding: '14px 18px', borderRadius: 10, display: 'flex', flexDirection: 'column', gap: 10
-                  }}>
-                    <div style={{ fontSize: 13, color: 'oklch(0.65 0.22 20)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <div className="flex flex-col gap-4 fade-in">
+                  <div className="bg-[oklch(0.18_0.010_20/0.1)] border border-[oklch(0.60_0.20_20/0.3)] px-4.5 py-3.5 rounded-[10px] flex flex-col gap-2.5">
+                    <div className="text-[13px] text-[oklch(0.65_0.22_20)] font-semibold flex items-center gap-1.5">
                       <Icon.Shield size={14} />
                       <span>Immediate Deactivation Warning</span>
                     </div>
-                    <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
+                    <p className="text-[12px] text-[var(--fg-muted)] m-0 leading-relaxed">
                       Deactivating your account will freeze your Pro API keys and restrict workspace access immediately. As per global privacy compliance, all associated data is queued for absolute purging.
                     </p>
-                    <p style={{ fontSize: 12, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5, fontWeight: 500 }}>
+                    <p className="text-[12px] text-[var(--fg-muted)] m-0 leading-relaxed font-medium">
                       <strong>20-Day Restoration Grace Window</strong>: Your account metadata and database records will remain in a soft-deleted state in our backend for exactly 20 days. If you return and log back in within 20 days, all configurations will be automatically restored. If you do not return, it will be permanently deleted.
                     </p>
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: 10, color: 'var(--fg-dim)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }} className="mono">
+                    <label className="block text-[10px] text-[var(--fg-dim)] font-semibold uppercase tracking-[0.05em] mb-2 mono">
                       To confirm deactivation, please type "SAYONARA" below:
                     </label>
                     <input
@@ -1618,31 +1393,26 @@ export default function AccountClient() {
                       placeholder="Type SAYONARA to confirm"
                       value={deleteConfirmation}
                       onChange={e => setDeleteConfirmation(e.target.value)}
-                      style={{
-                        width: '100%', padding: '10px 12px', borderRadius: 8,
-                        background: 'oklch(0.14 0.005 250)', border: '1px solid var(--border)',
-                        color: 'white', fontSize: 13, outline: 'none', boxSizing: 'border-box'
-                      }}
+                      className="w-full px-3 py-2.5 rounded-lg bg-[oklch(0.14_0.005_250)] border border-[var(--border)] text-white text-[13px] outline-none box-border"
                     />
                   </div>
 
                   {deactivateError && (
-                    <div style={{ fontSize: 12, color: 'oklch(0.65 0.22 20)', fontWeight: 500 }}>
+                    <div className="text-[12px] text-[oklch(0.65_0.22_20)] font-medium">
                       {deactivateError}
                     </div>
                   )}
                   {deactivateSuccess && (
-                    <div style={{ fontSize: 12, color: 'oklch(0.78 0.16 145)', fontWeight: 555 }}>
+                    <div className="text-[12px] text-[oklch(0.78_0.16_145)] font-[555]">
                       ✓ SAYONARA! Deactivation successful. Redirecting to landing page...
                     </div>
                   )}
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifySelf: 'stretch', justifyContent: 'space-between', borderTop: '1px solid var(--border)', paddingTop: 16, marginTop: 8 }}>
+                  <div className="flex items-center justify-self-stretch justify-between border-t border-[var(--border)] pt-4 mt-2">
                     <button
                       type="button"
                       onClick={() => { setShowDeactivateFields(false); setDeleteConfirmation(''); setDeactivateError(null); }}
-                      className=""
-                      style={{ fontSize: 12.5, color: 'var(--fg-dim)', cursor: 'pointer', background: 'none', border: 'none' }}
+                      className="text-[12.5px] text-[var(--fg-dim)] cursor-pointer bg-transparent border-transparent"
                     >
                       Cancel
                     </button>
@@ -1650,15 +1420,7 @@ export default function AccountClient() {
                       type="button"
                       disabled={deleteConfirmation !== 'SAYONARA' || isDeleting}
                       onClick={handleDeleteAccount}
-                      className=""
-                      style={{
-                        padding: '10px 20px', borderRadius: 8,
-                        background: deleteConfirmation === 'SAYONARA' ? 'oklch(0.65 0.22 20)' : 'oklch(0.18 0.010 20 / 0.1)',
-                        border: deleteConfirmation === 'SAYONARA' ? 'none' : '1px solid var(--border)',
-                        color: deleteConfirmation === 'SAYONARA' ? 'white' : 'var(--fg-dim)',
-                        fontWeight: 600, fontSize: 13,
-                        cursor: deleteConfirmation === 'SAYONARA' && !isDeleting ? 'pointer' : 'not-allowed'
-                      }}
+                      className={`px-5 py-2.5 rounded-lg font-semibold text-[13px] ${deleteConfirmation === 'SAYONARA' ? 'bg-[oklch(0.65_0.22_20)] border-transparent text-white' : 'bg-[oklch(0.18_0.010_20/0.1)] border border-[var(--border)] text-[var(--fg-dim)]'} ${deleteConfirmation === 'SAYONARA' && !isDeleting ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                     >
                       {isDeleting ? 'Deactivating...' : 'Confirm Workspace Deactivation'}
                     </button>
@@ -1671,68 +1433,33 @@ export default function AccountClient() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
-        <button onClick={launchApp} className="" style={{
-          padding: '11px 24px', borderRadius: 9,
-          background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-          color: 'var(--fg)', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
-          transition: 'background 0.15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
-        >Return to App Console</button>
+      <div className="flex justify-center mt-10">
+        <button onClick={launchApp} className="px-6 py-2.5 rounded-[9px] bg-[var(--bg-elev-2)] hover:bg-[var(--bg-hover)] border border-[var(--border)] text-[var(--fg)] font-medium text-[13.5px] cursor-pointer transition-colors duration-150">Return to App Console</button>
       </div>
 
       {/* Subscription Cancellation Confirmation Dialog Modal */}
       {cancelModalOpen && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 10000,
-          background: 'oklch(0.12 0.005 250 / 0.75)',
-          backdropFilter: 'blur(16px)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: 20,
-        }} onClick={() => setCancelModalOpen(false)}>
-          <div style={{
-            width: '100%', maxWidth: 460,
-            background: 'var(--bg-elev-1)',
-            border: '1px solid oklch(0.60 0.20 20 / 0.3)',
-            borderRadius: 16,
-            padding: 28,
-            boxShadow: '0 20px 40px oklch(0 0 0 / 0.4)',
-            display: 'flex', flexDirection: 'column', gap: 20,
-            animation: 'fadeIn 0.2s ease-out',
-          }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <span style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 40, height: 40, borderRadius: '50%',
-                background: 'oklch(0.18 0.010 20 / 0.15)',
-                border: '1px solid oklch(0.60 0.20 20 / 0.3)',
-                color: 'oklch(0.65 0.22 20)',
-              }}>
+        <div className="fixed inset-0 z-[10000] bg-[oklch(0.12_0.005_250/0.75)] backdrop-blur-md flex items-center justify-center p-5" onClick={() => setCancelModalOpen(false)}>
+          <div className="w-full max-w-[460px] bg-[var(--bg-elev-1)] border border-[oklch(0.60_0.20_20/0.3)] rounded-2xl p-7 shadow-[0_20px_40px_oklch(0_0_0/0.4)] flex flex-col gap-5 animate-[fadeIn_0.2s_ease-out]" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-3">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-[oklch(0.18_0.010_20/0.15)] border border-[oklch(0.60_0.20_20/0.3)] text-[oklch(0.65_0.22_20)]">
                 <Icon.AlertCircle size={20} />
               </span>
               <div>
-                <h3 style={{ fontSize: 16, fontWeight: 600, color: 'white', margin: 0 }}>Cancel Subscription?</h3>
-                <p style={{ fontSize: 12, color: 'var(--fg-dim)', margin: 0 }}>Confirm subscription cancellation request</p>
+                <h3 className="text-[16px] font-semibold text-white m-0">Cancel Subscription?</h3>
+                <p className="text-[12px] text-[var(--fg-dim)] m-0">Confirm subscription cancellation request</p>
               </div>
             </div>
 
-            <p style={{ fontSize: 13, color: 'var(--fg-muted)', margin: 0, lineHeight: 1.5 }}>
+            <p className="text-[13px] text-[var(--fg-muted)] m-0 leading-relaxed">
               Are you sure you want to cancel your premium subscription? You will still retain active access to all **{planName}** features until **{nextStr}**, after which your account will return to the Free Tier.
             </p>
 
-            <div style={{ display: 'flex', gap: 12, borderTop: '1px solid var(--border)', paddingTop: 18 }}>
+            <div className="flex gap-3 border-t border-[var(--border)] pt-4.5">
               <button
                 type="button"
                 onClick={() => setCancelModalOpen(false)}
-                className=""
-                style={{
-                  flex: 1, padding: '10px 14px', borderRadius: 8,
-                  background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-                  color: 'var(--fg)', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                  textAlign: 'center'
-                }}
+                className="flex-1 px-3.5 py-2.5 rounded-lg bg-[var(--bg-elev-2)] border border-[var(--border)] text-[var(--fg)] font-semibold text-[12.5px] cursor-pointer text-center"
               >
                 No, Keep Premium
               </button>
@@ -1740,13 +1467,7 @@ export default function AccountClient() {
                 type="button"
                 disabled={isCancelingSub}
                 onClick={handleCancelSubscription}
-                className=""
-                style={{
-                  flex: 1, padding: '10px 14px', borderRadius: 8,
-                  background: 'oklch(0.65 0.22 20)',
-                  color: 'white', fontWeight: 600, fontSize: 12.5, cursor: 'pointer',
-                  textAlign: 'center'
-                }}
+                className="flex-1 px-3.5 py-2.5 rounded-lg bg-[oklch(0.65_0.22_20)] text-white font-semibold text-[12.5px] cursor-pointer text-center"
                 >
                 {isCancelingSub ? 'Canceling...' : 'Yes, Cancel Plan'}
               </button>

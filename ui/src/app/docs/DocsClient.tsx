@@ -2,57 +2,32 @@
 
 import React from 'react';
 import { useSaaS } from '../../context/SaaSContext';
-import { eyebrow, sectionTitle, sectionSubtitle } from '../../components/PageStyles';
+import { eyebrow, sectionTitle } from '../../components/PageStyles';
 
 export default function DocsClient() {
   const { launchApp } = useSaaS();
   const isLight = typeof document !== 'undefined' && document.documentElement.classList.contains('light');
 
   return (
-    <div style={{
-      maxWidth: 880,
-      margin: '40px auto 120px',
-      padding: '0 32px',
-      boxSizing: 'border-box',
-      position: 'relative',
-    }} className="fade-in">
+    <div className="max-w-[880px] mx-auto mt-10 mb-[120px] px-8 box-border relative fade-in">
       {/* Subpage ambient top-center glow */}
-      <div style={{
-        position: 'absolute',
-        top: -100,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '100%',
-        maxWidth: 800,
-        height: 300,
-        pointerEvents: 'none',
+      <div className={`absolute top-[-100px] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] pointer-events-none z-0 ${isLight ? 'opacity-[0.08]' : 'opacity-[0.15]'}`} style={{
         background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
-        opacity: isLight ? 0.08 : 0.15,
-        zIndex: 0,
       }}/>
 
-      <div style={{ textAlign: 'center', marginBottom: 40, position: 'relative', zIndex: 1 }}>
-        <span style={eyebrow}>Technical Docs</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Developer Documentation</h1>
+      <div className="text-center mb-10 relative z-[1]">
+        <span className={eyebrow}>Technical Docs</span>
+        <h1 className={`${sectionTitle} mt-3 mb-0 text-[var(--fg)]`}>Developer Documentation</h1>
       </div>
 
-      <div className="glass-card" style={{ position: 'relative', zIndex: 1, padding: '40px clamp(24px, 5vw, 48px)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 32 }}>
+      <div className="glass-card relative z-[1] py-10 px-[clamp(24px,5vw,48px)]">
+        <div className="flex flex-col gap-8">
           <div>
-            <h2 style={{ fontSize: 18, color: 'var(--fg)', fontWeight: 600, marginBottom: 8 }}>1. Single-Message AI Formatter API</h2>
-            <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6, marginBottom: 12 }}>
+            <h2 className="text-[18px] text-[var(--fg)] font-semibold mb-2">1. Single-Message AI Formatter API</h2>
+            <p className="text-[14.5px] text-[var(--fg-muted)] leading-[1.6] mb-3">
               You can programmatically format raw AI text by posting to the unified Python/FastAPI endpoint:
             </p>
-            <pre style={{
-              background: 'var(--bg-elev-1)',
-              border: '1px solid var(--border)',
-              borderRadius: 8,
-              padding: '14px 18px',
-              overflowX: 'auto',
-              fontSize: 12.5,
-              color: isLight ? 'oklch(0.55 0.15 265)' : 'oklch(0.80 0.10 195)',
-              lineHeight: 1.5,
-            }} className="mono">
+            <pre className={`bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-lg py-3.5 px-4.5 overflow-x-auto text-[12.5px] leading-relaxed mono ${isLight ? 'text-[oklch(0.55_0.15_265)]' : 'text-[oklch(0.80_0.10_195)]'}`}>
   {`POST /api/format
 Headers: { "Content-Type": "application/json" }
 Body:
@@ -66,34 +41,21 @@ Body:
           </div>
 
           <div>
-            <h2 style={{ fontSize: 18, color: 'var(--fg)', fontWeight: 600, marginBottom: 8 }}>2. Rate Limits & Fair-Use</h2>
-            <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+            <h2 className="text-[18px] text-[var(--fg)] font-semibold mb-2">2. Rate Limits & Fair-Use</h2>
+            <p className="text-[14.5px] text-[var(--fg-muted)] leading-[1.6]">
               Our Free Tier operates on on-device scripts running locally in the browser, meaning zero rate limits. Server-side API formatting endpoints operate a Fair-Use protector to ensure service availability for all users.
             </p>
           </div>
 
           <div>
-            <h2 style={{ fontSize: 18, color: 'var(--fg)', fontWeight: 600, marginBottom: 8 }}>3. Security & Compliance</h2>
-            <p style={{ fontSize: 14.5, color: 'var(--fg-muted)', lineHeight: 1.6 }}>
+            <h2 className="text-[18px] text-[var(--fg)] font-semibold mb-2">3. Security & Compliance</h2>
+            <p className="text-[14.5px] text-[var(--fg-muted)] leading-[1.6]">
               Any files uploaded or text processed through the tools catalog is analyzed and streamed directly. We do not store, scan, or log document contents inside database instances, protecting data integrity.
             </p>
           </div>
 
-          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
-            <button onClick={launchApp} className="" style={{
-              padding: '12px 24px',
-              borderRadius: 9,
-              background: 'var(--bg-elev-2)',
-              border: '1px solid var(--border)',
-              color: 'var(--fg)',
-              fontWeight: 500,
-              fontSize: 13.5,
-              cursor: 'pointer',
-              transition: 'background 0.15s',
-            }}
-            onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-            onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
-            >Go to App</button>
+          <div className="mt-3 flex justify-center">
+            <button onClick={launchApp} className="px-6 py-3 rounded-[9px] bg-[var(--bg-elev-2)] border border-[var(--border)] text-[var(--fg)] font-medium text-[13.5px] cursor-pointer transition-colors duration-150 hover:bg-[var(--bg-hover)]">Go to App</button>
           </div>
         </div>
       </div>

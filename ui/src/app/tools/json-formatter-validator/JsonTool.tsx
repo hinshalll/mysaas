@@ -186,81 +186,65 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
   const Ico = Icon[tool.icon] || Icon.Braces;
 
   return (
-    <div style={{
-      maxWidth: 1240, margin: '0 auto',
-      padding: '40px 24px 80px',
-    }} className="fade-in">
+    <div className="max-w-[1240px] mx-auto px-6 pt-10 pb-20 fade-in">
       
       {/* Breadcrumb Header */}
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 8,
-        fontSize: 11.5, color: 'var(--fg-dim)',
-        marginBottom: 14,
-      }} className="mono">
+      <div className="inline-flex items-center gap-2 text-[11.5px] text-fg-dim mb-3.5 mono">
         <span style={{ color: tintFg(tool.hue) }}>{tool.categoryLabel}</span>
         <span>/</span>
-        <span style={{ color: 'var(--fg-muted)' }}>{tool.id}</span>
+        <span className="text-fg-muted">{tool.id}</span>
       </div>
 
       {/* Tool Identity Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 32 }}>
-        <div style={{
-          width: 52, height: 52, borderRadius: 12,
-          background: tint(tool.hue),
-          border: `1px solid ${tintBorder(tool.hue)}`,
-          color: tintFg(tool.hue),
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: `0 0 24px ${tint(tool.hue, 0.4, 0.1, 0.1)}`,
-        }}>
+      <div className="flex items-center gap-4 mb-8">
+        <div 
+          className="w-[52px] h-[52px] rounded-xl flex items-center justify-center"
+          style={{
+            background: tint(tool.hue),
+            border: `1px solid ${tintBorder(tool.hue)}`,
+            color: tintFg(tool.hue),
+            boxShadow: `0 0 24px ${tint(tool.hue, 0.4, 0.1, 0.1)}`,
+          }}
+        >
           <Ico size={24} strokeWidth={2} />
         </div>
         <div>
-          <h1 style={{ margin: 0, fontSize: 24, fontWeight: 600, color: 'white', letterSpacing: '-0.02em' }}>{tool.name}</h1>
-          <p style={{ margin: '4px 0 0', fontSize: 13.5, color: 'var(--fg-muted)' }}>{tool.tagline}</p>
+          <h1 className="m-0 text-2xl font-semibold text-white tracking-[-0.02em]">{tool.name}</h1>
+          <p className="mt-1 mb-0 text-[13.5px] text-fg-muted">{tool.tagline}</p>
         </div>
       </div>
 
       {/* Two Column Layout Panel */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(480px, 1fr))',
-        gap: 24,
-        alignItems: 'start',
-      }} className="tools-split-layout">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(480px,1fr))] gap-6 items-start tools-split-layout">
         
         {/* Left Side: Input & Operations */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{
-            background: 'oklch(0.16 0.006 250 / 0.7)',
-            border: '1px solid var(--border)',
-            borderRadius: 14,
-            padding: '20px 24px',
-            display: 'flex', flexDirection: 'column', gap: 16,
-          }}>
+        <div className="flex flex-col gap-4">
+          <div className="bg-[oklch(0.16_0.006_250/0.7)] border border-border rounded-xl p-5 md:px-6 flex flex-col gap-4">
             
             {/* Input Selection Header */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ display: 'flex', gap: 6, background: 'oklch(0.12 0.004 250)', padding: 4, borderRadius: 8, border: '1px solid var(--border)' }}>
-                <button onClick={() => setInputMethod('paste')} className="mono" style={{
-                  padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
-                  background: inputMethod === 'paste' ? 'oklch(0.20 0.008 250)' : 'transparent',
-                  color: inputMethod === 'paste' ? 'white' : 'var(--fg-muted)',
-                  cursor: 'pointer',
-                }}>Paste Text</button>
-                <button onClick={() => setInputMethod('upload')} className="mono" style={{
-                  padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
-                  background: inputMethod === 'upload' ? 'oklch(0.20 0.008 250)' : 'transparent',
-                  color: inputMethod === 'upload' ? 'white' : 'var(--fg-muted)',
-                  cursor: 'pointer',
-                }}>Upload File</button>
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <div className="flex gap-1.5 bg-[oklch(0.12_0.004_250)] p-1 rounded-lg border border-border">
+                <button 
+                  onClick={() => setInputMethod('paste')} 
+                  className={`mono px-3 py-1.5 text-[11.5px] font-semibold rounded-md cursor-pointer ${inputMethod === 'paste' ? 'bg-[oklch(0.20_0.008_250)] text-white' : 'bg-transparent text-fg-muted'}`}
+                >
+                  Paste Text
+                </button>
+                <button 
+                  onClick={() => setInputMethod('upload')} 
+                  className={`mono px-3 py-1.5 text-[11.5px] font-semibold rounded-md cursor-pointer ${inputMethod === 'upload' ? 'bg-[oklch(0.20_0.008_250)] text-white' : 'bg-transparent text-fg-muted'}`}
+                >
+                  Upload File
+                </button>
               </div>
 
               <div>
-                <button onClick={handleClear} className="mono" style={{
-                  padding: '6px 12px', fontSize: 11.5, fontWeight: 500, borderRadius: 6,
-                  color: 'oklch(0.70 0.12 15)', border: '1px solid oklch(0.70 0.12 15 / 0.2)',
-                  cursor: 'pointer',
-                }}>Clear Input</button>
+                <button 
+                  onClick={handleClear} 
+                  className="mono px-3 py-1.5 text-[11.5px] font-medium rounded-md text-[oklch(0.70_0.12_15)] border border-[oklch(0.70_0.12_15/0.2)] cursor-pointer"
+                >
+                  Clear Input
+                </button>
               </div>
             </div>
 
@@ -270,13 +254,7 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
                 placeholder="Paste raw, messy, or broken JSON payload here..."
                 value={inputText}
                 onChange={e => setInputText(e.target.value)}
-                style={{
-                  width: '100%', height: 320, padding: 16, borderRadius: 10,
-                  background: 'oklch(0.12 0.004 250)', border: '1px solid var(--border)',
-                  color: 'white', fontFamily: '"Fira Code", monospace', fontSize: 13,
-                  outline: 'none', resize: 'none', boxSizing: 'border-box',
-                  lineHeight: 1.5,
-                }}
+                className="w-full h-[320px] p-4 rounded-lg bg-[oklch(0.12_0.004_250)] border border-border text-white font-mono text-[13px] outline-none resize-none box-border leading-[1.5]"
               />
             ) : (
               <div
@@ -284,13 +262,10 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
                 onDragLeave={onDragLeave}
                 onDrop={onDrop}
                 onClick={() => fileInputRef.current?.click()}
+                className="w-full h-[320px] rounded-lg border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-colors duration-200 box-border p-6 text-center"
                 style={{
-                  width: '100%', height: 320, borderRadius: 10,
-                  border: `2px dashed ${isDragOver ? tintFg(tool.hue) : 'var(--border)'}`,
+                  borderColor: isDragOver ? tintFg(tool.hue) : 'var(--border)',
                   background: isDragOver ? tint(tool.hue, 0.18, 0.04, 0.06) : 'oklch(0.12 0.004 250)',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer', transition: 'background 0.2s, border-color 0.2s',
-                  boxSizing: 'border-box', padding: 24, textAlign: 'center',
                 }}
               >
                 <input
@@ -298,67 +273,48 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
                   accept=".json"
                   ref={fileInputRef}
                   onChange={e => e.target.files?.[0] && handleFileLoad(e.target.files[0])}
-                  style={{ display: 'none' }}
+                  className="hidden"
                 />
-                <Icon.FileDown size={36} style={{ color: isDragOver ? tintFg(tool.hue) : 'var(--fg-dim)', marginBottom: 14 }} />
-                <span style={{ fontSize: 14.5, fontWeight: 500, color: 'white', display: 'block', marginBottom: 6 }}>
+                <Icon.FileDown size={36} className="mb-3.5" style={{ color: isDragOver ? tintFg(tool.hue) : 'var(--fg-dim)' }} />
+                <span className="text-[14.5px] font-medium text-white block mb-1.5">
                   {inputText ? '📄 File Loaded Successfully' : 'Drag and drop your .json file here'}
                 </span>
-                <span style={{ fontSize: 12.5, color: 'var(--fg-subtle)' }}>
+                <span className="text-[12.5px] text-fg-subtle">
                   {inputText ? `Click here to replace file (${sizeKb} KB)` : 'or click to browse local files'}
                 </span>
               </div>
             )}
 
             {/* Input Metric readouts */}
-            <div style={{
-              display: 'flex', gap: 16, fontSize: 11.5, color: 'var(--fg-subtle)',
-              borderTop: '1px solid var(--border)', paddingTop: 14,
-            }} className="mono">
-              <div>Chars: <span style={{ color: 'white' }}>{charsCount}</span></div>
-              <div>Lines: <span style={{ color: 'white' }}>{linesCount}</span></div>
-              <div>Size: <span style={{ color: 'white' }}>{sizeKb} KB</span></div>
+            <div className="flex gap-4 text-[11.5px] text-fg-subtle border-t border-border pt-3.5 mono">
+              <div>Chars: <span className="text-white">{charsCount}</span></div>
+              <div>Lines: <span className="text-white">{linesCount}</span></div>
+              <div>Size: <span className="text-white">{sizeKb} KB</span></div>
             </div>
           </div>
 
           {/* Action Operations Bar */}
-          <div style={{
-            display: 'flex', flexDirection: 'column', gap: 10,
-          }}>
+          <div className="flex flex-col gap-2.5">
             <button
               onClick={() => handleAction('Format')}
               disabled={loading}
-              className=""
+              className="w-full p-3.5 rounded-lg font-semibold text-[14px] inline-flex items-center justify-center gap-2 hover:-translate-y-px transition-transform"
               style={{
-                width: '100%', padding: '14px', borderRadius: 10,
                 background: tint(tool.hue),
                 border: `1px solid ${tintBorder(tool.hue)}`,
                 color: tintFg(tool.hue),
-                fontWeight: 600, fontSize: 14,
                 cursor: loading ? 'not-allowed' : 'pointer',
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                transition: 'transform 0.15s',
               }}
-              onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-1px)'}
-              onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
             >
               {loading ? 'Processing...' : '✨ Format & Validate'}
             </button>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: 10 }}>
+            <div className="grid grid-cols-[1.2fr_1fr] gap-2.5">
               <button
                 onClick={() => handleAction('Auto-Repair')}
                 disabled={loading}
-                className=""
-                style={{
-                  padding: '12px', borderRadius: 10,
-                  background: 'oklch(0.20 0.008 75 / 0.25)',
-                  border: '1px solid oklch(0.75 0.14 75 / 0.2)',
-                  color: 'oklch(0.78 0.16 75)',
-                  fontWeight: 500, fontSize: 13,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                }}
+                className="p-3 rounded-lg bg-[oklch(0.20_0.008_75/0.25)] border border-[oklch(0.75_0.14_75/0.2)] text-[oklch(0.78_0.16_75)] font-medium text-[13px] inline-flex items-center justify-center gap-1.5"
+                style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
               >
                 <Icon.HeartPulse size={13} /> Repair Broken JSON
               </button>
@@ -366,16 +322,8 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
               <button
                 onClick={() => handleAction('Minify')}
                 disabled={loading}
-                className=""
-                style={{
-                  padding: '12px', borderRadius: 10,
-                  background: 'oklch(0.18 0.008 250 / 0.6)',
-                  border: '1px solid var(--border)',
-                  color: 'white',
-                  fontWeight: 500, fontSize: 13,
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                }}
+                className="p-3 rounded-lg bg-[oklch(0.18_0.008_250/0.6)] border border-border text-white font-medium text-[13px] inline-flex items-center justify-center gap-1.5"
+                style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
               >
                 <Icon.Archive size={13} /> Minify (Compress)
               </button>
@@ -384,38 +332,25 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
         </div>
 
         {/* Right Side: Output & Status badging */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div className="flex flex-col gap-4">
           
           {/* Status Alert Banners */}
           {status !== 'idle' && (
             <div className="fade-in">
               {/* Valid Badges */}
               {(status === 'success' || status === 'already_valid') && (
-                <div style={{
-                  padding: '14px 20px', borderRadius: 10,
-                  background: 'oklch(0.20 0.010 145 / 0.2)',
-                  border: '1px solid oklch(0.75 0.14 145 / 0.3)',
-                  color: 'oklch(0.78 0.16 145)',
-                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5,
-                  boxShadow: '0 0 16px oklch(0.78 0.16 145 / 0.1)',
-                }}>
+                <div className="px-5 py-3.5 rounded-lg bg-[oklch(0.20_0.010_145/0.2)] border border-[oklch(0.75_0.14_145/0.3)] text-[oklch(0.78_0.16_145)] flex items-center gap-2.5 text-[13.5px] shadow-[0_0_16px_oklch(0.78_0.16_145/0.1)]">
                   <Icon.CheckCircle size={15} strokeWidth={2.5} />
                   <span>
                     <strong>Valid JSON!</strong> Prettified payload is compiled successfully.
-                    {errorDetails && <span style={{ display: 'block', fontSize: 12, marginTop: 4, opacity: 0.8 }}>({errorDetails})</span>}
+                    {errorDetails && <span className="block text-[12px] mt-1 opacity-80">({errorDetails})</span>}
                   </span>
                 </div>
               )}
 
               {/* Repaired Badges */}
               {status === 'repaired' && (
-                <div style={{
-                  padding: '14px 20px', borderRadius: 10,
-                  background: 'oklch(0.20 0.010 75 / 0.25)',
-                  border: '1px solid oklch(0.75 0.14 75 / 0.3)',
-                  color: 'oklch(0.78 0.16 75)',
-                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5,
-                }}>
+                <div className="px-5 py-3.5 rounded-lg bg-[oklch(0.20_0.010_75/0.25)] border border-[oklch(0.75_0.14_75/0.3)] text-[oklch(0.78_0.16_75)] flex items-center gap-2.5 text-[13.5px]">
                   <Icon.AlertTriangle size={15} strokeWidth={2.5} />
                   <span>
                     <strong>Repaired JSON!</strong> {errorDetails}
@@ -425,15 +360,8 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
 
               {/* Error Badges */}
               {(status === 'error' || status === 'fatal_error') && (
-                <div style={{
-                  padding: '14px 20px', borderRadius: 10,
-                  background: 'oklch(0.20 0.010 15 / 0.2)',
-                  border: '1px solid oklch(0.70 0.12 15 / 0.3)',
-                  color: 'oklch(0.80 0.10 15)',
-                  display: 'flex', alignItems: 'center', gap: 10, fontSize: 13.5,
-                  lineHeight: 1.4,
-                }}>
-                  <Icon.XCircle size={16} strokeWidth={2.5} style={{ flexShrink: 0 }} />
+                <div className="px-5 py-3.5 rounded-lg bg-[oklch(0.20_0.010_15/0.2)] border border-[oklch(0.70_0.12_15/0.3)] text-[oklch(0.80_0.10_15)] flex items-center gap-2.5 text-[13.5px] leading-[1.4]">
+                  <Icon.XCircle size={16} strokeWidth={2.5} className="shrink-0" />
                   <span>
                     <strong>Validation Failed:</strong> {errorDetails}
                   </span>
@@ -443,34 +371,24 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
           )}
 
           {/* Output Display Card */}
-          <div style={{
-            background: 'oklch(0.16 0.006 250 / 0.7)',
-            border: '1px solid var(--border)',
-            borderRadius: 14,
-            padding: '20px 24px',
-            display: 'flex', flexDirection: 'column', gap: 16,
-          }}>
+          <div className="bg-[oklch(0.16_0.006_250/0.7)] border border-border rounded-xl p-5 md:px-6 flex flex-col gap-4">
             
             {/* Output Toolbar */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontSize: 12.5, fontWeight: 600, color: 'white' }} className="mono">Formatted Output</div>
+            <div className="flex items-center gap-3">
+              <div className="text-[12.5px] font-semibold text-white mono">Formatted Output</div>
               
               {outputText && (
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }} className="fade-in">
-                  <button onClick={handleCopy} className="mono" style={{
-                    padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
-                    border: '1px solid var(--border)', background: 'oklch(0.12 0.004 250)',
-                    color: copying ? 'oklch(0.78 0.16 145)' : 'white', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                  }}>
+                <div className="ml-auto flex gap-2 fade-in">
+                  <button 
+                    onClick={handleCopy} 
+                    className={`mono px-3 py-1.5 text-[11.5px] font-semibold rounded-md border border-border bg-[oklch(0.12_0.004_250)] cursor-pointer flex items-center gap-1.5 ${copying ? 'text-[oklch(0.78_0.16_145)]' : 'text-white'}`}
+                  >
                     {copying ? <><Icon.Check size={12} /> Copied!</> : <><Icon.Copy size={12} /> Copy JSON</>}
                   </button>
-                  <button onClick={handleDownload} className="mono" style={{
-                    padding: '6px 12px', fontSize: 11.5, fontWeight: 600, borderRadius: 6,
-                    border: '1px solid var(--border)', background: 'oklch(0.12 0.004 250)',
-                    color: 'white', cursor: 'pointer',
-                    display: 'flex', alignItems: 'center', gap: 6,
-                  }}>
+                  <button 
+                    onClick={handleDownload} 
+                    className="mono px-3 py-1.5 text-[11.5px] font-semibold rounded-md border border-border bg-[oklch(0.12_0.004_250)] text-white cursor-pointer flex items-center gap-1.5"
+                  >
                     <Icon.Download size={12} /> Download
                   </button>
                 </div>
@@ -478,30 +396,23 @@ export default function JsonTool({ tool, brandName, userPlan, sessionUser, onSho
             </div>
 
             {/* Output code block container */}
-            <div style={{ position: 'relative' }}>
+            <div className="relative">
               <textarea
                 readOnly
                 placeholder="Processed validation output will render here..."
                 value={outputText}
+                className="w-full h-[320px] p-4 rounded-lg bg-[oklch(0.12_0.004_250/0.5)] border border-border font-mono text-[13px] outline-none resize-none box-border leading-[1.5]"
                 style={{
-                  width: '100%', height: 320, padding: 16, borderRadius: 10,
-                  background: 'oklch(0.12 0.004 250 / 0.5)', border: '1px solid var(--border)',
                   color: outputText ? 'oklch(0.85 0.10 195)' : 'var(--fg-dim)', 
-                  fontFamily: '"Fira Code", monospace', fontSize: 13,
-                  outline: 'none', resize: 'none', boxSizing: 'border-box',
-                  lineHeight: 1.5,
                 }}
               />
             </div>
 
             {/* Output metrics details */}
-            <div style={{
-              display: 'flex', gap: 16, fontSize: 11.5, color: 'var(--fg-subtle)',
-              borderTop: '1px solid var(--border)', paddingTop: 14,
-            }} className="mono">
-              <div>Chars: <span style={{ color: 'white' }}>{outputText.length}</span></div>
-              <div>Lines: <span style={{ color: 'white' }}>{outputText ? outputText.split('\n').length : 0}</span></div>
-              <div>Size: <span style={{ color: 'white' }}>{outputText ? (outputText.length / 1024).toFixed(2) : '0.00'} KB</span></div>
+            <div className="flex gap-4 text-[11.5px] text-fg-subtle border-t border-border pt-3.5 mono">
+              <div>Chars: <span className="text-white">{outputText.length}</span></div>
+              <div>Lines: <span className="text-white">{outputText ? outputText.split('\n').length : 0}</span></div>
+              <div>Size: <span className="text-white">{outputText ? (outputText.length / 1024).toFixed(2) : '0.00'} KB</span></div>
             </div>
           </div>
         </div>

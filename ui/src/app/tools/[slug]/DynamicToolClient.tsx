@@ -8,17 +8,17 @@ import ComingSoonStub from '../../../components/ComingSoonStub';
 import dynamic from 'next/dynamic';
 
 const FormatterTool = dynamic(() => import('../universal-ai-formatter/FormatterTool'), {
-  loading: () => <div style={{ padding: 40, textAlign: 'center', color: 'var(--fg-dim)' }}>Loading Formatter Workspace...</div>,
+  loading: () => <div className="p-10 text-center text-[#94a3b8]">Loading Formatter Workspace...</div>,
   ssr: false,
 });
 
 const JsonTool = dynamic(() => import('../json-formatter-validator/JsonTool'), {
-  loading: () => <div style={{ padding: 40, textAlign: 'center', color: 'var(--fg-dim)' }}>Loading JSON Workspace...</div>,
+  loading: () => <div className="p-10 text-center text-[#94a3b8]">Loading JSON Workspace...</div>,
   ssr: false,
 });
 
 const HeicTool = dynamic(() => import('../heic-to-jpg-converter/HeicTool'), {
-  loading: () => <div style={{ padding: 40, textAlign: 'center', color: 'var(--fg-dim)' }}>Loading Converter Workspace...</div>,
+  loading: () => <div className="p-10 text-center text-[#94a3b8]">Loading Converter Workspace...</div>,
   ssr: false,
 });
 
@@ -42,7 +42,7 @@ export default function DynamicToolClient({ slug }: DynamicToolClientProps) {
 
   if (!tool) {
     return (
-      <div style={{ textAlign: 'center', margin: '80px auto', color: 'var(--fg-dim)' }}>
+      <div className="text-center my-20 mx-auto text-[#94a3b8]">
         Tool not found.
       </div>
     );

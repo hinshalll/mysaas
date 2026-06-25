@@ -55,54 +55,37 @@ export default function RoadmapClient() {
   };
 
   return (
-    <div style={{
-      maxWidth: 880, margin: '40px auto 120px',
-      padding: '0 32px', boxSizing: 'border-box',
-      position: 'relative',
-    }} className="fade-in">
+    <div className="max-w-[880px] mx-auto mt-10 mb-[120px] px-8 box-border relative fade-in">
       {/* Subpage ambient top-center glow */}
-      <div style={{
-        position: 'absolute', top: -100, left: '50%', transform: 'translateX(-50%)',
-        width: '100%', maxWidth: 800, height: 300, pointerEvents: 'none',
+      <div className={`absolute top-[-100px] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] pointer-events-none z-0 ${isLight ? 'opacity-[0.08]' : 'opacity-[0.15]'}`} style={{
         background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
-        opacity: isLight ? 0.08 : 0.15,
-        zIndex: 0,
       }}/>
 
-      <div style={{ textAlign: 'center', marginBottom: 48, position: 'relative', zIndex: 1 }}>
-        <span style={eyebrow}>Product Vision</span>
-        <h1 style={{ ...sectionTitle, margin: '12px 0 0', color: 'var(--fg)' }}>Roadmap</h1>
-        <p style={sectionSubtitle}>What we're building next. Priorities shift based on user demand—tell us what matters most.</p>
+      <div className="text-center mb-12 relative z-[1]">
+        <span className={eyebrow}>Product Vision</span>
+        <h1 className={`${sectionTitle} mt-3 mb-0 text-[var(--fg)]`}>Roadmap</h1>
+        <p className={sectionSubtitle}>What we're building next. Priorities shift based on user demand—tell us what matters most.</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 32, position: 'relative', zIndex: 1 }}>
+      <div className="flex flex-col gap-8 relative z-[1]">
         {milestones.map((ms) => (
           <div key={ms.quarter} className="glass-card">
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <span style={{
-                width: 10, height: 10, borderRadius: '50%',
+            <div className="flex items-center gap-3 mb-5">
+              <span className="w-2.5 h-2.5 rounded-full" style={{
                 background: `oklch(0.75 0.14 ${ms.hue})`,
                 boxShadow: isLight ? 'none' : `0 0 10px oklch(0.75 0.14 ${ms.hue} / 0.8)`,
               }} />
-              <span style={{ fontSize: 18, fontWeight: 600, color: 'var(--fg)' }} className="mono">{ms.quarter}</span>
+              <span className="text-[18px] font-semibold text-[var(--fg)] mono">{ms.quarter}</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="flex flex-col gap-3">
               {ms.items.map((item) => {
                 const st = statusColors[item.status];
                 return (
-                  <div key={item.title} style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    padding: '10px 14px', borderRadius: 10,
-                    background: 'var(--bg-elev-1)',
-                    border: '1px solid var(--border)',
-                  }}>
-                    <span style={{ fontSize: 14, color: 'var(--fg-muted)', fontWeight: 500 }}>{item.title}</span>
-                    <span style={{
-                      fontSize: 10, fontWeight: 600,
-                      padding: '3px 8px', borderRadius: 12,
+                  <div key={item.title} className="flex items-center justify-between py-2.5 px-3.5 rounded-[10px] bg-[var(--bg-elev-1)] border border-[var(--border)]">
+                    <span className="text-[14px] text-[var(--fg-muted)] font-medium">{item.title}</span>
+                    <span className="text-[10px] font-semibold px-2 py-[3px] rounded-xl uppercase tracking-[0.04em] mono" style={{
                       background: st.bg, color: st.fg,
-                      textTransform: 'uppercase', letterSpacing: '0.04em',
-                    }} className="mono">{st.label}</span>
+                    }}>{st.label}</span>
                   </div>
                 );
               })}
@@ -111,16 +94,8 @@ export default function RoadmapClient() {
         ))}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 40 }}>
-        <button onClick={launchApp} className="" style={{
-          padding: '11px 24px', borderRadius: 9,
-          background: 'var(--bg-elev-2)', border: '1px solid var(--border)',
-          color: 'var(--fg)', fontWeight: 500, fontSize: 13.5, cursor: 'pointer',
-          transition: 'background 0.15s',
-        }}
-        onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-hover)'}
-        onMouseLeave={e => e.currentTarget.style.background = 'var(--bg-elev-2)'}
-        >Return to App Console</button>
+      <div className="flex justify-center mt-10">
+        <button onClick={launchApp} className="px-6 py-3 rounded-[9px] bg-[var(--bg-elev-2)] border border-[var(--border)] text-[var(--fg)] font-medium text-[13.5px] cursor-pointer transition-colors duration-150 hover:bg-[var(--bg-hover)]">Return to App Console</button>
       </div>
     </div>
   );

@@ -7,20 +7,6 @@ import { Search, ArrowRight, Star } from 'lucide-react';
 import { Icon, tint, tintFg, tintBorder } from '../../components/LucideIcons';
 import ToolCard from '../../components/ToolCard';
 
-const quickBtn = {
-  display: 'inline-flex',
-  alignItems: 'center',
-  gap: 8,
-  padding: '8px 12px',
-  background: 'oklch(0.20 0.008 250 / 0.6)',
-  border: '1px solid var(--border)',
-  color: 'var(--fg)',
-  fontSize: 13,
-  fontWeight: 500,
-  borderRadius: 8,
-  cursor: 'pointer',
-};
-
 interface WelcomeStripProps {
   onOpenLauncher: () => void;
   onOpenPalette: () => void;
@@ -32,98 +18,45 @@ function WelcomeStrip({ onOpenLauncher, onOpenPalette }: WelcomeStripProps) {
   const greeting = hour < 5 ? 'Up late' : hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
 
   return (
-    <section style={{
-      padding: '40px 32px 28px',
-      maxWidth: 1280,
-      margin: '0 auto',
-      width: '100%',
-      boxSizing: 'border-box',
-    }}>
-      <div style={{
-        display: 'flex',
-        alignItems: 'flex-end',
-        gap: 24,
-        flexWrap: 'wrap',
-      }}>
-        <div style={{ flex: 1, minWidth: 280 }}>
-          <div style={{
-            fontSize: 11.5,
-            fontWeight: 600,
-            color: 'var(--fg-dim)',
-            letterSpacing: '0.10em',
-            textTransform: 'uppercase',
-            marginBottom: 10,
-          }}>{greeting}, Riley</div>
-          <h1 style={{
-            margin: 0,
-            fontSize: 'clamp(28px, 4vw, 40px)',
-            lineHeight: 1.05,
-            letterSpacing: '-0.025em',
-            fontWeight: 600,
-            color: 'var(--fg)',
-          }}>
-            What needs <span style={{
-              fontFamily: '"Source Serif Pro", Georgia, serif',
-              fontStyle: 'italic',
-              fontWeight: 400,
-              background: 'linear-gradient(110deg, oklch(0.92 0.04 265), oklch(0.78 0.16 285))',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              color: 'transparent',
-            }}>cleaning up</span> today?
+    <section className="px-8 pt-10 pb-7 max-w-[1280px] mx-auto w-full box-border">
+      <div className="flex items-end gap-6 flex-wrap">
+        <div className="flex-1 min-w-[280px]">
+          <div className="text-[11.5px] font-semibold text-[var(--fg-dim)] tracking-[0.10em] uppercase mb-2.5">
+            {greeting}, Riley
+          </div>
+          <h1 className="m-0 text-[clamp(28px,4vw,40px)] leading-[1.05] tracking-[-0.025em] font-semibold text-[var(--fg)]">
+            What needs <span className="font-serif italic font-normal bg-gradient-to-br from-[oklch(0.92_0.04_265)] to-[oklch(0.78_0.16_285)] text-transparent bg-clip-text">cleaning up</span> today?
           </h1>
-          <p style={{
-            margin: '10px 0 0',
-            fontSize: 14,
-            color: 'var(--fg-muted)',
-            maxWidth: 540,
-          }}>
+          <p className="mt-2.5 mb-0 text-[14px] text-[var(--fg-muted)] max-w-[540px]">
             Every utility is loaded and ready. Hit <kbd className="kbd-inline">⌘K</kbd> to jump to any of them, or pick one from the shelves below.
           </p>
         </div>
 
         {/* Inline quick actions */}
-        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button onClick={onOpenPalette} className="" style={quickBtn as React.CSSProperties}>
+        <div className="flex gap-2.5 flex-wrap">
+          <button onClick={onOpenPalette} className="reset inline-flex items-center gap-2 px-3 py-2 bg-[oklch(0.20_0.008_250/0.6)] border border-[var(--border)] text-[var(--fg)] text-[13px] font-medium rounded-lg cursor-pointer transition-colors hover:bg-[var(--bg-hover)]">
             <Search size={13} />
             <span>Quick find</span>
-            <kbd className="kbd" style={{ marginLeft: 4 }}>⌘K</kbd>
+            <kbd className="kbd ml-1">⌘K</kbd>
           </button>
         </div>
       </div>
 
       {/* Mini stats row */}
-      <div style={{
-        display: 'flex',
-        gap: 0,
-        marginTop: 28,
-        padding: '14px 0',
-        borderTop: '1px solid var(--border)',
-        flexWrap: 'wrap',
-      }} className="dash-stats">
+      <div className="flex gap-0 mt-7 py-3.5 border-t border-[var(--border)] flex-wrap dash-stats">
         {[
           { kpi: '14', label: 'days left in trial', tint: 75 },
           { kpi: '128', label: 'runs this month', tint: 265 },
           { kpi: '47ms', label: 'median launch', tint: 145, mono: true },
           { kpi: '0 B', label: 'data uploaded', tint: 195, mono: true },
         ].map((s, i) => (
-          <div key={i} style={{
-            padding: '4px 24px',
-            borderLeft: i === 0 ? 'none' : '1px solid var(--border)',
-            flex: '1 1 140px',
-          }}>
-            <div style={{
-              fontSize: 20,
-              fontWeight: 600,
-              letterSpacing: '-0.02em',
-              color: 'var(--fg)',
-              fontFamily: s.mono ? '"JetBrains Mono", monospace' : 'inherit',
-            }}>{s.kpi}</div>
-            <div style={{
-              fontSize: 11.5,
-              color: 'var(--fg-muted)',
-              marginTop: 2,
-            }}>{s.label}</div>
+          <div key={i} className={`py-1 px-6 flex-[1_1_140px] ${i === 0 ? 'border-none' : 'border-l border-[var(--border)]'}`}>
+            <div className={`text-[20px] font-semibold tracking-[-0.02em] text-[var(--fg)] ${s.mono ? 'font-mono' : 'font-inherit'}`}>
+              {s.kpi}
+            </div>
+            <div className="text-[11.5px] text-[var(--fg-muted)] mt-0.5">
+              {s.label}
+            </div>
           </div>
         ))}
       </div>
@@ -141,110 +74,34 @@ function FeaturedTool({ onPick }: FeaturedToolProps) {
   const Ico = Icon[featured.icon] || Search;
 
   return (
-    <section style={{
-      maxWidth: 1280,
-      margin: '0 auto',
-      padding: '12px 32px 32px',
-    }}>
-      <button onClick={() => onPick(featured.id)} className="" style={{
-        cursor: 'pointer',
-        width: '100%',
-        display: 'block',
-        textAlign: 'left',
-        padding: 'clamp(24px, 3vw, 36px)',
-        background: 'linear-gradient(120deg, oklch(0.22 0.05 265 / 0.55) 0%, oklch(0.18 0.03 290 / 0.40) 100%)',
-        border: '1px solid oklch(0.40 0.08 265 / 0.45)',
-        borderRadius: 16,
-        position: 'relative',
-        overflow: 'hidden',
-        transition: 'transform 0.2s, border-color 0.2s',
-        boxShadow: '0 16px 48px oklch(0.25 0.15 265 / 0.18), inset 0 1px 0 oklch(1 0 0 / 0.04)',
-      }}
-      onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-      onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-      >
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          pointerEvents: 'none',
-          background: 'radial-gradient(450px 220px at 90% 50%, oklch(0.60 0.18 285 / 0.20), transparent 70%)',
-        }}/>
-        <div style={{
-          position: 'relative',
-          display: 'grid',
-          gridTemplateColumns: '1fr auto',
-          gap: 24,
-          alignItems: 'center',
-        }} className="featured-grid">
+    <section className="max-w-[1280px] mx-auto px-8 pt-3 pb-8">
+      <button onClick={() => onPick(featured.id)} className="reset w-full block text-left p-[clamp(24px,3vw,36px)] bg-gradient-to-br from-[oklch(0.22_0.05_265/0.55)] to-[oklch(0.18_0.03_290/0.40)] border border-[oklch(0.40_0.08_265/0.45)] rounded-2xl relative overflow-hidden transition-all duration-200 shadow-[0_16px_48px_oklch(0.25_0.15_265/0.18),inset_0_1px_0_oklch(1_0_0/0.04)] cursor-pointer hover:-translate-y-[2px]">
+        <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(450px_220px_at_90%_50%,oklch(0.60_0.18_285/0.20),transparent_70%)]" />
+        <div className="relative grid grid-cols-[1fr_auto] gap-6 items-center featured-grid">
           <div>
-            <div style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 8,
-              padding: '4px 10px 4px 6px',
-              borderRadius: 999,
-              background: 'oklch(0.30 0.08 265 / 0.4)',
-              border: '1px solid oklch(0.45 0.10 265 / 0.4)',
-              fontSize: 11,
-              fontWeight: 500,
-              color: 'oklch(0.88 0.10 265)',
-              marginBottom: 14,
-            }}>
-              <span className="hot-dot"/>
+            <div className="inline-flex items-center gap-2 pl-1.5 pr-2.5 py-1 rounded-full bg-[oklch(0.30_0.08_265/0.4)] border border-[oklch(0.45_0.10_265/0.4)] text-[11px] font-medium text-[oklch(0.88_0.10_265)] mb-3.5">
+              <span className="hot-dot" />
               <span>Featured tool · most opened this week</span>
             </div>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 14,
-              marginBottom: 10,
-            }}>
-              <div style={{
-                width: 42,
-                height: 42,
-                borderRadius: 10,
+            <div className="flex items-center gap-3.5 mb-2.5">
+              <div className="w-[42px] h-[42px] rounded-lg flex items-center justify-center shrink-0" style={{
                 background: tint(featured.hue, 0.35, 0.08, 0.45),
                 border: `1px solid ${tintBorder(featured.hue)}`,
                 color: tintFg(featured.hue),
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
               }}>
-                <Ico size={19} strokeWidth={1.8}/>
+                <Ico size={19} strokeWidth={1.8} />
               </div>
-              <h2 style={{
-                margin: 0,
-                fontSize: 'clamp(20px, 2.4vw, 28px)',
-                fontWeight: 600,
-                letterSpacing: '-0.02em',
-                color: 'var(--fg)',
-              }}>{featured.name}</h2>
+              <h2 className="m-0 text-[clamp(20px,2.4vw,28px)] font-semibold tracking-[-0.02em] text-[var(--fg)]">
+                {featured.name}
+              </h2>
             </div>
-            <p style={{
-              margin: 0,
-              fontSize: 15,
-              color: 'var(--fg-muted)',
-              lineHeight: 1.5,
-              maxWidth: 560,
-            }}>
+            <p className="m-0 text-[15px] text-[var(--fg-muted)] leading-relaxed max-w-[560px]">
               Paste raw output from ChatGPT, Claude, or Gemini and get a beautifully themed PDF, Word doc, or HTML — runs entirely on-device.
             </p>
           </div>
 
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 8,
-            padding: '12px 18px',
-            background: 'linear-gradient(180deg, oklch(0.97 0.005 250), oklch(0.86 0.005 250))',
-            color: 'oklch(0.14 0.008 250)',
-            fontWeight: 500,
-            fontSize: 14,
-            borderRadius: 10,
-            boxShadow: '0 1px 0 oklch(1 0 0 / 0.5) inset, 0 1px 3px oklch(0 0 0 / 0.5)',
-          }}>
-            Open <ArrowRight size={14} strokeWidth={2.2}/>
+          <div className="inline-flex items-center gap-2 px-[18px] py-3 bg-gradient-to-b from-[oklch(0.97_0.005_250)] to-[oklch(0.86_0.005_250)] text-[oklch(0.14_0.008_250)] font-medium text-[14px] rounded-lg shadow-[inset_0_1px_0_oklch(1_0_0/0.5),0_1px_3px_oklch(0_0_0/0.5)]">
+            Open <ArrowRight size={14} strokeWidth={2.2} />
           </div>
         </div>
       </button>
@@ -260,55 +117,28 @@ interface ShelfProps {
 function Shelf({ category, onPick }: ShelfProps) {
   const isPro = category.pro;
   return (
-    <section style={{ marginBottom: 48 }}>
-      <header style={{
-        display: 'flex',
-        alignItems: 'baseline',
-        gap: 14,
-        marginBottom: 18,
-      }} className="shelf-header">
-        <span style={{
-          width: 6,
-          height: 6,
-          borderRadius: '50%',
+    <section className="mb-12">
+      <header className="flex items-baseline gap-3.5 mb-[18px] shelf-header">
+        <span className="w-1.5 h-1.5 rounded-full -mr-1 shrink-0" style={{
           background: tintFg(category.hue),
           boxShadow: `0 0 10px ${tintFg(category.hue)}`,
-          marginRight: -4,
-          flexShrink: 0,
         }} />
-        <span style={{
-          fontSize: 11,
-          fontWeight: 600,
-          letterSpacing: '0.10em',
-          textTransform: 'uppercase',
+        <span className="text-[11px] font-semibold tracking-[0.10em] uppercase shrink-0" style={{
           color: isPro ? tintFg(category.hue) : 'var(--fg-dim)',
-          flexShrink: 0,
         }}>
-          {isPro && <Star size={10} strokeWidth={2} style={{ marginRight: 4, display: 'inline', verticalAlign: '-1px' }} />}
+          {isPro && <Star size={10} strokeWidth={2} className="mr-1 inline align-[-1px]" />}
           {category.label}
         </span>
-        <h2 style={{
-          margin: 0,
-          fontSize: 'clamp(16px, 2vw, 20px)',
-          fontWeight: 600,
-          letterSpacing: '-0.015em',
-          color: 'var(--fg)',
-          textWrap: 'balance',
-        }}>{category.tagline}</h2>
-        <div style={{ flex: 1 }} />
+        <h2 className="m-0 text-[clamp(16px,2vw,20px)] font-semibold tracking-[-0.015em] text-[var(--fg)] [text-wrap:balance]">
+          {category.tagline}
+        </h2>
+        <div className="flex-1" />
       </header>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-        gap: 14,
-        ...(isPro ? {
-          padding: 18,
-          background: `linear-gradient(180deg, ${tint(category.hue, 0.30, 0.06, 0.10)}, ${tint(category.hue, 0.22, 0.04, 0.04)})`,
-          border: `1px solid ${tintBorder(category.hue)}`,
-          borderRadius: 14,
-        } : {}),
-      }}>
+      <div className={`grid grid-cols-[repeat(auto-fill,minmax(280px,1fr))] gap-[14px] ${isPro ? 'p-[18px] rounded-[14px]' : ''}`} style={isPro ? {
+        background: `linear-gradient(180deg, ${tint(category.hue, 0.30, 0.06, 0.10)}, ${tint(category.hue, 0.22, 0.04, 0.04)})`,
+        border: `1px solid ${tintBorder(category.hue)}`,
+      } : {}}>
         {category.tools.map((t: any) => (
           <ToolCard key={t.id} tool={{ ...t, hue: category.hue }} onClick={() => onPick(t.id)} />
         ))}
@@ -325,7 +155,7 @@ export default function DashboardClient() {
       <WelcomeStrip onOpenLauncher={() => setLauncher(true)} onOpenPalette={() => setPalette(true)} />
       <FeaturedTool onPick={openTool} />
 
-      <section style={{ maxWidth: 1280, margin: '0 auto', padding: '0 32px 80px', boxSizing: 'border-box' }}>
+      <section className="max-w-[1280px] mx-auto px-8 pb-20 box-border">
         {CATEGORIES.map(cat => (
           <Shelf key={cat.id} category={cat} onPick={openTool} />
         ))}

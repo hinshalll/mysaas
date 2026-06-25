@@ -443,86 +443,54 @@ export default function HeicTool({
   };
 
   return (
-    <div style={{
-      maxWidth: 800, margin: '0 auto', // Centered 800px width for a focused, clean dashboard
-      padding: '40px 24px 80px',
-      position: 'relative',
-      zIndex: 1,
-    }} className="fade-in">
+    <div className="max-w-[800px] mx-auto px-6 pt-10 pb-20 relative z-[1] fade-in">
       
       {/* Background glow shadow matching tool active hue */}
-      <div style={{
-        position: 'absolute',
-        top: 0,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: '80%',
-        height: '400px',
-        background: `radial-gradient(ellipse at center, ${tint(activeHue, lightMode, 0.4, 0.15, 0.15)} 0%, transparent 70%)`,
-        zIndex: -1,
-        pointerEvents: 'none',
-        filter: 'blur(80px)',
-      }} />
+      <div 
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-[80%] h-[400px] -z-10 pointer-events-none blur-[80px]"
+        style={{
+          background: `radial-gradient(ellipse at center, ${tint(activeHue, lightMode, 0.4, 0.15, 0.15)} 0%, transparent 70%)`,
+        }} 
+      />
 
       {/* Breadcrumbs */}
-      <div style={{
-        display: 'inline-flex', alignItems: 'center', gap: 8,
-        fontSize: 11.5, color: 'var(--fg-dim)',
-        marginBottom: 14,
-      }} className="mono">
-        <span style={{ color: tintFg(activeHue, lightMode), fontWeight: 500 }}>{tool.categoryLabel}</span>
-        <span style={{ opacity: 0.5 }}>/</span>
-        <span style={{ color: 'var(--fg)', opacity: 0.8 }}>{tool.id}</span>
+      <div className="inline-flex items-center gap-2 text-[11.5px] text-[var(--fg-dim)] mb-3.5 mono">
+        <span className="font-medium" style={{ color: tintFg(activeHue, lightMode) }}>{tool.categoryLabel}</span>
+        <span className="opacity-50">/</span>
+        <span className="text-[var(--fg)] opacity-80">{tool.id}</span>
       </div>
 
       {/* Hero Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16, marginBottom: 32 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div style={{
-            width: 54, height: 54, borderRadius: 14,
-            background: tint(activeHue, lightMode, 0.9, 0.08, 0.9),
-            border: `1px solid ${tintBorder(activeHue, lightMode)}`,
-            color: tintFg(activeHue, lightMode),
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            boxShadow: `0 8px 24px ${tint(activeHue, lightMode, 0.4, 0.1, 0.2)}`,
-            transition: 'transform 0.3s ease',
-          }}
-          className="tool-icon-wrapper"
+      <div className="flex items-center justify-between flex-wrap gap-4 mb-8">
+        <div className="flex items-center gap-4">
+          <div 
+            className="w-[54px] h-[54px] rounded-[14px] flex items-center justify-center transition-transform duration-300 tool-icon-wrapper"
+            style={{
+              background: tint(activeHue, lightMode, 0.9, 0.08, 0.9),
+              border: `1px solid ${tintBorder(activeHue, lightMode)}`,
+              color: tintFg(activeHue, lightMode),
+              boxShadow: `0 8px 24px ${tint(activeHue, lightMode, 0.4, 0.1, 0.2)}`,
+            }}
           >
             <ImageIcon size={24} strokeWidth={2} />
           </div>
           <div>
-            <h1 style={{ margin: 0, fontSize: 26, fontWeight: 700, color: 'var(--fg)', letterSpacing: '-0.02em' }}>{tool.name}</h1>
-            <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--fg-muted)' }}>{tool.tagline}</p>
+            <h1 className="m-0 text-[26px] font-bold text-[var(--fg)] tracking-[-0.02em]">{tool.name}</h1>
+            <p className="mt-1 mb-0 mx-0 text-[14px] text-[var(--fg-muted)]">{tool.tagline}</p>
           </div>
         </div>
         
         {/* Tier Indicator Tag */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 8,
-          background: 'var(--bg-elev-1)',
-          border: '1px solid var(--border)',
-          padding: '6px 14px', borderRadius: 9,
-          boxShadow: '0 2px 8px var(--shadow-sm)',
-        }}>
-          <span style={{ width: 6, height: 6, borderRadius: '50%', background: isPaid ? 'oklch(0.65 0.22 145)' : 'oklch(0.70 0.16 145)' }} />
-          <span className="mono" style={{ fontSize: 11.5, color: 'var(--fg-muted)' }}>
-            Tier: <strong style={{ color: 'var(--fg)' }}>{isPaid ? 'PRO' : (isGuest ? 'GUEST' : 'FREE')}</strong>
+        <div className="flex items-center gap-2 bg-[var(--bg-elev-1)] border border-[var(--border)] px-3.5 py-1.5 rounded-[9px] shadow-[0_2px_8px_var(--shadow-sm)]">
+          <span className={`w-1.5 h-1.5 rounded-full ${isPaid ? 'bg-[oklch(0.65_0.22_145)]' : 'bg-[oklch(0.70_0.16_145)]'}`} />
+          <span className="mono text-[11.5px] text-[var(--fg-muted)]">
+            Tier: <strong className="text-[var(--fg)] font-bold">{isPaid ? 'PRO' : (isGuest ? 'GUEST' : 'FREE')}</strong>
           </span>
         </div>
       </div>
 
       {/* Main Glass Dashboard - Focused Single Column layout */}
-      <div style={{
-        background: lightMode ? 'oklch(1 0 0 / 0.75)' : 'oklch(0.18 0.005 250 / 0.75)',
-        border: '1px solid var(--border)',
-        borderRadius: 20,
-        padding: '32px',
-        display: 'flex', flexDirection: 'column', gap: 28,
-        boxShadow: '0 20px 40px var(--shadow-lg)',
-        backdropFilter: 'blur(20px)',
-        transition: 'all 0.3s ease',
-      }}>
+      <div className={`border border-[var(--border)] rounded-[20px] p-8 flex flex-col gap-7 shadow-[0_20px_40px_var(--shadow-lg)] backdrop-blur-[20px] transition-all duration-300 ${lightMode ? 'bg-[oklch(1_0_0/0.75)]' : 'bg-[oklch(0.18_0.005_250/0.75)]'}`}>
         
         {/* Drag & Drop Uploader */}
         <div
@@ -530,18 +498,13 @@ export default function HeicTool({
           onDragLeave={onDragLeave}
           onDrop={onDrop}
           onClick={() => fileInputRef.current?.click()}
+          className={`w-full rounded-[14px] flex flex-col items-center justify-center cursor-pointer box-border p-5 text-center relative overflow-hidden uploader-zone transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] ${files.length > 0 ? 'h-[120px]' : 'h-[240px]'}`}
           style={{
-            width: '100%', height: files.length > 0 ? 120 : 240, borderRadius: 14,
             border: `2px dashed ${isDragOver ? tintFg(activeHue, lightMode) : 'var(--border)'}`,
             background: isDragOver 
               ? tint(activeHue, lightMode, 0.12, 0.05, 0.08) 
               : (lightMode ? 'oklch(0.98 0.002 250 / 0.4)' : 'oklch(0.12 0.004 250 / 0.3)'),
-            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            boxSizing: 'border-box', padding: 20, textAlign: 'center',
-            position: 'relative', overflow: 'hidden',
           }}
-          className="uploader-zone"
         >
           <input
             type="file"
@@ -549,21 +512,20 @@ export default function HeicTool({
             multiple
             ref={fileInputRef}
             onChange={e => handleFilesSelected(e.target.files!)}
-            style={{ display: 'none' }}
+            className="hidden"
           />
           <FileDown 
             size={files.length > 0 ? 24 : 36} 
+            className="file-down-icon transition-transform duration-200"
             style={{ 
               color: isDragOver ? tintFg(activeHue, lightMode) : 'var(--fg-muted)', 
               marginBottom: files.length > 0 ? 6 : 14,
-              transition: 'transform 0.2s ease',
             }} 
-            className="file-down-icon"
           />
-          <span style={{ fontSize: files.length > 0 ? 14 : 16, fontWeight: 600, color: 'var(--fg)', display: 'block', marginBottom: files.length > 0 ? 2 : 6 }}>
+          <span className={`font-semibold text-[var(--fg)] block ${files.length > 0 ? 'text-[14px] mb-0.5' : 'text-[16px] mb-1.5'}`}>
             {files.length > 0 ? `Selected ${files.length} Photo${files.length > 1 ? 's' : ''}` : 'Drag & drop HEIC / HEIF / ZIP files here'}
           </span>
-          <span style={{ fontSize: files.length > 0 ? 12 : 13, color: 'var(--fg-muted)', maxWidth: 480 }}>
+          <span className={`text-[var(--fg-muted)] max-w-[480px] ${files.length > 0 ? 'text-[12px]' : 'text-[13px]'}`}>
             {files.length > 0 
               ? 'Click or drag more files to add to the batch' 
               : `100% private, on-device conversion. Photos never leave your browser. Max file size: ${maxFileSizeMb}MB.`}
@@ -572,38 +534,23 @@ export default function HeicTool({
 
         {/* Configurations Header Settings */}
         {files.length > 0 && (
-          <div style={{
+          <div className="border-b border-[var(--border)] pb-7 items-end" style={{
             display: 'grid',
             gridTemplateColumns: (files.length > 1 || isZipUploaded) ? 'repeat(auto-fit, minmax(260px, 1fr))' : '1fr',
             gap: 24,
-            borderBottom: '1px solid var(--border)',
-            paddingBottom: 28,
-            alignItems: 'end',
           }}>
             
             {/* Target Output Format Selection */}
-            <div style={{ maxWidth: (files.length > 1 || isZipUploaded) ? undefined : 320, margin: (files.length > 1 || isZipUploaded) ? undefined : '0 auto', width: '100%' }}>
-              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--fg-muted)', marginBottom: 10, letterSpacing: '0.08em', textAlign: (files.length > 1 || isZipUploaded) ? 'left' : 'center' }} className="mono uppercase">Target Format</label>
-              <div style={{ 
-                display: 'flex', 
-                gap: 4, 
-                background: lightMode ? 'oklch(0.96 0.002 250)' : 'oklch(0.12 0.004 250 / 0.6)', 
-                padding: 4, 
-                borderRadius: 10, 
-                border: '1px solid var(--border)' 
-              }}>
+            <div className={`w-full ${!(files.length > 1 || isZipUploaded) ? 'max-w-[320px] mx-auto' : ''}`}>
+              <label className={`mono uppercase block text-[11px] font-bold text-[var(--fg-muted)] mb-2.5 tracking-[0.08em] ${(files.length > 1 || isZipUploaded) ? 'text-left' : 'text-center'}`}>Target Format</label>
+              <div className={`flex gap-1 p-1 rounded-[10px] border border-[var(--border)] ${lightMode ? 'bg-[oklch(0.96_0.002_250)]' : 'bg-[oklch(0.12_0.004_250/0.6)]'}`}>
                 <button
                   onClick={() => setTargetFormat('jpg')}
                   disabled={convertingActive || isAllConverted}
-                  className="mono"
+                  className={`mono flex-1 px-3.5 py-2.5 text-[12px] font-semibold rounded-lg text-center transition-all duration-250 ${targetFormat === 'jpg' ? 'shadow-[0_2px_8px_var(--shadow-sm)]' : ''} ${(convertingActive || isAllConverted) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   style={{
-                    flex: 1, padding: '10px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8,
                     background: targetFormat === 'jpg' ? (lightMode ? 'white' : tint(activeHue, lightMode, 0.8, 0.08, 0.95)) : 'transparent',
                     color: targetFormat === 'jpg' ? tintFg(activeHue, lightMode) : 'var(--fg-muted)',
-                    cursor: (convertingActive || isAllConverted) ? 'not-allowed' : 'pointer',
-                    textAlign: 'center',
-                    boxShadow: targetFormat === 'jpg' ? '0 2px 8px var(--shadow-sm)' : 'none',
-                    transition: 'all 0.25s ease',
                   }}
                 >
                   Convert to JPG
@@ -611,15 +558,10 @@ export default function HeicTool({
                 <button
                   onClick={() => setTargetFormat('png')}
                   disabled={convertingActive || isAllConverted}
-                  className="mono"
+                  className={`mono flex-1 px-3.5 py-2.5 text-[12px] font-semibold rounded-lg text-center transition-all duration-250 ${targetFormat === 'png' ? 'shadow-[0_2px_8px_var(--shadow-sm)]' : ''} ${(convertingActive || isAllConverted) ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                   style={{
-                    flex: 1, padding: '10px 14px', fontSize: 12, fontWeight: 600, borderRadius: 8,
                     background: targetFormat === 'png' ? (lightMode ? 'white' : tint(activeHue, lightMode, 0.8, 0.08, 0.95)) : 'transparent',
                     color: targetFormat === 'png' ? tintFg(activeHue, lightMode) : 'var(--fg-muted)',
-                    cursor: (convertingActive || isAllConverted) ? 'not-allowed' : 'pointer',
-                    textAlign: 'center',
-                    boxShadow: targetFormat === 'png' ? '0 2px 8px var(--shadow-sm)' : 'none',
-                    transition: 'all 0.25s ease',
                   }}
                 >
                   Convert to PNG
@@ -630,24 +572,17 @@ export default function HeicTool({
             {/* Custom Renaming configuration - only visible for multiple uploads or zip file uploads */}
             {(files.length > 1 || isZipUploaded) && (
               <div>
-                <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: 'var(--fg-muted)', marginBottom: 10, letterSpacing: '0.08em' }} className="mono uppercase">Batch Rename Template (Optional)</label>
-                <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                <label className="mono uppercase block text-[11px] font-bold text-[var(--fg-muted)] mb-2.5 tracking-[0.08em]">Batch Rename Template (Optional)</label>
+                <div className="relative flex items-center">
                   <input
                     type="text"
                     placeholder="Keep original filenames..."
                     value={customName}
                     onChange={e => setCustomName(e.target.value)}
                     disabled={convertingActive}
-                    style={{
-                      width: '100%', padding: '11px 14px 11px 36px', 
-                      background: lightMode ? 'white' : 'oklch(0.12 0.004 250 / 0.6)',
-                      border: '1px solid var(--border)', borderRadius: 10,
-                      color: 'var(--fg)', fontSize: 13, outline: 'none',
-                      boxSizing: 'border-box', transition: 'all 0.2s',
-                    }}
-                    className="rename-input"
+                    className={`rename-input w-full py-[11px] pr-3.5 pl-[36px] border border-[var(--border)] rounded-[10px] text-[var(--fg)] text-[13px] outline-none box-border transition-all duration-200 ${lightMode ? 'bg-white' : 'bg-[oklch(0.12_0.004_250/0.6)]'}`}
                   />
-                  <Edit2 size={13} style={{ position: 'absolute', left: 14, color: 'var(--fg-muted)', opacity: 0.7 }} />
+                  <Edit2 size={13} className="absolute left-3.5 text-[var(--fg-muted)] opacity-70" />
                 </div>
               </div>
             )}
@@ -657,53 +592,33 @@ export default function HeicTool({
 
         {/* Dashboard Panels */}
         {files.length > 0 && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="flex flex-col gap-4">
             
             {/* Header controls with list layout toggle controls */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontSize: 13, color: 'var(--fg-muted)' }} className="mono">
-                Selected: <span style={{ color: 'var(--fg)', fontWeight: 600 }}>{files.length}</span> / {maxBatchCount} photos
+            <div className="flex justify-between items-center">
+              <div className="mono text-[13px] text-[var(--fg-muted)]">
+                Selected: <span className="text-[var(--fg)] font-semibold">{files.length}</span> / {maxBatchCount} photos
               </div>
               
-              <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <div className="flex gap-2.5 items-center">
                 <button
                   onClick={handleClear}
                   disabled={convertingActive}
-                  className="mono"
-                  style={{
-                    padding: '6px 12px', fontSize: 11, fontWeight: 500, borderRadius: 6,
-                    color: 'oklch(0.70 0.12 15)', border: '1px solid oklch(0.70 0.12 15 / 0.15)',
-                    cursor: convertingActive ? 'not-allowed' : 'pointer',
-                    background: 'oklch(0.12 0.004 250 / 0.2)',
-                  }}
+                  className={`mono px-3 py-1.5 text-[11px] font-medium rounded-md text-[oklch(0.70_0.12_15)] border border-[oklch(0.70_0.12_15/0.15)] bg-[oklch(0.12_0.004_250/0.2)] ${convertingActive ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                 >
                   Clear All
                 </button>
-                <div style={{ display: 'inline-flex', gap: 4, background: lightMode ? 'oklch(0.96 0.002 250)' : 'oklch(0.12 0.004 250)', padding: 3, borderRadius: 6, border: '1px solid var(--border)' }}>
+                <div className={`inline-flex gap-1 p-[3px] rounded-md border border-[var(--border)] ${lightMode ? 'bg-[oklch(0.96_0.002_250)]' : 'bg-[oklch(0.12_0.004_250)]'}`}>
                   <button
                     onClick={() => setViewMode('grid')}
-                    className=""
-                    style={{
-                      padding: 6, borderRadius: 4,
-                      background: viewMode === 'grid' ? (lightMode ? 'white' : 'var(--bg-elev-2)') : 'transparent',
-                      color: viewMode === 'grid' ? 'var(--fg)' : 'var(--fg-muted)',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center',
-                      boxShadow: (viewMode === 'grid' && lightMode) ? '0 1px 4px var(--shadow-sm)' : 'none'
-                    }}
+                    className={`p-1.5 rounded text-[13px] flex items-center cursor-pointer ${viewMode === 'grid' ? (lightMode ? 'bg-white shadow-[0_1px_4px_var(--shadow-sm)] text-[var(--fg)]' : 'bg-[var(--bg-elev-2)] text-[var(--fg)]') : 'bg-transparent text-[var(--fg-muted)]'}`}
                     title="Grid View"
                   >
                     <LayoutGrid size={13} />
                   </button>
                   <button
                     onClick={() => setViewMode('list')}
-                    className=""
-                    style={{
-                      padding: 6, borderRadius: 4,
-                      background: viewMode === 'list' ? (lightMode ? 'white' : 'var(--bg-elev-2)') : 'transparent',
-                      color: viewMode === 'list' ? 'var(--fg)' : 'var(--fg-muted)',
-                      cursor: 'pointer', display: 'flex', alignItems: 'center',
-                      boxShadow: (viewMode === 'list' && lightMode) ? '0 1px 4px var(--shadow-sm)' : 'none'
-                    }}
+                    className={`p-1.5 rounded text-[13px] flex items-center cursor-pointer ${viewMode === 'list' ? (lightMode ? 'bg-white shadow-[0_1px_4px_var(--shadow-sm)] text-[var(--fg)]' : 'bg-[var(--bg-elev-2)] text-[var(--fg)]') : 'bg-transparent text-[var(--fg-muted)]'}`}
                     title="List View"
                   >
                     <List size={13} />
@@ -714,17 +629,14 @@ export default function HeicTool({
 
             {/* 1. Render files in Grid View */}
             {viewMode === 'grid' && (
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-                gap: 16,
-              }}>
+              <div className="grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))' }}>
                 {files.map((item, idx) => {
                   const savings = calculateSavings(item.originalSize, item.convertedSize);
                   const isConverting = item.status === 'converting';
                   return (
                     <div
                       key={item.id}
+                      className="hover-card-asset rounded-[14px] p-3 flex flex-col relative transition-all duration-250 shadow-[0_4px_12px_var(--shadow-sm)] overflow-hidden"
                       style={{
                         background: lightMode ? 'white' : 'oklch(0.12 0.004 250 / 0.6)',
                         border: item.status === 'success' 
@@ -732,93 +644,57 @@ export default function HeicTool({
                           : item.status === 'size_exceeded' || item.status === 'error'
                             ? '1px solid oklch(0.80 0.10 15 / 0.25)'
                             : '1px solid var(--border)',
-                        borderRadius: 14,
-                        padding: 12,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        position: 'relative',
-                        transition: 'all 0.25s ease',
-                        boxShadow: '0 4px 12px var(--shadow-sm)',
-                        overflow: 'hidden',
                       }}
-                      className="hover-card-asset"
                     >
                       {/* Close/Remove button */}
                       <button
                         onClick={() => handleRemoveFile(item.id)}
                         disabled={convertingActive}
-                        style={{
-                          position: 'absolute', top: 8, right: 8, zIndex: 10,
-                          padding: 5, borderRadius: '50%', 
-                          background: lightMode ? 'oklch(0.95 0 0)' : 'oklch(0.06 0.002 250 / 0.65)',
-                          border: '1px solid var(--border)', color: 'oklch(0.70 0.12 15)', 
-                          cursor: convertingActive ? 'not-allowed' : 'pointer',
-                          display: 'flex', alignItems: 'center',
-                          transition: 'all 0.2s',
-                        }}
-                        className="remove-btn"
+                        className={`remove-btn absolute top-2 right-2 z-10 p-[5px] rounded-full border border-[var(--border)] text-[oklch(0.70_0.12_15)] flex items-center transition-all duration-200 ${convertingActive ? 'cursor-not-allowed' : 'cursor-pointer'} ${lightMode ? 'bg-[oklch(0.95_0_0)]' : 'bg-[oklch(0.06_0.002_250/0.65)]'}`}
                       >
                         <X size={11} />
                       </button>
 
                       {/* Thumbnail */}
-                      <div style={{
-                        height: 110, borderRadius: 8, 
-                        background: lightMode ? 'oklch(0.96 0.002 250)' : 'oklch(0.08 0.002 250 / 0.5)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        overflow: 'hidden', position: 'relative', marginBottom: 12,
-                        border: '1px solid var(--border)',
-                      }}>
+                      <div className={`h-[110px] rounded-lg flex items-center justify-center overflow-hidden relative mb-3 border border-[var(--border)] ${lightMode ? 'bg-[oklch(0.96_0.002_250)]' : 'bg-[oklch(0.08_0.002_250/0.5)]'}`}>
                         {item.status === 'success' && item.convertedUrl ? (
                           <img
                             src={item.convertedUrl}
                             alt="Converted preview"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            className="w-full h-full object-cover"
                           />
                         ) : isConverting ? (
-                          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                          <div className="flex flex-col items-center gap-2">
                             <Loader size={18} className="spin" style={{ color: tintFg(activeHue, lightMode) }} />
-                            <span style={{ fontSize: 9.5, color: 'var(--fg-muted)' }} className="mono">Converting...</span>
+                            <span className="text-[9.5px] text-[var(--fg-muted)] mono">Converting...</span>
                           </div>
                         ) : item.status === 'size_exceeded' ? (
-                          <LockIcon size={16} style={{ color: 'oklch(0.80 0.10 15)' }} />
+                          <LockIcon size={16} className="text-[oklch(0.80_0.10_15)]" />
                         ) : item.status === 'error' ? (
-                          <XCircle size={16} style={{ color: 'oklch(0.80 0.10 15)' }} />
+                          <XCircle size={16} className="text-[oklch(0.80_0.10_15)]" />
                         ) : (
-                          <ImageIcon size={22} style={{ color: 'var(--fg-muted)', opacity: 0.6 }} />
+                          <ImageIcon size={22} className="text-[var(--fg-muted)] opacity-60" />
                         )}
                         
                         {/* Engine Badge */}
                         {item.status === 'success' && (
-                          <span className="mono" style={{
-                            position: 'absolute', bottom: 6, left: 6, fontSize: 8,
-                            padding: '2px 5px', borderRadius: 4,
-                            background: item.engine === 'native' ? 'oklch(0.70 0.16 145)' : 'oklch(0.68 0.18 265)',
-                            color: 'white',
-                            fontWeight: 600,
-                            boxShadow: '0 2px 4px oklch(0 0 0 / 0.15)',
-                          }}>
+                          <span className={`mono absolute bottom-1.5 left-1.5 text-[8px] px-[5px] py-[2px] rounded font-semibold text-white shadow-[0_2px_4px_oklch(0_0_0/0.15)] ${item.engine === 'native' ? 'bg-[oklch(0.70_0.16_145)]' : 'bg-[oklch(0.68_0.18_265)]'}`}>
                             {item.engine === 'native' ? 'NATIVE' : 'WASM'}
                           </span>
                         )}
 
                         {/* Linear Progress Bar for active conversions */}
                         {isConverting && (
-                          <div style={{
-                            position: 'absolute', bottom: 0, left: 0, right: 0, height: 3,
-                            background: 'oklch(0.5 0.1 25 / 0.2)', overflow: 'hidden'
-                          }}>
-                            <div style={{
-                              height: '100%', width: '60%', 
+                          <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-[oklch(0.5_0.1_25/0.2)] overflow-hidden">
+                            <div className="h-full w-[60%] animate-[progressMove_1.5s_infinite_linear]" style={{
                               background: tintFg(activeHue, lightMode),
-                              animation: 'progressMove 1.5s infinite linear',
                             }} />
                           </div>
                         )}
                       </div>
 
                       {/* Info & Inline Renaming */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+                      <div className="flex flex-col gap-1 flex-1">
                         {item.isEditingName ? (
                           <input
                             type="text"
@@ -827,23 +703,17 @@ export default function HeicTool({
                             onBlur={() => toggleRenameMode(item.id, false)}
                             onKeyDown={e => { if (e.key === 'Enter') toggleRenameMode(item.id, false); }}
                             autoFocus
+                            className={`w-full px-1.5 py-[3px] rounded-md text-[var(--fg)] text-[12px] outline-none ${lightMode ? 'bg-white' : 'bg-[var(--bg-elev-2)]'}`}
                             style={{
-                              width: '100%', padding: '3px 6px', 
-                              background: lightMode ? 'white' : 'var(--bg-elev-2)',
-                              border: `1px solid ${tintFg(activeHue, lightMode)}`, borderRadius: 6,
-                              color: 'var(--fg)', fontSize: 12, outline: 'none',
+                              border: `1px solid ${tintFg(activeHue, lightMode)}`,
                               boxShadow: `0 0 0 2px ${tint(activeHue, lightMode, 0.4, 0.1, 0.25)}`
                             }}
                           />
                         ) : (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <div className="flex items-center gap-1.5">
                             <div 
                               onClick={() => { if (!convertingActive) toggleRenameMode(item.id, true); }}
-                              style={{
-                                fontSize: 12, fontWeight: 600, color: 'var(--fg)',
-                                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                                flex: 1, cursor: convertingActive ? 'default' : 'pointer',
-                              }} 
+                              className={`text-[12px] font-semibold text-[var(--fg)] whitespace-nowrap overflow-hidden text-ellipsis flex-1 ${convertingActive ? 'cursor-default' : 'cursor-pointer'}`}
                               title="Click to rename"
                             >
                               {item.name}
@@ -851,30 +721,23 @@ export default function HeicTool({
                             {!convertingActive && (
                               <Edit2 
                                 size={10} 
-                                style={{ color: 'var(--fg-muted)', cursor: 'pointer', opacity: 0.6 }} 
+                                className="text-[var(--fg-muted)] cursor-pointer opacity-60"
                                 onClick={() => toggleRenameMode(item.id, true)} 
                               />
                             )}
                           </div>
                         )}
                         
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, fontSize: 10.5 }}>
-                          <span style={{ color: 'var(--fg-muted)' }} className="mono">{formatSize(item.originalSize)}</span>
+                        <div className="flex justify-between items-center mt-1 text-[10.5px]">
+                          <span className="text-[var(--fg-muted)] mono">{formatSize(item.originalSize)}</span>
                           {item.status === 'success' && item.convertedSize && (
-                            <span style={{ color: 'var(--fg)', fontWeight: 600 }} className="mono">➔ {formatSize(item.convertedSize)}</span>
+                            <span className="text-[var(--fg)] font-semibold mono">➔ {formatSize(item.convertedSize)}</span>
                           )}
                         </div>
                         
                         {item.status === 'success' && savings && (
-                          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 4 }}>
-                            <span style={{ 
-                              fontSize: 9.5, 
-                              color: savings.isSmaller ? 'oklch(0.70 0.16 145)' : 'oklch(0.70 0.12 15)', 
-                              fontWeight: 700,
-                              background: savings.isSmaller ? 'oklch(0.70 0.16 145 / 0.12)' : 'oklch(0.70 0.12 15 / 0.12)',
-                              padding: '2px 6px',
-                              borderRadius: 4,
-                            }} className="mono">
+                          <div className="flex justify-end mt-1">
+                            <span className={`mono text-[9.5px] font-bold px-1.5 py-[2px] rounded ${savings.isSmaller ? 'text-[oklch(0.70_0.16_145)] bg-[oklch(0.70_0.16_145/0.12)]' : 'text-[oklch(0.70_0.12_15)] bg-[oklch(0.70_0.12_15/0.12)]'}`}>
                               {savings.isSmaller ? `-${savings.percentage}%` : `+${Math.abs(Number(savings.percentage))}%`}
                             </span>
                           </div>
@@ -885,13 +748,10 @@ export default function HeicTool({
                       {item.status === 'success' && (
                         <button
                           onClick={() => handleDownloadSingle(item, idx)}
-                          className="mono"
+                          className="mono w-full py-1.5 text-[11px] font-semibold rounded-md cursor-pointer flex items-center justify-center gap-1.5 mt-2.5 transition-all duration-200"
                           style={{
-                            width: '100%', padding: '6px 0', fontSize: 11, fontWeight: 600, borderRadius: 6,
                             background: tint(activeHue, lightMode, 0.9, 0.08, 0.9), border: `1px solid ${tintBorder(activeHue, lightMode)}`,
-                            color: tintFg(activeHue, lightMode), cursor: 'pointer', display: 'flex',
-                            alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 10,
-                            transition: 'all 0.2s',
+                            color: tintFg(activeHue, lightMode),
                           }}
                         >
                           <Download size={11} /> Save Image
@@ -905,20 +765,15 @@ export default function HeicTool({
 
             {/* 2. Render files in List View */}
             {viewMode === 'list' && (
-              <div style={{
-                border: '1px solid var(--border)',
-                borderRadius: 14,
-                overflow: 'hidden',
-                background: lightMode ? 'white' : 'oklch(0.12 0.004 250 / 0.3)',
-              }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: 13 }}>
+              <div className={`border border-[var(--border)] rounded-[14px] overflow-hidden ${lightMode ? 'bg-white' : 'bg-[oklch(0.12_0.004_250/0.3)]'}`}>
+                <table className="w-full border-collapse text-left text-[13px]">
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--border)', background: lightMode ? 'oklch(0.97 0 0)' : 'oklch(0.14 0.005 250 / 0.5)' }}>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)' }} className="mono uppercase">Name</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)' }} className="mono uppercase">Original</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)' }} className="mono uppercase">Converted</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)' }} className="mono uppercase">Savings</th>
-                      <th style={{ padding: '12px 16px', fontWeight: 700, color: 'var(--fg-muted)', textAlign: 'right' }} className="mono uppercase">Actions</th>
+                    <tr className={`border-b border-[var(--border)] ${lightMode ? 'bg-[oklch(0.97_0_0)]' : 'bg-[oklch(0.14_0.005_250/0.5)]'}`}>
+                      <th className="px-4 py-3 font-bold text-[var(--fg-muted)] mono uppercase">Name</th>
+                      <th className="px-4 py-3 font-bold text-[var(--fg-muted)] mono uppercase">Original</th>
+                      <th className="px-4 py-3 font-bold text-[var(--fg-muted)] mono uppercase">Converted</th>
+                      <th className="px-4 py-3 font-bold text-[var(--fg-muted)] mono uppercase">Savings</th>
+                      <th className="px-4 py-3 font-bold text-[var(--fg-muted)] mono uppercase text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -927,24 +782,18 @@ export default function HeicTool({
                       return (
                         <tr 
                           key={item.id} 
+                          className="border-b border-[var(--border)] transition-colors duration-200"
                           style={{ 
-                            borderBottom: '1px solid var(--border)',
                             background: item.status === 'converting' ? tint(activeHue, lightMode, 0.95, 0.02, 0.04) : 'transparent',
-                            transition: 'background 0.2s',
                           }}
                         >
-                          <td style={{ padding: '12px 16px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                              <div style={{
-                                width: 28, height: 28, borderRadius: 6, 
-                                background: lightMode ? 'oklch(0.95 0 0)' : 'var(--bg-elev-1)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
-                                border: '1px solid var(--border)',
-                              }}>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className={`w-7 h-7 rounded-md flex items-center justify-center overflow-hidden border border-[var(--border)] ${lightMode ? 'bg-[oklch(0.95_0_0)]' : 'bg-[var(--bg-elev-1)]'}`}>
                                 {item.status === 'success' && item.convertedUrl ? (
-                                  <img src={item.convertedUrl} alt="Mini preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  <img src={item.convertedUrl} alt="Mini preview" className="w-full h-full object-cover" />
                                 ) : (
-                                  <ImageIcon size={14} style={{ color: 'var(--fg-muted)', opacity: 0.6 }} />
+                                  <ImageIcon size={14} className="text-[var(--fg-muted)] opacity-60" />
                                 )}
                               </div>
                               
@@ -956,24 +805,23 @@ export default function HeicTool({
                                   onBlur={() => toggleRenameMode(item.id, false)}
                                   onKeyDown={e => { if (e.key === 'Enter') toggleRenameMode(item.id, false); }}
                                   autoFocus
+                                  className={`px-1.5 py-0.5 rounded-md text-[var(--fg)] text-[12.5px] outline-none ${lightMode ? 'bg-white' : 'bg-[var(--bg-elev-2)]'}`}
                                   style={{
-                                    padding: '2px 6px', background: lightMode ? 'white' : 'var(--bg-elev-2)',
-                                    border: `1px solid ${tintFg(activeHue, lightMode)}`, borderRadius: 6,
-                                    color: 'var(--fg)', fontSize: 12.5, outline: 'none'
+                                    border: `1px solid ${tintFg(activeHue, lightMode)}`,
                                   }}
                                 />
                               ) : (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <div className="flex items-center gap-1.5">
                                   <span 
                                     onClick={() => { if (!convertingActive) toggleRenameMode(item.id, true); }}
-                                    style={{ color: 'var(--fg)', fontWeight: 500, cursor: convertingActive ? 'default' : 'pointer' }}
+                                    className={`text-[var(--fg)] font-medium ${convertingActive ? 'cursor-default' : 'cursor-pointer'}`}
                                   >
                                     {item.name}
                                   </span>
                                   {!convertingActive && (
                                     <Edit2 
                                       size={10} 
-                                      style={{ color: 'var(--fg-muted)', cursor: 'pointer', opacity: 0.6 }} 
+                                      className="text-[var(--fg-muted)] cursor-pointer opacity-60"
                                       onClick={() => toggleRenameMode(item.id, true)} 
                                     />
                                   )}
@@ -982,53 +830,44 @@ export default function HeicTool({
                             </div>
                           </td>
                           
-                          <td style={{ padding: '12px 16px', color: 'var(--fg-muted)' }} className="mono">
+                          <td className="px-4 py-3 text-[var(--fg-muted)] mono">
                             {formatSize(item.originalSize)}
                           </td>
                           
-                          <td style={{ padding: '12px 16px' }}>
+                          <td className="px-4 py-3">
                             {item.status === 'success' && item.convertedSize ? (
-                              <span style={{ color: 'var(--fg)', fontWeight: 600 }} className="mono">{formatSize(item.convertedSize)}</span>
+                              <span className="text-[var(--fg)] font-semibold mono">{formatSize(item.convertedSize)}</span>
                             ) : item.status === 'converting' ? (
-                              <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: tintFg(activeHue, lightMode) }}>
+                              <div className="flex items-center gap-1.5" style={{ color: tintFg(activeHue, lightMode) }}>
                                 <Loader size={12} className="spin" />
-                                <span style={{ fontSize: 11 }} className="mono">Converting...</span>
+                                <span className="text-[11px] mono">Converting...</span>
                               </div>
                             ) : item.status === 'error' ? (
-                              <span style={{ color: 'oklch(0.80 0.10 15)' }} className="mono">Failed</span>
+                              <span className="text-[oklch(0.80_0.10_15)] mono">Failed</span>
                             ) : (
-                              <span style={{ color: 'var(--fg-muted)', opacity: 0.5 }} className="mono">-</span>
+                              <span className="text-[var(--fg-muted)] opacity-50 mono">-</span>
                             )}
                           </td>
                           
-                          <td style={{ padding: '12px 16px' }} className="mono">
+                          <td className="px-4 py-3 mono">
                             {item.status === 'success' && savings ? (
-                              <span style={{ 
-                                color: savings.isSmaller ? 'oklch(0.70 0.16 145)' : 'oklch(0.70 0.12 15)',
-                                fontWeight: 600,
-                                background: savings.isSmaller ? 'oklch(0.70 0.16 145 / 0.1)' : 'oklch(0.70 0.12 15 / 0.1)',
-                                padding: '2px 6px',
-                                borderRadius: 4,
-                                fontSize: 11
-                              }}>
+                              <span className={`font-semibold px-1.5 py-0.5 rounded text-[11px] ${savings.isSmaller ? 'text-[oklch(0.70_0.16_145)] bg-[oklch(0.70_0.16_145/0.1)]' : 'text-[oklch(0.70_0.12_15)] bg-[oklch(0.70_0.12_15/0.1)]'}`}>
                                 {savings.isSmaller ? `-${savings.percentage}%` : `+${Math.abs(Number(savings.percentage))}%`}
                               </span>
                             ) : (
-                              <span style={{ color: 'var(--fg-muted)', opacity: 0.5 }}>-</span>
+                              <span className="text-[var(--fg-muted)] opacity-50">-</span>
                             )}
                           </td>
                           
-                          <td style={{ padding: '12px 16px', textAlign: 'right' }}>
-                            <div style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+                          <td className="px-4 py-3 text-right">
+                            <div className="inline-flex gap-2 items-center">
                               {item.status === 'success' && (
                                 <button
                                   onClick={() => handleDownloadSingle(item, idx)}
-                                  className=""
+                                  className="px-2.5 py-1 rounded-md text-[11.5px] font-semibold cursor-pointer transition-all duration-200"
                                   style={{
-                                    padding: '4px 10px', borderRadius: 6,
                                     background: tint(activeHue, lightMode, 0.9, 0.08, 0.9), border: `1px solid ${tintBorder(activeHue, lightMode)}`,
-                                    color: tintFg(activeHue, lightMode), fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
-                                    transition: 'all 0.2s',
+                                    color: tintFg(activeHue, lightMode),
                                   }}
                                 >
                                   Save
@@ -1037,15 +876,7 @@ export default function HeicTool({
                               <button
                                 onClick={() => handleRemoveFile(item.id)}
                                 disabled={convertingActive}
-                                className=""
-                                style={{
-                                  padding: 5, borderRadius: 6, background: 'transparent',
-                                  color: 'oklch(0.70 0.12 15)', cursor: convertingActive ? 'not-allowed' : 'pointer',
-                                  display: 'flex', alignItems: 'center', opacity: 0.7,
-                                  transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-                                onMouseLeave={e => e.currentTarget.style.opacity = '0.7'}
+                                className={`p-[5px] rounded-md bg-transparent text-[oklch(0.70_0.12_15)] flex items-center opacity-70 transition-all duration-200 hover:opacity-100 ${convertingActive ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                                 title="Remove File"
                               >
                                 <Trash2 size={13} />
@@ -1061,47 +892,30 @@ export default function HeicTool({
             )}
 
             {/* Conversions Bottom Action Panel */}
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              background: lightMode ? 'oklch(0.97 0 0)' : 'oklch(0.12 0.002 250 / 0.3)',
-              border: '1px solid var(--border)',
-              borderRadius: 14,
-              padding: '18px 24px',
-              marginTop: 12,
-              flexWrap: 'wrap',
-              gap: 16,
-              boxShadow: '0 4px 16px var(--shadow-sm)',
-            }}>
+            <div className={`flex justify-between items-center border border-[var(--border)] rounded-[14px] px-6 py-[18px] mt-3 flex-wrap gap-4 shadow-[0_4px_16px_var(--shadow-sm)] ${lightMode ? 'bg-[oklch(0.97_0_0)]' : 'bg-[oklch(0.12_0.002_250/0.3)]'}`}>
               <div>
                 {pendingCount > 0 ? (
-                  <span style={{ fontSize: 13, color: 'var(--fg-muted)' }}>
-                    🚀 Ready to convert <strong style={{ color: 'var(--fg)' }}>{pendingCount}</strong> pending image{pendingCount > 1 ? 's' : ''}.
+                  <span className="text-[13px] text-[var(--fg-muted)]">
+                    🚀 Ready to convert <strong className="text-[var(--fg)]">{pendingCount}</strong> pending image{pendingCount > 1 ? 's' : ''}.
                   </span>
                 ) : (
-                  <span style={{ fontSize: 13, color: 'oklch(0.70 0.16 145)', display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 500 }}>
+                  <span className="text-[13px] text-[oklch(0.70_0.16_145)] inline-flex items-center gap-1.5 font-medium">
                     <CheckCircle size={15} /> All conversions complete ({successFiles.length} photos ready)
                   </span>
                 )}
               </div>
 
-              <div style={{ display: 'flex', gap: 12 }}>
+              <div className="flex gap-3">
                 {pendingCount > 0 && (
                   <button
                     onClick={handleConvertAll}
                     disabled={convertingActive}
-                    className=""
+                    className={`px-6 py-[11px] rounded-[10px] font-semibold text-[13.5px] inline-flex items-center gap-2 transition-all duration-250 ${convertingActive ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                     style={{
-                      padding: '11px 24px', borderRadius: 10,
                       background: tint(activeHue, lightMode, 0.45, 0.15, 0.95),
                       border: `1px solid ${tintBorder(activeHue, lightMode)}`,
                       color: lightMode ? 'white' : tintFg(activeHue, lightMode),
-                      fontWeight: 600, fontSize: 13.5,
-                      cursor: convertingActive ? 'not-allowed' : 'pointer',
-                      display: 'inline-flex', alignItems: 'center', gap: 8,
                       boxShadow: `0 4px 14px ${tint(activeHue, lightMode, 0.5, 0.15, 0.25)}`,
-                      transition: 'all 0.25s ease',
                     }}
                   >
                     {convertingActive ? (
@@ -1121,15 +935,10 @@ export default function HeicTool({
                   <button
                     onClick={handleDownloadAllZip}
                     disabled={zipping}
-                    className=""
+                    className={`px-6 py-[11px] rounded-[10px] text-white font-semibold text-[13.5px] inline-flex items-center gap-2 transition-all duration-250 ${zipping ? 'cursor-not-allowed' : 'cursor-pointer'}`}
                     style={{
-                      padding: '11px 24px', borderRadius: 10,
                       background: `linear-gradient(180deg, ${tint(activeHue, lightMode, 0.45, 0.15, 0.95)}, ${tint(activeHue, lightMode, 0.55, 0.17, 0.95)})`,
-                      color: 'white', fontWeight: 600, fontSize: 13.5,
-                      cursor: zipping ? 'not-allowed' : 'pointer',
-                      display: 'inline-flex', alignItems: 'center', gap: 8,
                       boxShadow: `0 4px 16px ${tint(activeHue, lightMode, 0.5, 0.15, 0.25)}`,
-                      transition: 'all 0.25s ease',
                     }}
                   >
                     {zipping ? (
@@ -1153,19 +962,12 @@ export default function HeicTool({
       </div>
 
       {/* FAQ Block Accordion */}
-      <div style={{
-        marginTop: 48,
-        background: 'var(--bg-elev-1)',
-        border: '1px solid var(--border)',
-        borderRadius: 18,
-        padding: '28px 32px',
-        boxShadow: '0 8px 24px var(--shadow-sm)',
-      }}>
-        <h2 style={{ fontSize: 19, fontWeight: 700, color: 'var(--fg)', margin: '0 0 20px', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div className="mt-12 bg-[var(--bg-elev-1)] border border-[var(--border)] rounded-[18px] px-8 py-7 shadow-[0_8px_24px_var(--shadow-sm)]">
+        <h2 className="text-[19px] font-bold text-[var(--fg)] m-0 mb-5 flex items-center gap-2.5">
           <HelpCircle size={19} style={{ color: tintFg(activeHue, lightMode) }} /> Frequently Asked Questions
         </h2>
         
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        <div className="flex flex-col gap-1">
           {[
             {
               q: "Is it safe to upload my personal photos here?",
@@ -1186,30 +988,18 @@ export default function HeicTool({
           ].map((faq, idx) => (
             <div 
               key={idx} 
-              style={{ 
-                borderBottom: idx === 3 ? 'none' : '1px solid var(--border)', 
-                paddingBottom: 14,
-                paddingTop: idx === 0 ? 0 : 14,
-              }}
+              className={`pb-3.5 ${idx === 3 ? 'border-none' : 'border-b border-[var(--border)]'} ${idx === 0 ? 'pt-0' : 'pt-3.5'}`}
             >
               <button
                 onClick={() => toggleFaq(idx)}
-                className=""
-                style={{
-                  width: '100%', display: 'flex', justifySelf: 'space-between', alignItems: 'center',
-                  padding: '6px 0', cursor: 'pointer', textAlign: 'left', color: 'var(--fg)', fontWeight: 600,
-                  fontSize: 14.5
-                }}
+                className="w-full flex justify-between items-center py-1.5 cursor-pointer text-left text-[var(--fg)] font-semibold text-[14.5px] bg-transparent border-none"
               >
-                <span style={{ flex: 1 }}>{faq.q}</span>
-                {faqOpen[idx] ? <ChevronUp size={16} style={{ color: 'var(--fg-muted)' }} /> : <ChevronDown size={16} style={{ color: 'var(--fg-muted)' }} />}
+                <span className="flex-1">{faq.q}</span>
+                {faqOpen[idx] ? <ChevronUp size={16} className="text-[var(--fg-muted)]" /> : <ChevronDown size={16} className="text-[var(--fg-muted)]" />}
               </button>
               
               {faqOpen[idx] && (
-                <div style={{ 
-                  marginTop: 8, fontSize: 13.5, color: 'var(--fg-muted)', lineHeight: 1.6,
-                  animation: 'slideDownFaq 0.25s cubic-bezier(0.16, 1, 0.3, 1)'
-                }}>
+                <div className="mt-2 text-[13.5px] text-[var(--fg-muted)] leading-[1.6] animate-[slideDownFaq_0.25s_cubic-bezier(0.16,1,0.3,1)]">
                   <style>{`
                     @keyframes slideDownFaq {
                       from { opacity: 0; transform: translateY(-4px); }

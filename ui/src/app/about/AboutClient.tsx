@@ -10,11 +10,7 @@ export default function AboutClient() {
     <main className="max-w-[880px] mx-auto mt-10 mb-[120px] px-8 relative fade-in">
       {/* Subpage ambient top-center glow */}
       <div 
-        className="absolute -top-[100px] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] pointer-events-none z-0 transition-opacity duration-200"
-        style={{
-          background: 'radial-gradient(500px 200px at 50% 0%, var(--accent) 0%, transparent 70%)',
-          opacity: isLight ? 0.08 : 0.15,
-        }}
+        className={`absolute -top-[100px] left-1/2 -translate-x-1/2 w-full max-w-[800px] h-[300px] pointer-events-none z-0 transition-opacity duration-200 bg-[radial-gradient(500px_200px_at_50%_0%,var(--accent)_0%,transparent_70%)] ${isLight ? 'opacity-[0.08]' : 'opacity-[0.15]'}`}
       />
 
       <header className="text-center mb-10 relative z-10">

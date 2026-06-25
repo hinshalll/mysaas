@@ -180,43 +180,20 @@ puts res.body`
   };
 
   return (
-    <div style={{
-      background: 'linear-gradient(145deg, #090a0f, #13151f)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      borderRadius: 16,
-      overflow: 'hidden',
-      boxShadow: '0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)',
-      fontFamily: 'monospace',
-      width: '100%',
-      position: 'relative'
-    }}>
+    <div className="bg-gradient-to-br from-[#090a0f] to-[#13151f] border border-white/10 rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.5),inset_0_1px_0_rgba(255,255,255,0.1)] font-mono w-full relative">
       {/* Glossy top highlight */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '1px', background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent)' }} />
+      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent" />
       
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        background: 'rgba(0, 0, 0, 0.4)',
-        borderBottom: '1px solid rgba(255, 255, 255, 0.05)',
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ff5f56', boxShadow: '0 0 10px rgba(255, 95, 86, 0.4)' }} />
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#ffbd2e', boxShadow: '0 0 10px rgba(255, 189, 46, 0.4)' }} />
-            <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#27c93f', boxShadow: '0 0 10px rgba(39, 201, 63, 0.4)' }} />
+      <div className="flex flex-col bg-black/40 border-b border-white/5">
+        <div className="flex justify-between items-center px-4 py-3 border-b border-white/5">
+          <div className="flex gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ff5f56] shadow-[0_0_10px_rgba(255,95,86,0.4)]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e] shadow-[0_0_10px_rgba(255,189,46,0.4)]" />
+            <span className="w-2.5 h-2.5 rounded-full bg-[#27c93f] shadow-[0_0_10px_rgba(39,201,63,0.4)]" />
           </div>
           <button
             onClick={handleCopy}
-            className=""
-            style={{
-              color: copiedCode ? '#4ade80' : '#8b949e',
-              cursor: copiedCode ? 'default' : 'pointer',
-              display: 'flex', alignItems: 'center', gap: 6,
-              fontSize: 12, fontWeight: 500,
-              background: 'rgba(255, 255, 255, 0.05)',
-              padding: '4px 10px', borderRadius: 6,
-              transition: 'all 0.2s', border: '1px solid rgba(255, 255, 255, 0.05)'
-            }}
+            className={`flex items-center gap-1.5 text-xs font-medium bg-white/5 px-2.5 py-1 rounded-md transition-all duration-200 border border-white/5 ${copiedCode ? 'text-[#4ade80] cursor-default' : 'text-[#8b949e] cursor-pointer'}`}
           >
             {copiedCode ? <CheckCircle2 size={13} /> : <Copy size={13} />}
             {copiedCode ? 'Copied!' : 'Copy'}
@@ -224,25 +201,12 @@ puts res.body`
         </div>
 
         {/* Language Tabs Row */}
-        <div style={{ display: 'flex', overflowX: 'auto', padding: '8px 12px', gap: 4, scrollbarWidth: 'none' }}>
+        <div className="flex overflow-x-auto px-3 py-2 gap-1 [scrollbar-width:none]">
           {languages.map(lang => (
             <button
               key={lang.id}
               onClick={() => setActiveLang(lang.id)}
-              className=""
-              style={{
-                background: activeLang === lang.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                color: activeLang === lang.id ? '#ffffff' : '#8b949e',
-                padding: '6px 12px',
-                borderRadius: 8,
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={e => { if (activeLang !== lang.id) e.currentTarget.style.color = 'white' }}
-              onMouseLeave={e => { if (activeLang !== lang.id) e.currentTarget.style.color = '#8b949e' }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer whitespace-nowrap transition-all duration-200 ease-in-out ${activeLang === lang.id ? 'bg-white/10 text-white' : 'bg-transparent text-[#8b949e] hover:text-white'}`}
             >
               {lang.label}
             </button>
@@ -250,8 +214,8 @@ puts res.body`
         </div>
       </div>
 
-      <div style={{ padding: 20, overflowX: 'auto', minHeight: 280, position: 'relative' }}>
-        <pre style={{ margin: 0, fontSize: 13, lineHeight: 1.6, color: '#a5b4fc', textAlign: 'left' }}>
+      <div className="p-5 overflow-x-auto min-h-[280px] relative">
+        <pre className="m-0 text-[13px] leading-[1.6] text-[#a5b4fc] text-left">
           {snippets[activeLang]}
         </pre>
       </div>
@@ -313,132 +277,81 @@ export default function ApiHubPage() {
   const isAllSystemsOperational = !loadingStatus && statusData?.monitors?.every(m => m.ok) !== false;
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: '#040508', // Deep space dark
-      color: '#ffffff',
-      fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
+    <div className="min-h-screen bg-[#040508] text-white font-sans relative overflow-hidden">
       {/* Next-gen Ambient Background Glows */}
-      <div style={{ position: 'absolute', top: '-10%', left: '-10%', width: '50vw', height: '50vw', background: 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
-      <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '60vw', height: '60vw', background: 'radial-gradient(circle, rgba(236,72,153,0.06) 0%, transparent 60%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] bg-[radial-gradient(circle,rgba(99,102,241,0.08)_0%,transparent_60%)] blur-[80px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60vw] h-[60vw] bg-[radial-gradient(circle,rgba(236,72,153,0.06)_0%,transparent_60%)] blur-[80px] pointer-events-none z-0" />
       
       {/* Grid Pattern Overlay */}
-      <div style={{
-        position: 'absolute', top: 0, left: 0, right: 0, height: '100%',
-        backgroundImage: 'linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)',
-        backgroundSize: '40px 40px',
-        backgroundPosition: 'center center',
-        pointerEvents: 'none', zIndex: 0,
-        maskImage: 'linear-gradient(to bottom, black 20%, transparent 80%)',
-        WebkitMaskImage: 'linear-gradient(to bottom, black 20%, transparent 80%)'
-      }} />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[length:40px_40px] bg-center pointer-events-none z-0 [mask-image:linear-gradient(to_bottom,black_20%,transparent_80%)] [-webkit-mask-image:linear-gradient(to_bottom,black_20%,transparent_80%)]" />
 
-      <div style={{
-        maxWidth: 1200,
-        margin: '0 auto',
-        padding: '40px 24px 120px',
-        position: 'relative',
-        zIndex: 1,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 64,
-      }}>
+      <div className="max-w-[1200px] mx-auto px-6 pt-10 pb-[120px] relative z-[1] flex flex-col gap-16">
         
         {/* Minimal Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255, 255, 255, 0.02)', padding: '12px 20px', borderRadius: 100, border: '1px solid rgba(255, 255, 255, 0.05)', backdropFilter: 'blur(12px)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 13, fontWeight: 600, color: '#94a3b8' }}>
-            <Link href="/" style={{ color: 'inherit', textDecoration: 'none', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color='white'} onMouseLeave={e => e.currentTarget.style.color='#94a3b8'}>Home</Link>
-            <span style={{ opacity: 0.3 }}>/</span>
-            <span style={{ color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}><Code size={14} /> API Hub</span>
+        <div className="flex justify-between items-center bg-white/2 px-5 py-3 rounded-full border border-white/5 backdrop-blur-md">
+          <div className="flex items-center gap-3 text-[13px] font-semibold text-[#94a3b8]">
+            <Link href="/" className="text-inherit no-underline transition-colors duration-200 hover:text-white">Home</Link>
+            <span className="opacity-30">/</span>
+            <span className="text-white flex items-center gap-1.5"><Code size={14} /> API Hub</span>
           </div>
           
           {/* Global Status Pill */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, fontWeight: 600, color: isAllSystemsOperational ? '#4ade80' : '#fbbf24', background: isAllSystemsOperational ? 'rgba(74, 222, 128, 0.1)' : 'rgba(251, 191, 36, 0.1)', padding: '6px 14px', borderRadius: 100, border: isAllSystemsOperational ? '1px solid rgba(74, 222, 128, 0.2)' : '1px solid rgba(251, 191, 36, 0.2)' }}>
-            {loadingStatus ? <Loader size={12} className="spin" /> : <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'currentColor', boxShadow: '0 0 8px currentColor' }} />}
+          <div className={`flex items-center gap-2 text-xs font-semibold px-3.5 py-1.5 rounded-full border ${isAllSystemsOperational ? 'text-[#4ade80] bg-[#4ade80]/10 border-[#4ade80]/20' : 'text-[#fbbf24] bg-[#fbbf24]/10 border-[#fbbf24]/20'}`}>
+            {loadingStatus ? <Loader size={12} className="spin" /> : <span className="w-1.5 h-1.5 rounded-full bg-current shadow-[0_0_8px_currentColor]" />}
             {loadingStatus ? 'Checking systems...' : isAllSystemsOperational ? 'All Systems Operational' : 'Degraded Performance'}
           </div>
         </div>
 
         {/* Epic Hero Section */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 60,
-          alignItems: 'center',
-        }}>
+        <div className="grid grid-cols-2 gap-[60px] items-center">
           {/* Left Column: Copy */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(99, 102, 241, 0.1)',
-              border: '1px solid rgba(99, 102, 241, 0.2)', color: '#818cf8', fontSize: 12, fontWeight: 700,
-              padding: '6px 14px', borderRadius: 100, textTransform: 'uppercase', letterSpacing: '0.05em', alignSelf: 'flex-start'
-            }}>
+          <div className="flex flex-col gap-6">
+            <div className="inline-flex items-center gap-2 bg-[#6366f1]/10 border border-[#6366f1]/20 text-[#818cf8] text-xs font-bold px-3.5 py-1.5 rounded-full uppercase tracking-[0.05em] self-start">
               <Zap size={14} fill="currentColor" /> Developer APIs v1.0
             </div>
             
-            <h1 style={{ 
-              fontSize: 'clamp(40px, 5vw, 64px)', fontWeight: 800, margin: 0, 
-              letterSpacing: '-0.03em', lineHeight: 1.05,
-              background: 'linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent'
-            }}>
+            <h1 className="text-[clamp(40px,5vw,64px)] font-extrabold m-0 tracking-[-0.03em] leading-[1.05] bg-gradient-to-br from-white to-[#a5b4fc] bg-clip-text text-transparent">
               Build faster with intelligent APIs.
             </h1>
             
-            <p style={{ fontSize: 18, color: '#94a3b8', lineHeight: 1.6, margin: 0, maxWidth: 500 }}>
+            <p className="text-lg text-[#94a3b8] leading-[1.6] m-0 max-w-[500px]">
               Integrate world-class document formatting, image transcoding, and PDF rendering directly into your products. Zero cold starts, infinite scaling.
             </p>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 12 }}>
-              <Link href="/account#api-keys" style={{
-                fontSize: 15, fontWeight: 600, color: '#ffffff',
-                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                padding: '14px 28px', borderRadius: 12, textDecoration: 'none',
-                boxShadow: '0 8px 24px rgba(99, 102, 241, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2)',
-                display: 'inline-flex', alignItems: 'center', gap: 8, transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(99, 102, 241, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.2)'; }}
-              onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(99, 102, 241, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.2)'; }}
-              >
+            <div className="flex items-center gap-4 mt-3">
+              <Link href="/account#api-keys" className="text-[15px] font-semibold text-white bg-gradient-to-br from-[#6366f1] to-[#4f46e5] px-7 py-3.5 rounded-xl no-underline shadow-[0_8px_24px_rgba(99,102,241,0.3),inset_0_1px_1px_rgba(255,255,255,0.2)] inline-flex items-center gap-2 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_rgba(99,102,241,0.4),inset_0_1px_1px_rgba(255,255,255,0.2)]">
                 Get Your API Key <ArrowRight size={18} />
               </Link>
             </div>
 
             {/* Quick Start Flow */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 20, padding: '16px', background: 'rgba(255, 255, 255, 0.02)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ fontSize: 11, fontWeight: 700, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Quick Start</span>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, color: '#cbd5e1', fontWeight: 500 }}>
+            <div className="flex items-center gap-3 mt-5 p-4 bg-white/2 rounded-xl border border-white/5">
+              <div className="flex flex-col gap-1">
+                <span className="text-[11px] font-bold text-[#6366f1] uppercase tracking-[0.05em]">Quick Start</span>
+                <div className="flex items-center gap-2 text-[13px] text-[#cbd5e1] font-medium">
                   <span>1. Register</span> <ChevronRight size={12} color="#475569" />
                   <span>2. Copy Key</span> <ChevronRight size={12} color="#475569" />
-                  <span style={{ color: '#fff' }}>3. Execute Request</span>
+                  <span className="text-white">3. Execute Request</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Right Column: Terminal Widget */}
-          <div style={{ position: 'relative' }}>
-            <div style={{ position: 'absolute', top: -20, left: -20, right: -20, bottom: -20, background: 'radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%)', filter: 'blur(40px)', zIndex: -1 }} />
+          <div className="relative">
+            <div className="absolute -inset-5 bg-[radial-gradient(circle,rgba(99,102,241,0.15)_0%,transparent_70%)] blur-[40px] -z-10" />
             <HeroTerminalWidget />
           </div>
         </div>
 
         {/* API Catalog Grid */}
-        <div style={{ marginTop: 40 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 32 }}>
-            <h2 style={{ fontSize: 32, fontWeight: 800, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>Explore Endpoints</h2>
-            <p style={{ fontSize: 16, color: '#94a3b8', margin: 0 }}>Discover robust capabilities designed for developer velocity.</p>
+        <div className="mt-10">
+          <div className="flex flex-col gap-2 mb-8">
+            <h2 className="text-[32px] font-extrabold text-white m-0 tracking-[-0.02em]">Explore Endpoints</h2>
+            <p className="text-[16px] text-[#94a3b8] m-0">Discover robust capabilities designed for developer velocity.</p>
           </div>
           
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
-            gap: 24,
-          }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(340px,1fr))] gap-6">
             {[
               {
                 id: 'universal-ai-formatter',
@@ -489,68 +402,46 @@ export default function ApiHubPage() {
               const statusColor = status === 'active' ? '#4ade80' : status === 'sleeping' ? '#fbbf24' : '#94a3b8';
               
               return (
-                <Link key={api.id} href={`/api/${api.id}`} style={{ textDecoration: 'none', display: 'block' }}>
-                  <div style={{
-                    background: 'rgba(255, 255, 255, 0.02)',
-                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                    borderRadius: 20,
-                    padding: 28,
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    position: 'relative',
-                    overflow: 'hidden',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                  }}
-                  onMouseEnter={e => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.15)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                    e.currentTarget.style.boxShadow = `0 20px 40px -10px ${api.bgGlow}`;
-                  }}
-                  onMouseLeave={e => {
-                    e.currentTarget.style.transform = 'none';
-                    e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.02)';
-                    e.currentTarget.style.boxShadow = 'none';
-                  }}
+                <Link key={api.id} href={`/api/${api.id}`} className="no-underline block group">
+                  <div className="bg-white/2 border border-white/5 rounded-[20px] p-7 h-full flex flex-col relative overflow-hidden transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)] group-hover:-translate-y-1 group-hover:border-white/15 group-hover:bg-white/5"
+                  style={{ '--hover-glow': api.bgGlow } as any}
                   >
+                    <style jsx>{`
+                      div:hover { box-shadow: 0 20px 40px -10px var(--hover-glow); }
+                    `}</style>
                     {/* Top ambient glow */}
-                    <div style={{ position: 'absolute', top: 0, left: '20%', width: '60%', height: 2, background: `linear-gradient(90deg, transparent, ${api.color}, transparent)`, opacity: 0.5 }} />
+                    <div className="absolute top-0 left-1/5 w-[60%] h-0.5 opacity-50" style={{ background: `linear-gradient(90deg, transparent, ${api.color}, transparent)` }} />
 
-                    <div style={{ flex: 1 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
-                        <div style={{
-                          width: 48, height: 48, borderRadius: 14,
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start mb-5">
+                        <div className="w-12 h-12 rounded-[14px] flex items-center justify-center border border-white/10" style={{
                           background: `linear-gradient(135deg, rgba(255,255,255,0.05) 0%, ${api.bgGlow} 100%)`,
-                          border: '1px solid rgba(255,255,255,0.08)',
                           color: api.color,
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
                           boxShadow: `0 8px 16px ${api.bgGlow}`
                         }}>
                           <api.icon size={24} />
                         </div>
                         
                         {/* Status Pill */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, fontWeight: 600, background: 'rgba(0,0,0,0.4)', padding: '4px 10px', borderRadius: 100, border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div className="flex items-center gap-1.5 text-[11px] font-semibold bg-black/40 px-2.5 py-1 rounded-full border border-white/5">
                           {status === 'checking' ? (
-                            <Loader size={10} className="spin" style={{ color: '#94a3b8' }} />
+                            <Loader size={10} className="spin text-[#94a3b8]" />
                           ) : (
-                            <span style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, boxShadow: `0 0 8px ${statusColor}` }} />
+                            <span className="w-1.5 h-1.5 rounded-full" style={{ background: statusColor, boxShadow: `0 0 8px ${statusColor}` }} />
                           )}
-                          <span style={{ color: '#cbd5e1' }}>{status === 'active' ? 'Awake' : status === 'sleeping' ? 'Sleeping' : 'Pinging'}</span>
+                          <span className="text-[#cbd5e1]">{status === 'active' ? 'Awake' : status === 'sleeping' ? 'Sleeping' : 'Pinging'}</span>
                         </div>
                       </div>
 
-                      <h3 style={{ margin: '0 0 12px', fontSize: 20, fontWeight: 700, color: 'white', letterSpacing: '-0.01em' }}>{api.title}</h3>
-                      <p style={{ margin: '0 0 24px', fontSize: 14, color: '#94a3b8', lineHeight: 1.6 }}>{api.desc}</p>
+                      <h3 className="m-0 mb-3 text-[20px] font-bold text-white tracking-[-0.01em]">{api.title}</h3>
+                      <p className="m-0 mb-6 text-[14px] text-[#94a3b8] leading-[1.6]">{api.desc}</p>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 20, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                      <span style={{ fontSize: 12, fontFamily: 'monospace', color: '#6366f1', background: 'rgba(99, 102, 241, 0.1)', padding: '6px 12px', borderRadius: 8, fontWeight: 600 }}>
+                    <div className="flex justify-between items-center pt-5 border-t border-white/5">
+                      <span className="text-[12px] font-mono text-[#6366f1] bg-[#6366f1]/10 px-3 py-1.5 rounded-lg font-semibold">
                         {api.endpoint}
                       </span>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 13, fontWeight: 600, color: 'white' }}>
+                      <span className="flex items-center gap-1 text-[13px] font-semibold text-white">
                         View Docs <ChevronRight size={14} color="#94a3b8" />
                       </span>
                     </div>
@@ -562,57 +453,43 @@ export default function ApiHubPage() {
         </div>
 
         {/* Pricing & Limits Grid */}
-        <div style={{ marginTop: 20 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 32 }}>
-            <h2 style={{ fontSize: 32, fontWeight: 800, color: 'white', margin: 0, letterSpacing: '-0.02em' }}>Pricing & Quotas</h2>
-            <p style={{ fontSize: 16, color: '#94a3b8', margin: 0 }}>Predictable scaling for indie hackers and enterprise teams.</p>
+        <div className="mt-5">
+          <div className="flex flex-col gap-2 mb-8">
+            <h2 className="text-[32px] font-extrabold text-white m-0 tracking-[-0.02em]">Pricing & Quotas</h2>
+            <p className="text-[16px] text-[#94a3b8] m-0">Predictable scaling for indie hackers and enterprise teams.</p>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: 24,
-          }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-6">
             {[
               { name: 'Guest Sandbox', runs: '3 / day', limit: '3 / min', key: 'Public Sandbox', price: 'Free', highlight: false },
               { name: 'Free Account', runs: '10 / day', limit: '10 / min', key: 'Personal Key', price: 'Free', highlight: false },
               { name: 'Pro', runs: '200 / day', limit: '30 / min', key: 'Production Key', price: '$9 / mo', highlight: true },
               { name: 'Developer API', runs: '2,000 / day', limit: '120 / min', key: 'Developer Key', price: '$29 / mo', highlight: false }
             ].map((tier, idx) => (
-              <div key={idx} style={{
-                background: tier.highlight ? 'rgba(99, 102, 241, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                border: tier.highlight ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(255, 255, 255, 0.05)',
-                borderRadius: 20,
-                padding: 32,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 24,
-                position: 'relative',
-                boxShadow: tier.highlight ? '0 20px 40px rgba(99, 102, 241, 0.1)' : 'none'
-              }}>
+              <div key={idx} className={`rounded-[20px] p-8 flex flex-col gap-6 relative ${tier.highlight ? 'bg-[#6366f1]/10 border border-[#6366f1]/30 shadow-[0_20px_40px_rgba(99,102,241,0.1)]' : 'bg-white/2 border border-white/5'}`}>
                 {tier.highlight && (
-                  <div style={{ position: 'absolute', top: -12, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', color: 'white', fontSize: 11, fontWeight: 700, padding: '4px 12px', borderRadius: 100, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-br from-[#6366f1] to-[#4f46e5] text-white text-[11px] font-bold px-3 py-1 rounded-full tracking-[0.05em] uppercase">
                     Most Popular
                   </div>
                 )}
                 
                 <div>
-                  <h3 style={{ fontSize: 18, fontWeight: 700, color: 'white', margin: '0 0 8px' }}>{tier.name}</h3>
-                  <div style={{ fontSize: 24, fontWeight: 800, color: tier.highlight ? '#a5b4fc' : '#ffffff' }}>{tier.price}</div>
+                  <h3 className="text-[18px] font-bold text-white m-0 mb-2">{tier.name}</h3>
+                  <div className={`text-[24px] font-extrabold ${tier.highlight ? 'text-[#a5b4fc]' : 'text-white'}`}>{tier.price}</div>
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: 13, color: '#94a3b8' }}>API Quota</span>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: 'white', fontFamily: 'monospace' }}>{tier.runs}</span>
+                <div className="flex flex-col gap-4">
+                  <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                    <span className="text-[13px] text-[#94a3b8]">API Quota</span>
+                    <span className="text-[14px] font-semibold text-white font-mono">{tier.runs}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingBottom: 12, borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                    <span style={{ fontSize: 13, color: '#94a3b8' }}>Rate Limit</span>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: 'white', fontFamily: 'monospace' }}>{tier.limit}</span>
+                  <div className="flex justify-between items-center pb-3 border-b border-white/5">
+                    <span className="text-[13px] text-[#94a3b8]">Rate Limit</span>
+                    <span className="text-[14px] font-semibold text-white font-mono">{tier.limit}</span>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 13, color: '#94a3b8' }}>Auth Req</span>
-                    <span style={{ fontSize: 13, fontWeight: 500, color: 'white' }}>{tier.key}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-[13px] text-[#94a3b8]">Auth Req</span>
+                    <span className="text-[13px] font-medium text-white">{tier.key}</span>
                   </div>
                 </div>
               </div>
@@ -621,55 +498,32 @@ export default function ApiHubPage() {
         </div>
 
         {/* Global Security / Footer */}
-        <div style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 24,
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid rgba(255, 255, 255, 0.05)',
-          padding: '24px 32px',
-          borderRadius: 20,
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-            <div style={{ width: 48, height: 48, borderRadius: 14, background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div className="flex flex-wrap items-center justify-between gap-6 bg-white/2 border border-white/5 p-6 px-8 rounded-[20px]">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-[14px] bg-[#10b981]/10 border border-[#10b981]/20 flex items-center justify-center">
               <ShieldCheck size={24} color="#34d399" />
             </div>
             <div>
-              <h4 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'white' }}>TLS 1.3 & Zero Retention</h4>
-              <p style={{ margin: '4px 0 0', fontSize: 14, color: '#94a3b8', lineHeight: 1.5, maxWidth: 600 }}>
+              <h4 className="m-0 text-[16px] font-bold text-white">TLS 1.3 & Zero Retention</h4>
+              <p className="m-0 mt-1 text-[14px] text-[#94a3b8] leading-[1.5] max-w-[600px]">
                 Encrypted in transit. Payloads parsed entirely in memory and dropped instantly. No logs, no storage.
               </p>
             </div>
           </div>
           
-          <a href="/api/openapi.json" download="openapi.json" style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600,
-            color: '#ffffff', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)',
-            padding: '10px 20px', borderRadius: 10, textDecoration: 'none', transition: 'all 0.2s',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)' }}
-          >
+          <a href="/api/openapi.json" download="openapi.json" className="inline-flex items-center gap-2 text-[13px] font-semibold text-white bg-white/5 border border-white/10 px-5 py-2.5 rounded-lg no-underline transition-colors duration-200 hover:bg-white/10">
             <Download size={14} /> OpenAPI Specification
           </a>
         </div>
 
         {/* System Admin Dashboard Section */}
         {isAdmin && (
-          <div style={{
-            paddingTop: 40,
-            borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 24
-          }}>
+          <div className="pt-10 border-t border-white/10 flex flex-col gap-6">
             <div>
-              <h2 style={{ fontSize: 24, fontWeight: 700, color: 'white', margin: 0, letterSpacing: '-0.02em', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <h2 className="text-[24px] font-bold text-white m-0 tracking-[-0.02em] flex items-center gap-2.5">
                 <Server size={20} color="#6366f1" /> System Administration Console
               </h2>
-              <p style={{ margin: '8px 0 0', fontSize: 15, color: '#94a3b8' }}>
+              <p className="m-0 mt-2 text-[15px] text-[#94a3b8]">
                 Monitor engine node latency, wake states, and active connections.
               </p>
             </div>

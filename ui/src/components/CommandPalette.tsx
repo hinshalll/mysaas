@@ -86,63 +86,25 @@ export default function CommandPalette({ open, onClose, onPick }: CommandPalette
   if (!open) return null;
 
   return (
-    <div className="fade-in" onClick={onClose} style={{
-      position: 'fixed', inset: 0, zIndex: 100,
-      background: 'var(--bg-overlay-modal)',
-      backdropFilter: 'blur(8px)',
-      display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
-      paddingTop: 'min(15vh, 120px)',
-    }}>
-      <div onClick={e => e.stopPropagation()} className="scale-in" style={{
-        width: 'min(640px, calc(100vw - 32px))',
-        background: 'var(--bg-modal)',
-        border: '1px solid var(--border-strong)',
-        borderRadius: 14,
-        boxShadow: 'var(--shadow-modal)',
-        overflow: 'hidden',
-      }}>
+    <div className="fade-in fixed inset-0 z-[100] bg-[var(--bg-overlay-modal)] backdrop-blur-[8px] flex items-start justify-center pt-[min(15vh,120px)]" onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} className="scale-in w-[min(640px,calc(100vw-32px))] bg-[var(--bg-modal)] border border-[var(--border-strong)] rounded-[14px] shadow-[var(--shadow-modal)] overflow-hidden">
         {/* Input */}
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '14px 18px',
-          borderBottom: '1px solid var(--border)',
-        }}>
-          <Search size={16} style={{ color: 'var(--fg-subtle)' }} />
+        <div className="flex items-center gap-2.5 px-[18px] py-[14px] border-b border-[var(--border)]">
+          <Search size={16} className="text-[var(--fg-subtle)]" />
           <input
             ref={inputRef}
             value={q}
             onChange={e => setQ(e.target.value)}
             onKeyDown={onKey}
             placeholder="Jump to a tool, search by what it does…"
-            style={{
-              flex: 1, background: 'transparent', border: 'none', outline: 'none',
-              color: 'var(--fg)', fontSize: 15,
-              fontFamily: 'inherit',
-            }}
+            className="flex-1 bg-transparent border-none outline-none text-[var(--fg)] text-[15px] font-[inherit]"
           />
           {q && (
-            <button onClick={() => setQ('')} className="reset" style={{
-              fontSize: 11, color: 'var(--fg-muted)',
-              padding: '3px 7px', borderRadius: 4,
-              background: 'var(--bg-elev-2)', cursor: 'pointer',
-            }}>clear</button>
+            <button onClick={() => setQ('')} className="reset text-[11px] text-[var(--fg-muted)] px-[7px] py-[3px] rounded-[4px] bg-[var(--bg-elev-2)] cursor-pointer">clear</button>
           )}
           <kbd
             onClick={onClose}
-            className="kbd"
-            style={{
-              cursor: 'pointer',
-              userSelect: 'none',
-              transition: 'background 0.15s, border-color 0.15s',
-            }}
-            onMouseEnter={e => {
-              e.currentTarget.style.background = 'var(--bg-hover)';
-              e.currentTarget.style.borderColor = 'var(--border-strong)';
-            }}
-            onMouseLeave={e => {
-              e.currentTarget.style.background = '';
-              e.currentTarget.style.borderColor = '';
-            }}
+            className="kbd cursor-pointer select-none transition-colors duration-150 hover:bg-[var(--bg-hover)] hover:border-[var(--border-strong)]"
             title="Close Search (Esc)"
           >
             esc
@@ -150,17 +112,10 @@ export default function CommandPalette({ open, onClose, onPick }: CommandPalette
         </div>
 
         {/* Results */}
-        <div ref={listRef} style={{
-          maxHeight: '50vh',
-          overflowY: 'auto',
-          padding: 6,
-        }}>
+        <div ref={listRef} className="max-h-[50vh] overflow-y-auto p-1.5">
           {results.length === 0 ? (
-            <div style={{
-              padding: '40px 20px', textAlign: 'center',
-              color: 'var(--fg-subtle)', fontSize: 13,
-            }}>
-              No tools match <span className="mono" style={{ color: 'var(--fg-muted)' }}>"{q}"</span>
+            <div className="py-10 px-5 text-center text-[var(--fg-subtle)] text-[13px]">
+              No tools match <span className="mono text-[var(--fg-muted)]">"{q}"</span>
             </div>
           ) : results.map((t: any, i: number) => {
             const Ico = Icon[t.icon] || Search;
@@ -169,63 +124,43 @@ export default function CommandPalette({ open, onClose, onPick }: CommandPalette
               <button key={t.id} data-row={i}
                 onClick={() => onPick(t.id)}
                 onMouseEnter={() => setCursor(i)}
-                className="reset"
-                style={{
-                  width: '100%', boxSizing: 'border-box',
-                  display: 'flex', alignItems: 'center', gap: 12,
-                  padding: '10px 12px',
-                  borderRadius: 8,
-                  background: active ? 'var(--bg-hover)' : 'transparent',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                }}>
-                <span style={{
-                  width: 30, height: 30, borderRadius: 7,
+                className={`reset w-full box-border flex items-center gap-3 px-3 py-2.5 rounded-lg cursor-pointer text-left ${active ? 'bg-[var(--bg-hover)]' : 'bg-transparent'}`}
+              >
+                <span className="w-[30px] h-[30px] rounded-[7px] flex items-center justify-center shrink-0" style={{
                   background: tint(t.hue),
                   border: `1px solid ${tintBorder(t.hue)}`,
                   color: tintFg(t.hue),
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
                 }}>
                   <Ico size={14} strokeWidth={1.8} />
                 </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-                    <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--fg)' }}>{t.name}</span>
-                    {t.pro && <span className="pro-badge" style={{ fontSize: 9 }}>PRO</span>}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-[13.5px] font-medium text-[var(--fg)]">{t.name}</span>
+                    {t.pro && <span className="pro-badge text-[9px]">PRO</span>}
                   </div>
-                  <div style={{
-                    fontSize: 11.5, color: 'var(--fg-subtle)',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>{t.tagline}</div>
+                  <div className="text-[11.5px] text-[var(--fg-subtle)] overflow-hidden text-ellipsis whitespace-nowrap">{t.tagline}</div>
                 </div>
-                <span style={{ fontSize: 10.5, color: 'var(--fg-dim)', letterSpacing: '0.04em' }} className="mono">
+                <span className="text-[10.5px] text-[var(--fg-dim)] tracking-[0.04em] mono">
                   {t.categoryLabel}
                 </span>
-                {active && <ArrowRight size={13} style={{ color: 'var(--fg-muted)' }} />}
+                {active && <ArrowRight size={13} className="text-[var(--fg-muted)]" />}
               </button>
             );
           })}
         </div>
 
         {/* Footer hints */}
-        <div style={{
-          padding: '8px 14px',
-          borderTop: '1px solid var(--border)',
-          display: 'flex', alignItems: 'center', gap: 14,
-          fontSize: 11, color: 'var(--fg-dim)',
-          background: 'var(--bg-elev-1)',
-        }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        <div className="px-3.5 py-2 border-t border-[var(--border)] flex items-center gap-3.5 text-[11px] text-[var(--fg-dim)] bg-[var(--bg-elev-1)]">
+          <span className="flex items-center gap-1.25">
             <kbd className="kbd-sm">↑↓</kbd> navigate
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span className="flex items-center gap-1.25">
             <kbd className="kbd-sm">↵</kbd> open
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span className="flex items-center gap-1.25">
             <kbd className="kbd-sm">esc</kbd> close
           </span>
-          <span style={{ flex: 1 }} />
+          <span className="flex-1" />
           <span>{results.length} result{results.length === 1 ? '' : 's'}</span>
         </div>
       </div>
